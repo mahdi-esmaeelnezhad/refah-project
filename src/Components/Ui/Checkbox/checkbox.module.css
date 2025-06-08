@@ -1,36 +1,36 @@
 /* Checkbox.module.css */
 
 .wrapper {
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-    user-select: none;
-  }
-  
-  .hiddenCheckbox {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .customBox {
-    width: 24px;
-    height: 24px;
-    border: 2px solid black;
-    border-radius: 4px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    transition: all 0.2s ease;
-  }
-  
-  .checked::after {
-    content: "";
-    width: 12px;
-    height: 12px;
-    background-color: #4a4cd3;
-    clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 30%, 80% 15%, 43% 62%);
-    display: block;
-  }
-  
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.hiddenCheckbox {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.customBox {
+  width: 24px;
+  height: 24px;
+  border: 2px solid black;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  transition: all 0.2s ease;
+}
+
+.checked::after {
+  position: absolute;
+  content: "";
+  width: 12px;
+  height: 12px;
+  background-color: #4a4cd3;
+  clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 30%, 80% 15%, 43% 62%);
+  display: block;
+}

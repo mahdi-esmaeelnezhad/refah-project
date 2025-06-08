@@ -1,34 +1,34 @@
 /* RadioButton.module.css */
 
 .wrapper {
-    display: inline-flex;
-    align-items: center;
-    cursor: pointer;
-  }
-  
-  .hiddenRadio {
-    position: absolute;
-    opacity: 0;
-    pointer-events: none;
-  }
-  
-  .customRadio {
-    width: 24px;
-    height: 24px;
-    border: 2px solid black;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.2s ease;
-  }
-  
-  .selected::after {
-    content: "";
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background-color: #4a4cd3;
-    display: block;
-  }
-  
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.hiddenRadio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.customRadio {
+  width: 24px;
+  height: 24px;
+  border: 2px solid black;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.selected::after {
+  position: absolute;
+  content: "";
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background-color: #4a4cd3;
+  display: block;
+}

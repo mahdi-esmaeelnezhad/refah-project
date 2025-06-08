@@ -91,7 +91,7 @@ const Login = () => {
               <Input
                 type="text"
                 placeholder="نام کاربری"
-                height={32.43}
+                height={62.43}
                 width={"438px"}
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}
@@ -115,8 +115,8 @@ const Login = () => {
               <Input
                 type={showPassword ? "text" : "password"}
                 width={"438px"}
-                style={{ marginTop: "50px" }}
-                height={32.43}
+                style={{ marginTop: "30px" }}
+                height={62.43}
                 placeholder="پسورد"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -141,7 +141,7 @@ const Login = () => {
               />
 
               <Button
-                style={{ width: "438px", marginTop: "60px", height: "63.43px" }}
+                style={{ width: "438px", marginTop: "40px", height: "63.43px" }}
                 label="ورود"
                 color="#7889F5"
                 radius={15}

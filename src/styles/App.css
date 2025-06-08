@@ -1,3 +1,12 @@
+html,
+body {
+  width: 100%;
+  max-width: 1920px;
+  height: 100%;
+  max-height: 972px;
+  margin: 0;
+}
+
 :root {
   --color-organization: #111e6c;
 
@@ -60,125 +69,52 @@
   --color-coming-soon: #e27220;
 }
 
-html,
-body {
-  /* width: 100%;
-  max-width: 1920px;
-  height: 100%;
-  max-height: 972px; */
-}
-
 .shadow {
   box-shadow: 0px 4px 20px 2px rgba(0, 0, 0, 0.2);
   border-radius: 12px;
 }
 
-.text-regular {
-  font-family: Peyda;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 15px;
-  line-height: 19px;
+.flex {
+  display: flex;
+  flex-direction: row;
 }
 
-.text-medium {
-  font-family: Peyda;
-  font-style: normal;
-  font-weight: 500;
-  font-size: 15px;
-  line-height: 19px;
+.fixed {
+  position: fixed;
 }
 
-.text-smei-bold {
-  font-family: Peyda;
-  font-style: normal;
-  font-weight: 600;
-  font-size: 15px;
-  line-height: 19px;
+.flex-col {
+  flex-direction: column;
 }
 
-/* Modern CSS Reset (2024) */
-:root {
-  color-scheme: light dark;
+.gap-2 {
+  gap: 4px;
 }
 
-/* Box sizing rules */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
+.gap-4 {
+  gap: 16px;
 }
 
-/* Remove default margin */
-body,
-h1,
-h2,
-h3,
-h4,
-h5,
-h6,
-p,
-figure,
-blockquote,
-dl,
-dd {
-  margin: 0;
+.gap-8 {
+  gap: 32px;
 }
 
-/* Remove list styles (bullets/numbers) */
-ol,
-ul {
-  list-style: none;
+.gap-12 {
+  gap: 48px;
 }
 
-/* Make images easier to work with */
-img,
-picture,
-video,
-canvas,
-svg {
-  display: block;
-  max-width: 100%;
-  height: auto;
+.font-20 {
+  font-size: 20px;
 }
 
-/* Inherit fonts for inputs and buttons */
-input,
-button,
-textarea,
-select {
-  font: inherit;
-  color: inherit;
+.font-21 {
+  font-size: 21px;
 }
 
-/* Remove default button styles */
-button {
-  background: none;
-  border: none;
-  cursor: pointer;
+.font-22 {
+  font-size: 22px;
 }
 
-/* Remove animations for reduced motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-}
-
-/* Focus styles for accessibility */
-/* :focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-} */
-
-/* Root stacking context */
-#root {
-  isolation: isolate;
+.font-23 {
+  font-size: 23px;
 }

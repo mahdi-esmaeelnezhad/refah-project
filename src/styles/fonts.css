@@ -1,0 +1,70 @@
+/* Peyfa Font Face Definitions */
+@font-face {
+  font-family: "Peyda";
+  src: url("PeydaFaNum-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Peyda";
+  src: url("PeydaFaNum-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Peyda";
+  src: url("PeydaFaNum-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Peyda";
+  src: url("PeydaFaNum-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+html,
+body {
+  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Text Styles */
+.text-regular {
+  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 19px;
+}
+
+.text-medium {
+  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 19px;
+}
+
+.text-semi-bold {
+  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 19px;
+}
+
+.text-bold {
+  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 15px;
+  line-height: 19px;
+}

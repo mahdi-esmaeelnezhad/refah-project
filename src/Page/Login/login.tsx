@@ -5,9 +5,8 @@ import rightPatern from "../../assets/img/Pattern - White 2.png";
 import paternRight from "../../assets/img/pattern 4.png";
 import logoAsset from "../../assets/img/Asset 46@2x copy 1.png";
 import logoGroup from "../../assets/img/Group 4483.png";
-import shopLogo from "../../assets/img/Shoppin Logo 1.png";
-
-import "./login.css";
+import logoGroupOne from "../../assets/img/Group 4483 (1).png";
+import "./Login.css"; // فایل CSS برای انیمیشن‌ها
 
 const Login = () => {
   const [showInitial, setShowInitial] = useState(true);
@@ -15,10 +14,11 @@ const Login = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setFadeOut(true);
+      setFadeOut(true); // شروع انیمیشن fade-out
 
-      setTimeout(() => setShowInitial(false), 500);
-    }, 2000);
+      // بعد از اتمام انیمیشن خروج، صفحه اصلی را نشان بده
+      setTimeout(() => setShowInitial(false), 500); // مدت انیمیشن: 0.5 ثانیه
+    }, 2000); // تأخیر اولیه: 2 ثانیه
 
     return () => clearTimeout(timer);
   }, []);
@@ -30,8 +30,18 @@ const Login = () => {
           <div>
             <img src={rightPatern} alt="right pattern" />
           </div>
-          <div style={{ marginTop: "425px" }}>
-            <img src={logoGroup} alt="logo group" />
+          <div
+            style={{
+              marginTop: "425px",
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <img
+              style={{ marginBottom: "10px" }}
+              src={logoGroup}
+              alt="logo group"
+            />
             <img src={logoAsset} alt="logo asset" />
           </div>
           <div>

@@ -63,7 +63,11 @@ const Input: React.FC<InputProps> = ({
     }
 
     return (
-      <div className={`${styles.inputWrapper} ${error ? styles.error : ""} ${disabled ? styles.disabled : ""}`}>
+      <div
+        className={`${styles.inputWrapper} ${error ? styles.error : ""} ${
+          disabled ? styles.disabled : ""
+        }`}
+      >
         {icon && <span className={styles.icon}>{icon}</span>}
         <input
           type="text"

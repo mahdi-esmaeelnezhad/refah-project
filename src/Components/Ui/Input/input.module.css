@@ -1,0 +1,102 @@
+.container {
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .label {
+    font-weight: bold;
+    margin-bottom: 4px;
+    font-size: 0.875rem;
+    color: #222;
+  }
+  
+  .required {
+    color: red;
+  }
+  
+  .inputWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background-color: #f2f2f2;
+    border-radius: 55px;
+    padding: 0.75rem 1rem;
+    border: 1px solid transparent;
+    transition: all 0.3s ease;
+  }
+  
+  .input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 1rem;
+    direction: rtl;
+  }
+  
+  .withIcon {
+    padding-right: 2rem;
+  }
+  
+  .icon {
+    position: absolute;
+    left: 1rem;
+    font-size: 1.2rem;
+  }
+  
+  .suffix {
+    font-size: 0.875rem;
+    margin-right: 0.5rem;
+    color: #333;
+  }
+  
+  .tagButton {
+    background-color: #5c4db1;
+    color: white;
+    border: none;
+    border-radius: 15px;
+    padding: 0.25rem 0.75rem;
+    margin-right: 1rem;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  
+  .error {
+    border-color: red;
+  }
+  
+  .disabled {
+    background-color: #ddd;
+    pointer-events: none;
+    opacity: 0.6;
+  }
+  
+  .errorText {
+    color: red;
+    font-size: 0.75rem;
+    margin-top: 4px;
+  }
+  
+  .imageUploadWrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .imageBox {
+    width: 60px;
+    height: 60px;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.5rem;
+    background-color: #eee;
+    cursor: pointer;
+  }
+  
+  .hiddenInput {
+    display: none;
+  }
+  

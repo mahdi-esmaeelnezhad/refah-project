@@ -1,42 +1,184 @@
+:root {
+  --color-organization: #111e6c;
+
+  --color-primary: #7485e5;
+  --color-primary-100: #e5e8fb;
+  --color-primary-bg: #e5e8fb;
+  --color-primary-200: #cad1f8;
+  --color-primary-focus: #cad1f8;
+  --color-primary-300: #b0baf4;
+  --color-primary-border: #b0baf4;
+  --color-primary-400: #95a3f1;
+  --color-primary-500: #7485e5;
+  --color-primary-600: #5c69b2;
+  --color-primary-presed: #5c69b2;
+  --color-primary-700: #3e4677;
+  --color-primary-800: #1f233b;
+  --color-primary-900: #000000;
+
+  --color-our-choice: #dedede;
+  --color-our-choice-100: #f8f8f8;
+  --color-our-choice-200: #f2f2f2;
+  --color-our-choice-300: #ebebeb;
+  --color-our-choice-400: #e5e5e5;
+  --color-our-choice-500: #dedede;
+  --color-our-choice-600: #a7a7a7;
+  --color-our-choice-700: #6f6f6f;
+  --color-our-choice-800: #383838;
+  --color-our-choice-900: #000000;
+
+  --color-complementary: #eddc7b;
+  --color-complementary-100: #f4eab0;
+  --color-complementary-300: #fdfbef;
+  --color-complementary-500: #eddc7b;
+
+  --color-success: #479e55;
+  --color-success-presed: #32653a;
+  --color-success-border: #66c575;
+  --color-success-focus: #a8e3b1;
+  --color-success-bg: #c6f5ce;
+
+  --color-danger: #de4949;
+  --color-danger-presed: #ba2a2a;
+  --color-danger-border: #f56b6b;
+  --color-danger-focus: #f99999;
+  --color-danger-bg: #ffc8c8;
+
+  --color-warning: #daa51a;
+  --color-warning-presed: #b78400;
+  --color-warning-border: #efbe3e;
+  --color-warning-focus: #ffd976;
+  --color-warning-bg: #ffe7a7;
+
+  --color-info: #4973de;
+  --color-info-presed: #2a4ba1;
+  --color-info-border: #9cb8ff;
+  --color-info-focus: #7ca1ff;
+  --color-info-bg: #9cb8ff;
+
+  --color-badge-counter: #49cd3d;
+  --color-coming-soon: #e27220;
+}
+
+html,
+body {
+  /* width: 100%;
+  max-width: 1920px;
+  height: 100%;
+  max-height: 972px; */
+}
+
+.shadow {
+  box-shadow: 0px 4px 20px 2px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+}
+
+.text-regular {
+  font-family: Peyda;
+  font-style: normal;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 19px;
+}
+
+.text-medium {
+  font-family: Peyda;
+  font-style: normal;
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 19px;
+}
+
+.text-smei-bold {
+  font-family: Peyda;
+  font-style: normal;
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 19px;
+}
+
+/* Modern CSS Reset (2024) */
+:root {
+  color-scheme: light dark;
+}
+
+/* Box sizing rules */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* Remove default margin */
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+/* Remove list styles (bullets/numbers) */
+ol,
+ul {
+  list-style: none;
+}
+
+/* Make images easier to work with */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Inherit fonts for inputs and buttons */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+/* Remove default button styles */
+button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+/* Remove animations for reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus styles for accessibility */
+:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Root stacking context */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
-}
-
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
-}
-
-.card {
-  padding: 2em;
-}
-
-.read-the-docs {
-  color: #888;
+  isolation: isolate;
 }

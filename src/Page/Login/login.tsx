@@ -6,22 +6,37 @@ import paternRight from "../../assets/img/pattern 4.png";
 import logoAsset from "../../assets/img/Asset 46@2x copy 1.png";
 import logoGroup from "../../assets/img/Group 4483.png";
 import logoGroupOne from "../../assets/img/Group 4483 (1).png";
+import Input from "../../Components/Ui/Input/input";
+import { Button } from "../../Components/Ui/Button/button";
+import phone from "../../assets/img/Group 2.png";
+import user from "../../assets/user.svg";
+import pass from "../../assets/pass.svg";
 import "./Login.css"; // فایل CSS برای انیمیشن‌ها
+import { CgEnter } from "react-icons/cg";
 
 const Login = () => {
   const [showInitial, setShowInitial] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      setFadeOut(true); // شروع انیمیشن fade-out
+      setFadeOut(true);
 
-      // بعد از اتمام انیمیشن خروج، صفحه اصلی را نشان بده
-      setTimeout(() => setShowInitial(false), 500); // مدت انیمیشن: 0.5 ثانیه
-    }, 2000); // تأخیر اولیه: 2 ثانیه
+      setTimeout(() => setShowInitial(false), 500);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, []);
+  const handleLogin = () => {
+    setSubmitted(true);
+    if (!phoneNumber || !password) return;
+
+    console.log("Login with:", { phoneNumber, password });
+  };
 
   return (
     <div className="login-container">
@@ -32,7 +47,7 @@ const Login = () => {
           </div>
           <div
             style={{
-              marginTop: "425px",
+              marginTop: "390px",
               display: "flex",
               flexDirection: "column",
             }}
@@ -57,8 +72,107 @@ const Login = () => {
           <div>
             <img src={paternRight} alt="right pattern" />
           </div>
-          <div style={{ marginTop: "425px" }}>
-            <p>mahdi</p>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "Center",
+              justifyContent: "center",
+            }}
+          >
+            <div>
+              <img
+                style={{ marginTop: "0px" }}
+                src={logoGroupOne}
+                alt="left pattern"
+              />
+            </div>
+            <div style={{ marginTop: "70px" }}>
+              <Input
+                type="text"
+                placeholder="نام کاربری"
+                height={32.43}
+                width={"438px"}
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                variant={submitted && !phoneNumber ? "error" : "default"}
+                error={
+                  submitted && !phoneNumber ? "نام کاربری وارد نشده است" : ""
+                }
+                required
+                icon={
+                  <img
+                    src={user}
+                    alt="user icon"
+                    style={{
+                      width: 20,
+                      height: 20,
+                    }}
+                  />
+                }
+              />
+
+              <Input
+                type={showPassword ? "text" : "password"}
+                width={"438px"}
+                style={{ marginTop: "50px" }}
+                height={32.43}
+                placeholder="پسورد"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                variant={submitted && !password ? "error" : "default"}
+                error={submitted && !password ? " پسورد وارد نشده است" : ""}
+                required
+                icon={
+                  <img
+                    src={pass}
+                    alt="toggle password"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      cursor: "pointer",
+                      position: "absolute",
+                      right: "380px",
+                      bottom: "-10px",
+                    }}
+                  />
+                }
+              />
+
+              <Button
+                style={{ width: "438px", marginTop: "60px", height: "63.43px" }}
+                label="ورود"
+                color="#7889F5"
+                radius={15}
+                onClick={handleLogin}
+              />
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "Center",
+                  justifyContent: "center",
+                  marginTop: "30px",
+                }}
+              >
+                <a href="/">فراموشی رمز عبور!</a>
+              </div>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "Center",
+                  justifyContent: "center",
+                }}
+              >
+                <img
+                  style={{ marginTop: "90px" }}
+                  src={phone}
+                  alt="left pattern"
+                />
+              </div>
+            </div>
           </div>
           <div>
             <img

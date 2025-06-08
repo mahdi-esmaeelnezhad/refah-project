@@ -5,10 +5,11 @@ type ButtonState = "normal" | "pressed" | "loading" | "disabled";
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   label: string;
-  color?: string; 
-  radius?: number; 
+  color?: string;
+  radius?: number;
   variant?: ButtonVariant;
   state?: ButtonState;
+  style?: React.CSSProperties;
 }
 
 export const Button: React.FC<ButtonProps> = ({
@@ -17,6 +18,7 @@ export const Button: React.FC<ButtonProps> = ({
   radius = 10,
   variant = "filled",
   state = "normal",
+  style,
   disabled,
   ...props
 }) => {
@@ -51,6 +53,7 @@ export const Button: React.FC<ButtonProps> = ({
     opacity: isDisabled ? 0.6 : 1,
     transition: "all 0.2s ease-in-out",
     minWidth: 120,
+    ...style,
   };
 
   return (

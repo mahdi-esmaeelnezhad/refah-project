@@ -19,11 +19,15 @@ interface InputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   error?: string;
+  type?: string;
   required?: boolean;
   variant?: InputVariant;
 
   icon?: React.ReactNode;
+  style?: React.CSSProperties;
   suffix?: string;
+  width?: string | number;
+  height?: string | number;
   hasButton?: boolean;
   buttonText?: string;
   onButtonClick?: () => void;
@@ -38,10 +42,14 @@ const Input: React.FC<InputProps> = ({
   onChange,
   disabled = false,
   error,
+  type,
   required,
   variant = "default",
   icon,
+  style,
   suffix,
+  width,
+  height,
   hasButton,
   buttonText,
   onButtonClick,
@@ -67,15 +75,21 @@ const Input: React.FC<InputProps> = ({
         className={`${styles.inputWrapper} ${error ? styles.error : ""} ${
           disabled ? styles.disabled : ""
         }`}
+        style={{
+          height: typeof height === "number" ? `${height}px` : height,
+        }}
       >
         {icon && <span className={styles.icon}>{icon}</span>}
         <input
-          type="text"
+          type={type}
           className={`${styles.input} ${icon ? styles.withIcon : ""}`}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
           disabled={disabled}
+          style={{
+            height: typeof height === "number" ? `${height}px` : height,
+          }}
         />
         {suffix && <span className={styles.suffix}>{suffix}</span>}
         {hasButton && buttonText && (
@@ -88,7 +102,14 @@ const Input: React.FC<InputProps> = ({
   };
 
   return (
-    <div className={styles.container}>
+    <div
+      className={styles.container}
+      style={{
+        width: typeof width === "number" ? `${width}px` : width,
+        height: typeof height === "number" ? `${height}px` : height,
+        ...style,
+      }}
+    >
       {label && (
         <label className={styles.label}>
           {label} {required && <span className={styles.required}>*</span>}

@@ -1,34 +1,27 @@
 import React from "react";
+import styles from "./switch.module.css";
 
 interface SwitchProps {
   on: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }
 
-export const Switch: React.FC<SwitchProps> = ({ on, onToggle }) => {
+export const Switch: React.FC<SwitchProps> = ({ on, onToggle, disabled = false }) => {
+  const id = React.useId();
+
   return (
-    <div
-      onClick={onToggle}
-      style={{
-        width: 50,
-        height: 24,
-        borderRadius: 12,
-        backgroundColor: on ? "#4a4cd3" : "#ccc",
-        display: "flex",
-        justifyContent: on ? "flex-end" : "flex-start",
-        padding: 2,
-        cursor: "pointer",
-      }}
-    >
-      <div
-        style={{
-          width: 20,
-          height: 20,
-          borderRadius: "50%",
-          backgroundColor: "#fff",
-          boxShadow: "0 0 2px rgba(0,0,0,0.3)",
-        }}
+    <label className={styles.wrapper} htmlFor={id}>
+      <input
+        type="checkbox"
+        id={id}
+        checked={on}
+        onChange={onToggle}
+        role="switch"
+        disabled={disabled}
+        className={styles.hiddenInput}
       />
-    </div>
+      <span className={`${styles.slider} ${on ? styles.on : ""}`} />
+    </label>
   );
 };

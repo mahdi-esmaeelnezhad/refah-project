@@ -1,0 +1,48 @@
+/* Switch.module.css */
+
+.wrapper {
+    display: inline-block;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .hiddenInput {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+  
+  .slider {
+    width: 50px;
+    height: 24px;
+    background-color: #ccc;
+    border-radius: 12px;
+    position: relative;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    padding: 2px;
+    box-sizing: border-box;
+  }
+  
+  .slider::after {
+    content: "";
+    width: 20px;
+    height: 20px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+    transform: translateX(0);
+  }
+  
+  .on {
+    background-color: #4a4cd3;
+  }
+  
+  .on::after {
+    transform: translateX(26px);
+  }
+  

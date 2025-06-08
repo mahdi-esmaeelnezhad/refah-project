@@ -1,16 +1,19 @@
 import { useState } from 'react'
 import { Button } from './Components/Ui/Button/button'
 import { Checkbox } from './Components/Ui/Checkbox/checkbox'
-import { RadioButton } from './Components/Ui/Radio/radio'
+import { Radio } from './Components/Ui/Radio/radio'
 import Input from './Components/Ui/Input/input'
 import { Switch } from './Components/Ui/switch/switch'
-import { SwitchBtn } from './Components/Ui/switch/switchBtn'
+// import SwitchBtn from './Components/Ui/SwitchBtn/switchBtn'
 import { FiUser, FiSearch, FiMapPin } from "react-icons/fi";
 import './App.css'
 
 function App() {
   const [text, setText] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
+  const [agree, setAgree] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("option1");
+  const [enabled, setEnabled] = useState(false);
 
   return (
     <>
@@ -20,10 +23,21 @@ function App() {
 <Button label="پرداخت" state="loading" />
 <Button label="پرداخت" state="pressed" />
 <Button label="پرداخت" state="disabled" />
-<Checkbox checked={true} onChange={v => console.log(v)} />
-<RadioButton selected={false} onChange={() => console.log("clicked")} />
-<Switch on={true} onToggle={() => console.log("toggle switch1")} />
-<SwitchBtn on={false} onToggle={() => console.log("toggle switch2")} />
+<Checkbox checked={agree} onChange={setAgree} />
+<Radio
+          name="options"
+          value="option1"
+          selected={selectedOption === "option1"}
+          onChange={() => setSelectedOption("option1")}
+        />
+                <Radio
+          name="options"
+          value="option2"
+          selected={selectedOption === "option2"}
+          onChange={() => setSelectedOption("option2")}
+        />
+<Switch on={enabled} onToggle={() => setEnabled(!enabled)} />
+{/* <SwitchBtn initialValue={true} /> */}
 
 
 <div style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "2rem", maxWidth: 600, margin: "0 auto" }}>

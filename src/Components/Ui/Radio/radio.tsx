@@ -1,35 +1,33 @@
 import React from "react";
+import styles from "./radioButton.module.css";
 
 interface RadioButtonProps {
+  name: string;
+  value: string;
   selected: boolean;
   onChange: () => void;
+  disabled?: boolean;
 }
 
-export const RadioButton: React.FC<RadioButtonProps> = ({ selected, onChange }) => {
+export const Radio: React.FC<RadioButtonProps> = ({
+  name,
+  value,
+  selected,
+  onChange,
+  disabled = false,
+}) => {
   return (
-    <div
-      onClick={onChange}
-      style={{
-        width: 24,
-        height: 24,
-        borderRadius: "50%",
-        border: "2px solid black",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        cursor: "pointer",
-      }}
-    >
-      {selected && (
-        <div
-          style={{
-            width: 12,
-            height: 12,
-            borderRadius: "50%",
-            backgroundColor: "#4a4cd3",
-          }}
-        />
-      )}
-    </div>
+    <label className={styles.wrapper}>
+      <input
+        type="radio"
+        name={name}
+        value={value}
+        checked={selected}
+        onChange={onChange}
+        disabled={disabled}
+        className={styles.hiddenRadio}
+      />
+      <span className={`${styles.customRadio} ${selected ? styles.selected : ""}`} />
+    </label>
   );
 };

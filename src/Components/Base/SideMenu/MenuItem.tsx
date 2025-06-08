@@ -1,21 +1,32 @@
-const MenuItem = ({
+import React, { type CSSProperties, type ReactNode } from "react";
+
+interface MenuItemProps {
+  children: ReactNode;
+  textClassName?: string;
+  style?: CSSProperties;
+  className?: string;
+  icon?: JSX.Element | string;
+  onClick?: () => void;
+}
+
+const MenuItem: React.FC<MenuItemProps> = ({
   children,
   textClassName = "",
   style = {},
   className = "",
   icon = "",
+  onClick,
 }) => {
   return (
-    <li
-      className={`menu-item flex ${className}`}
-      style={{
-        alignItems: "center",
-        gap: "11px",
-        ...style,
-      }}
-    >
-      {icon}
-      <span className={textClassName}>{children}</span>
+    <li>
+      <button
+        onClick={onClick}
+        className={`menu-item flex items-center gap-[11px] w-full text-left ${className}`}
+        style={style}
+      >
+        {icon}
+        <span className={textClassName}>{children}</span>
+      </button>
     </li>
   );
 };

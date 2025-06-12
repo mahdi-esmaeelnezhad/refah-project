@@ -63,7 +63,7 @@
 }
 
 .error {
-  border-color: red;
+  border-color: #de4949;
 }
 
 .disabled {
@@ -73,8 +73,9 @@
 }
 
 .errorText {
-  color: red;
-  font-size: 0.75rem;
+  color: #de4949;
+  font-size: 20px;
+  font-weight: 500;
   margin-top: 4px;
 }
 

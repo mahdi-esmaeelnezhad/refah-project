@@ -122,7 +122,7 @@ export default function Home() {
         }}
       >
         Content
-        <h1 className='text-4xl font-bold text-green-600 underline'>
+        <h1 className='text-4xl font-bold text-complementary underline'>
           Tailwind 3.4.17 + Vite + React 🎉
         </h1>
       </section>

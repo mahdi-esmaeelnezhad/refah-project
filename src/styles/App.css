@@ -1,6 +1,6 @@
 html,
 body {
-  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Peyda', -apple-system, BlinkMacSystemFont, sans-serif;
   width: 100%;
   max-width: 1920px;
   height: 100%;
@@ -76,33 +76,8 @@ body {
   border-radius: 12px;
 }
 
-.flex {
-  display: flex;
-  flex-direction: row;
-}
-
-.fixed {
-  position: fixed;
-}
-
-.flex-col {
-  flex-direction: column;
-}
-
-.gap-2 {
-  gap: 4px;
-}
-
-.gap-4 {
-  gap: 16px;
-}
-
-.gap-8 {
-  gap: 32px;
-}
-
-.gap-12 {
-  gap: 48px;
+.font-16 {
+  font-size: 16px;
 }
 
 .font-20 {
@@ -119,4 +94,8 @@ body {
 
 .font-23 {
   font-size: 23px;
+}
+
+.font-25 {
+  font-size: 25px;
 }

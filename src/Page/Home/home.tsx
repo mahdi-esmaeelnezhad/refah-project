@@ -1,130 +1,13 @@
-import MenuItem from '../../Components/Base/SideMenu/MenuItem'
-import SuperMarket from '../../Components/Icons/SuperMarket'
-import ProductsIcon from '../../Components/Icons/ProductsIcon'
-import FactorIcon from '../../Components/Icons/FactorIcon'
-import HomeIcon from '../../Components/Icons/HomeIcon'
-import TypoImage from '../../assets/images/typo-logo.png'
-import Dialog from '../../Components/Ui/Dialog'
+import { Content } from '../../Components/Base/SideMenu/Content'
 import { NavBar } from '../../Components/Base/SideMenu/NavBar'
+import SideMenu from '../../Components/Base/SideMenu/SideMenu'
 
 export default function Home() {
   return (
     <>
-      <section
-        className='side-menu'
-        style={{
-          position: 'fixed',
-          width: '246px',
-          height: '972px',
-          background: 'var(--color-primary)',
-          padding: '28px',
-          color: '#fff'
-        }}
-      >
-        <ul className='flex flex-col' style={{ gap: '46px' }}>
-          {/* <li className="text-bold font-23">
-            <svg
-              width="32"
-              height="32"
-              viewBox="0 0 32 32"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M29.8129 11.027L29.4262 7.33366C28.8662 3.30699 27.0395 1.66699 23.1329 1.66699H19.9862H18.0129H13.9595H11.9862H8.7862C4.8662 1.66699 3.05287 3.30699 2.47953 7.37366L2.11953 11.0403C1.9862 12.467 2.37287 13.8537 3.21287 14.9337C4.2262 16.2537 5.7862 17.0003 7.51953 17.0003C9.19953 17.0003 10.8129 16.1603 11.8262 14.8137C12.7329 16.1603 14.2795 17.0003 15.9995 17.0003C17.7195 17.0003 19.2262 16.2003 20.1462 14.867C21.1729 16.187 22.7595 17.0003 24.4129 17.0003C26.1862 17.0003 27.7862 16.2137 28.7862 14.827C29.5862 13.7603 29.9462 12.4137 29.8129 11.027Z"
-                fill="white"
-              />
-              <path
-                d="M15.1335 22.213C13.4402 22.3863 12.1602 23.8263 12.1602 25.533V29.1863C12.1602 29.5463 12.4535 29.8397 12.8135 29.8397H19.1735C19.5335 29.8397 19.8268 29.5463 19.8268 29.1863V25.9997C19.8402 23.213 18.2002 21.893 15.1335 22.213Z"
-                fill="white"
-              />
-              <path
-                d="M28.4935 19.2001V23.1734C28.4935 26.8534 25.5068 29.8401 21.8268 29.8401C21.4668 29.8401 21.1735 29.5468 21.1735 29.1868V26.0001C21.1735 24.2934 20.6535 22.9601 19.6402 22.0534C18.7468 21.2401 17.5335 20.8401 16.0268 20.8401C15.6935 20.8401 15.3602 20.8534 15.0002 20.8934C12.6268 21.1334 10.8268 23.1334 10.8268 25.5334V29.1868C10.8268 29.5468 10.5335 29.8401 10.1735 29.8401C6.4935 29.8401 3.50684 26.8534 3.50684 23.1734V19.2268C3.50684 18.2934 4.42684 17.6668 5.2935 17.9734C5.6535 18.0934 6.0135 18.1868 6.38684 18.2401C6.54684 18.2668 6.72017 18.2934 6.88017 18.2934C7.0935 18.3201 7.30684 18.3334 7.52017 18.3334C9.06684 18.3334 10.5868 17.7601 11.7868 16.7734C12.9335 17.7601 14.4268 18.3334 16.0002 18.3334C17.5868 18.3334 19.0535 17.7868 20.2002 16.8001C21.4002 17.7734 22.8935 18.3334 24.4135 18.3334C24.6535 18.3334 24.8935 18.3201 25.1202 18.2934C25.2802 18.2801 25.4268 18.2668 25.5735 18.2401C25.9868 18.1868 26.3602 18.0668 26.7335 17.9468C27.6002 17.6534 28.4935 18.2934 28.4935 19.2001Z"
-                fill="white"
-              />
-            </svg>
-            سوپرمارکت آبی
-          </li> */}
-          <MenuItem textClassName='font-23 text-bold' icon={<SuperMarket />}>
-            سوپرمارکت آبی
-          </MenuItem>
-          <hr />
-
-          <MenuItem textClassName='font-21' icon={<HomeIcon />}>
-            صفحه نخست
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<FactorIcon />}>
-            فاکتور‌ها
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<ProductsIcon />}>
-            محصولات
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            کالای ثبت نشده
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            ضایعات
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            تخفیف
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            مشتریان
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            ارسال با پیک
-          </MenuItem>
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            نسیه
-          </MenuItem>
-
-          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
-            تنظیمات
-          </MenuItem>
-        </ul>
-
-        <span
-          className='fixed text-regular'
-          style={{
-            bottom: '20px',
-            right: '79px'
-          }}
-        >
-          <img src={TypoImage} />
-          نسخه 1.2.4{' '}
-        </span>
-      </section>
+      <SideMenu />
       <NavBar></NavBar>
-      <section
-        style={{
-          position: 'fixed',
-          width: '1575px',
-          height: '848px',
-          background: '#CDBFEA',
-          left: '53px',
-          top: '100px'
-        }}
-      >
-        Content
-        <h1 className='text-4xl font-bold text-complementary underline'>
-          Tailwind 3.4.17 + Vite + React 🎉
-          <Dialog
-            title='Are you sure?'
-            onClose={() => console.log('Closed')}
-            onConfirm={() => console.log('Confirmed')}
-            onCancel={() => console.log('Cancelled')}
-          >
-            <button>Open Dialog</button>
-          </Dialog>
-        </h1>
-      </section>
+      <Content />
     </>
   )
 }

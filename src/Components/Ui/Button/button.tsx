@@ -1,76 +1,79 @@
-import React from "react";
+import React from 'react'
 
-type ButtonVariant = "filled" | "outline";
-type ButtonState = "normal" | "pressed" | "loading" | "disabled";
+type ButtonVariant = 'filled' | 'outline'
+type ButtonState = 'normal' | 'pressed' | 'loading' | 'disabled'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  label: string;
-  color?: string;
-  radius?: number;
-  variant?: ButtonVariant;
-  state?: ButtonState;
-  style?: React.CSSProperties;
+  label: string
+  color?: string
+  radius?: number
+  variant?: ButtonVariant
+  state?: ButtonState
+  style?: React.CSSProperties
+  children?: React.ReactNode
 }
 
 export const Button: React.FC<ButtonProps> = ({
   label,
-  color = "#4CAF50",
+  color = '#4CAF50',
   radius = 10,
-  variant = "filled",
-  state = "normal",
+  variant = 'filled',
+  state = 'normal',
   style,
   disabled,
+  children,
   ...props
 }) => {
-  const isDisabled = disabled || state === "disabled";
+  const isDisabled = disabled || state === 'disabled'
 
   const getBackgroundColor = () => {
-    if (variant === "outline") return "transparent";
-    if (state === "pressed") return darkenColor(color, 20);
-    if (state === "disabled") return "#ccc";
-    return color;
-  };
+    if (variant === 'outline') return 'transparent'
+    if (state === 'pressed') return darkenColor(color, 20)
+    if (state === 'disabled') return '#ccc'
+    return color
+  }
 
   const getTextColor = () => {
-    if (variant === "outline") return color;
-    if (state === "disabled") return "#fff";
-    return "#fff";
-  };
+    if (variant === 'outline') return color
+    if (state === 'disabled') return '#fff'
+    return '#fff'
+  }
 
   const getBorder = () => {
-    if (variant === "outline") return `2px solid ${color}`;
-    return "none";
-  };
+    if (variant === 'outline') return `2px solid ${color}`
+    return 'none'
+  }
 
   const buttonStyle: React.CSSProperties = {
     backgroundColor: getBackgroundColor(),
     color: getTextColor(),
     border: getBorder(),
     borderRadius: `${radius}px`,
-    padding: "10px 20px",
-    fontSize: "16px",
-    cursor: isDisabled ? "not-allowed" : "pointer",
+    padding: '10px 20px',
+    fontSize: '16px',
+    cursor: isDisabled ? 'not-allowed' : 'pointer',
     opacity: isDisabled ? 0.6 : 1,
-    transition: "all 0.2s ease-in-out",
+    transition: 'all 0.2s ease-in-out',
     minWidth: 120,
-    ...style,
-  };
+    ...style
+  }
 
   return (
     <button style={buttonStyle} disabled={isDisabled} {...props}>
-      {state === "loading" ? `${label} ...` : label}
+      {state === 'loading' ? `${label} ...` : label}
+      {children}
     </button>
-  );
-};
+  )
+}
 
 function darkenColor(hex: string, percent: number) {
-  const num = parseInt(hex.replace("#", ""), 16);
-  const amt = Math.round(2.55 * percent);
-  const R = (num >> 16) - amt;
-  const G = ((num >> 8) & 0x00ff) - amt;
-  const B = (num & 0x0000ff) - amt;
+  const num = parseInt(hex.replace('#', ''), 16)
+  const amt = Math.round(2.55 * percent)
+  const R = (num >> 16) - amt
+  const G = ((num >> 8) & 0x00ff) - amt
+  const B = (num & 0x0000ff) - amt
   return (
-    "#" +
+    '#' +
     (
       0x1000000 +
       (R < 255 ? (R < 1 ? 0 : R) : 255) * 0x10000 +
@@ -79,5 +82,5 @@ function darkenColor(hex: string, percent: number) {
     )
       .toString(16)
       .slice(1)
-  );
+  )
 }

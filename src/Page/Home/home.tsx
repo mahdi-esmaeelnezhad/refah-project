@@ -1,25 +1,27 @@
-import MenuItem from "../../Components/Base/SideMenu/MenuItem";
-import SuperMarket from "../../Components/Icons/SuperMarket";
-import ProductsIcon from "../../Components/Icons/ProductsIcon";
-import FactorIcon from "../../Components/Icons/FactorIcon";
-import HomeIcon from "../../Components/Icons/HomeIcon";
-import TypoImage from "../../assets/images/typo-logo.png";
+import MenuItem from '../../Components/Base/SideMenu/MenuItem'
+import SuperMarket from '../../Components/Icons/SuperMarket'
+import ProductsIcon from '../../Components/Icons/ProductsIcon'
+import FactorIcon from '../../Components/Icons/FactorIcon'
+import HomeIcon from '../../Components/Icons/HomeIcon'
+import TypoImage from '../../assets/images/typo-logo.png'
+import Dialog from '../../Components/Ui/Dialog'
+import { NavBar } from '../../Components/Base/SideMenu/NavBar'
 
 export default function Home() {
   return (
     <>
       <section
-        className="side-menu"
+        className='side-menu'
         style={{
-          position: "fixed",
-          width: "246px",
-          height: "972px",
-          background: "var(--color-primary)",
-          padding: "28px",
-          color: "#fff",
+          position: 'fixed',
+          width: '246px',
+          height: '972px',
+          background: 'var(--color-primary)',
+          padding: '28px',
+          color: '#fff'
         }}
       >
-        <ul className="flex flex-col" style={{ gap: "46px" }}>
+        <ul className='flex flex-col' style={{ gap: '46px' }}>
           {/* <li className="text-bold font-23">
             <svg
               width="32"
@@ -43,86 +45,86 @@ export default function Home() {
             </svg>
             سوپرمارکت آبی
           </li> */}
-          <MenuItem textClassName="font-23 text-bold" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-23 text-bold' icon={<SuperMarket />}>
             سوپرمارکت آبی
           </MenuItem>
           <hr />
 
-          <MenuItem textClassName="font-21" icon={<HomeIcon />}>
+          <MenuItem textClassName='font-21' icon={<HomeIcon />}>
             صفحه نخست
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<FactorIcon />}>
+          <MenuItem textClassName='font-21' icon={<FactorIcon />}>
             فاکتور‌ها
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<ProductsIcon />}>
+          <MenuItem textClassName='font-21' icon={<ProductsIcon />}>
             محصولات
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             کالای ثبت نشده
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             ضایعات
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             تخفیف
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             مشتریان
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             ارسال با پیک
           </MenuItem>
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             نسیه
           </MenuItem>
 
-          <MenuItem textClassName="font-21" icon={<SuperMarket />}>
+          <MenuItem textClassName='font-21' icon={<SuperMarket />}>
             تنظیمات
           </MenuItem>
         </ul>
 
         <span
-          className="fixed text-regular"
+          className='fixed text-regular'
           style={{
-            bottom: "20px",
-            right: "79px",
+            bottom: '20px',
+            right: '79px'
           }}
         >
           <img src={TypoImage} />
-          نسخه 1.2.4{" "}
+          نسخه 1.2.4{' '}
         </span>
       </section>
+      <NavBar></NavBar>
       <section
         style={{
-          position: "fixed",
-          width: "1575px",
-          height: "42px",
-          background: "#BFDBEA",
-          left: "53px",
-          top: "22px",
-        }}
-      >
-        Header
-      </section>
-      <section
-        style={{
-          position: "fixed",
-          width: "1575px",
-          height: "848px",
-          background: "#CDBFEA",
-          left: "53px",
-          top: "100px",
+          position: 'fixed',
+          width: '1575px',
+          height: '848px',
+          background: '#CDBFEA',
+          left: '53px',
+          top: '100px'
         }}
       >
         Content
+        <h1 className='text-4xl font-bold text-complementary underline'>
+          Tailwind 3.4.17 + Vite + React 🎉
+          <Dialog
+            title='Are you sure?'
+            onClose={() => console.log('Closed')}
+            onConfirm={() => console.log('Confirmed')}
+            onCancel={() => console.log('Cancelled')}
+          >
+            <button>Open Dialog</button>
+          </Dialog>
+        </h1>
       </section>
     </>
-  );
+  )
 }

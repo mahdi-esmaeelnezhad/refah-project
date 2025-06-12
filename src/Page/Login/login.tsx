@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import axios, { AxiosError } from "axios";
 import leftPatter from "../../assets/img/Pattern - White 1.png";
 import patterleft from "../../assets/img/pattern 3.png";
 import rightPatern from "../../assets/img/Pattern - White 2.png";
@@ -11,31 +12,277 @@ import { Button } from "../../Components/Ui/Button/button";
 import phone from "../../assets/img/Group 2.png";
 import user from "../../assets/user.svg";
 import pass from "../../assets/pass.svg";
-import "./Login.css"; // فایل CSS برای انیمیشن‌ها
-import { CgEnter } from "react-icons/cg";
+import key from "../../assets/key.svg";
+import back from "../../assets/back.svg";
+import "./Login.css";
+import ForgetPassword from "../../Components/ForgetPassword/forgetPassword";
+import SendSms from "../../Components/SendSms/sendSms";
+import ChangePassword from "../../Components/ChangePassword/changePassword";
+
+type Step = "login" | "forgetPassword" | "sendSms" | "changePassword";
 
 const Login = () => {
   const [showInitial, setShowInitial] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
+  const [forgotPasswordPhoneNumber, setForgotPasswordPhoneNumber] =
+    useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [phoneError, setPhoneError] = useState("");
+  const [error, setError] = useState("");
+
+  const [currentStep, setCurrentStep] = useState<Step>("login");
 
   useEffect(() => {
     const timer = setTimeout(() => {
       setFadeOut(true);
-
       setTimeout(() => setShowInitial(false), 500);
     }, 2000);
 
     return () => clearTimeout(timer);
   }, []);
-  const handleLogin = () => {
+
+  const validatePhoneNumber = async () => {
+    try {
+      // const response = await axios.post(
+      //   "https://fake-api.example.com/validate-phone",
+      //   {
+      //     phoneNumber: phoneNumber,
+      //   }
+      // );
+
+      setPhoneError("");
+      return true;
+    } catch (error: unknown) {
+      const axiosError = error as AxiosError;
+      if (axiosError.response && axiosError.response.status === 404) {
+        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
+      } else {
+        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
+      }
+      return false;
+    }
+  };
+
+  const handleLogin = async () => {
     setSubmitted(true);
     if (!phoneNumber || !password) return;
 
-    console.log("Login with:", { phoneNumber, password });
+    try {
+      // Fake API call - consider "09123456789" and "123456" as valid credentials
+      if (phoneNumber === "09123456789" && password === "123456") {
+        // Redirect to dashboard
+        window.location.href = "/dashboard";
+      } else {
+        setError("نام کاربری یا رمز عبور اشتباه است");
+      }
+    } catch (error) {
+      setPhoneError("خطا در ورود به سیستم");
+    }
+  };
+
+  const handleBack = () => {
+    switch (currentStep) {
+      case "changePassword":
+        setCurrentStep("sendSms");
+        break;
+      case "sendSms":
+        setCurrentStep("forgetPassword");
+        break;
+      case "forgetPassword":
+        setCurrentStep("login");
+        setForgotPasswordPhoneNumber("");
+        break;
+      default:
+        setCurrentStep("login");
+        setForgotPasswordPhoneNumber("");
+    }
+  };
+
+  const handleForgetPasswordClick = () => {
+    setCurrentStep("forgetPassword");
+  };
+
+  const handleSendSmsSuccess = (phoneNumber: string) => {
+    setForgotPasswordPhoneNumber(phoneNumber);
+    setCurrentStep("sendSms");
+  };
+
+  const handleSmsVerificationSuccess = () => {
+    setCurrentStep("changePassword");
+  };
+
+  const handleChangePasswordSuccess = () => {
+    setCurrentStep("login");
+    setForgotPasswordPhoneNumber("");
+  };
+
+  const renderStep = () => {
+    switch (currentStep) {
+      case "forgetPassword":
+        return (
+          <ForgetPassword
+            onBack={handleBack}
+            onSuccess={handleSendSmsSuccess}
+          />
+        );
+      case "sendSms":
+        return (
+          <SendSms
+            phoneNumber={forgotPasswordPhoneNumber}
+            onBack={handleBack}
+            onSuccess={handleSmsVerificationSuccess}
+          />
+        );
+      case "changePassword":
+        return (
+          <ChangePassword
+            onBack={handleBack}
+            onSuccess={handleChangePasswordSuccess}
+          />
+        );
+      default:
+        return (
+          <>
+            <Input
+              type="text"
+              placeholder="نام کاربری"
+              height={62.43}
+              placeholderStyle={{
+                fontSize: "22px",
+                color: "#7E7E7E",
+                fontWeight: "600",
+              }}
+              width={"438px"}
+              value={phoneNumber}
+              onChange={(e) => {
+                setPhoneNumber(e.target.value);
+                setPhoneError("");
+              }}
+              variant={
+                (submitted && !phoneNumber) || phoneError ? "error" : "default"
+              }
+              error={
+                phoneError ||
+                (submitted && !phoneNumber ? "نام کاربری وارد نشده است" : "")
+              }
+              required
+              icon={
+                <img
+                  src={user}
+                  alt="user icon"
+                  style={{ width: 20, height: 20 }}
+                />
+              }
+            />
+            <Input
+              type={showPassword ? "text" : "password"}
+              width={"438px"}
+              style={{ marginTop: "30px" }}
+              height={62.43}
+              placeholder="پسورد"
+              placeholderStyle={{
+                fontSize: "22px",
+                color: "#7E7E7E",
+                fontWeight: "600",
+              }}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              variant={submitted && !password ? "error" : "default"}
+              error={submitted && !password ? " پسورد وارد نشده است" : ""}
+              required
+              icon={
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "10px",
+                    width: "100%",
+                  }}
+                >
+                  <img
+                    src={key}
+                    alt="key icon"
+                    style={{
+                      width: 20,
+                      height: 20,
+                      position: "absolute",
+                      right: "12px",
+                    }}
+                  />
+                  <img
+                    src={pass}
+                    alt="toggle password"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    style={{
+                      width: 20,
+                      height: 20,
+                      cursor: "pointer",
+                      position: "absolute",
+                      left: "12px",
+                    }}
+                  />
+                </div>
+              }
+            />
+            <div
+              style={{
+                marginTop: "50px",
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+              }}
+            >
+              {error && (
+                <span
+                  style={{
+                    color: "#DE4949",
+                    fontSize: "20px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {error}
+                </span>
+              )}
+              <Button
+                style={{
+                  width: "438px",
+                  marginTop: "20px",
+                  height: "75.43px",
+                  fontSize: "26px",
+                  fontWeight: "600",
+                }}
+                label="ورود"
+                color="#7889F5"
+                radius={15}
+                onClick={handleLogin}
+              />
+            </div>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                marginTop: "30px",
+              }}
+            >
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleForgetPasswordClick();
+                }}
+              >
+                فراموشی رمز عبور!
+              </a>
+            </div>
+          </>
+        );
+    }
   };
 
   return (
@@ -76,7 +323,7 @@ const Login = () => {
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "Center",
+              alignItems: "center",
               justifyContent: "center",
             }}
           >
@@ -84,97 +331,54 @@ const Login = () => {
               <img
                 style={{ marginTop: "0px" }}
                 src={logoGroupOne}
-                alt="left pattern"
+                alt="logo group one"
               />
             </div>
             <div style={{ marginTop: "70px" }}>
-              <Input
-                type="text"
-                placeholder="نام کاربری"
-                height={62.43}
-                width={"438px"}
-                value={phoneNumber}
-                onChange={(e) => setPhoneNumber(e.target.value)}
-                variant={submitted && !phoneNumber ? "error" : "default"}
-                error={
-                  submitted && !phoneNumber ? "نام کاربری وارد نشده است" : ""
-                }
-                required
-                icon={
-                  <img
-                    src={user}
-                    alt="user icon"
-                    style={{
-                      width: 20,
-                      height: 20,
-                    }}
-                  />
-                }
-              />
-
-              <Input
-                type={showPassword ? "text" : "password"}
-                width={"438px"}
-                style={{ marginTop: "30px" }}
-                height={62.43}
-                placeholder="پسورد"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                variant={submitted && !password ? "error" : "default"}
-                error={submitted && !password ? " پسورد وارد نشده است" : ""}
-                required
-                icon={
-                  <img
-                    src={pass}
-                    alt="toggle password"
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    style={{
-                      width: 20,
-                      height: 20,
-                      cursor: "pointer",
-                      position: "absolute",
-                      right: "380px",
-                      bottom: "-10px",
-                    }}
-                  />
-                }
-              />
-
-              <Button
-                style={{ width: "438px", marginTop: "40px", height: "63.43px" }}
-                label="ورود"
-                color="#7889F5"
-                radius={15}
-                onClick={handleLogin}
-              />
+              {renderStep()}
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  alignItems: "Center",
-                  justifyContent: "center",
-                  marginTop: "30px",
-                }}
-              >
-                <a href="/">فراموشی رمز عبور!</a>
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "Center",
+                  alignItems: "center",
                   justifyContent: "center",
                 }}
               >
                 <img
                   style={{ marginTop: "90px" }}
                   src={phone}
-                  alt="left pattern"
+                  alt="phone illustration"
                 />
               </div>
             </div>
           </div>
-          <div>
+          <div style={{ position: "relative" }}>
+            {currentStep !== "login" && (
+              <div style={{ display: "flex", alignItems: "center" }}>
+                <img
+                  src={back}
+                  alt="back"
+                  style={{ position: "absolute", top: "18px", left: "18px" }}
+                />
+                <p
+                  style={{
+                    width: "120px",
+                    height: "40px",
+                    position: "absolute",
+                    top: "12px",
+                    left: "10px",
+                    zIndex: 10,
+                    color: "#000",
+                    cursor: "pointer",
+                    fontSize: "23px",
+                    fontWeight: "600",
+                  }}
+                  onClick={handleBack}
+                >
+                  بازگشت
+                </p>
+              </div>
+            )}
             <img
               style={{ marginTop: "64px" }}
               src={patterleft}

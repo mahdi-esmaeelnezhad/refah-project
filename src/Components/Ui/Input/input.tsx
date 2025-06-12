@@ -22,7 +22,8 @@ interface InputProps {
   type?: string;
   required?: boolean;
   variant?: InputVariant;
-
+  placeholderStyle?: React.CSSProperties;
+  errorStyle?: React.CSSProperties;
   icon?: React.ReactNode;
   style?: React.CSSProperties;
   suffix?: string;
@@ -43,6 +44,8 @@ const Input: React.FC<InputProps> = ({
   disabled = false,
   error,
   type,
+  placeholderStyle,
+  errorStyle,
   required,
   variant = "default",
   icon,
@@ -89,6 +92,8 @@ const Input: React.FC<InputProps> = ({
           disabled={disabled}
           style={{
             height: typeof height === "number" ? `${height}px` : height,
+            ...placeholderStyle,
+            ...errorStyle,
           }}
         />
         {suffix && <span className={styles.suffix}>{suffix}</span>}
@@ -107,6 +112,8 @@ const Input: React.FC<InputProps> = ({
       style={{
         width: typeof width === "number" ? `${width}px` : width,
         height: typeof height === "number" ? `${height}px` : height,
+        ...placeholderStyle,
+        ...errorStyle,
         ...style,
       }}
     >

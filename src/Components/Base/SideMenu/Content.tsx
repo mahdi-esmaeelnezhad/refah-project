@@ -2,16 +2,19 @@ import { useState } from 'react'
 import { Button } from '../../Ui/Button/button'
 import Input from '../../Ui/Input/input'
 import { Switch } from '../../Ui/switch/switch'
-import { BinIcon, CloseIcon, CloseSmIcon } from '../../icons'
+import { BinIcon, CloseSmIcon } from '../../icons'
 import {
   commaSeparator,
   numberToPersianToman
 } from '../../../utils/numberToPersianWord'
 import { Radio } from '../../Ui/Radio/radio'
+import Tooltip from './Tooltip'
+import { DialPad } from './DialPad'
 
 export function Content({ children = '' }) {
   const [deliveryMedivod, setDeliveryMedivod] = useState('حضوری')
   const [paymentMedivod, setPaymentMedivod] = useState('کارتی')
+  const [input, setInput] = useState('')
 
   return (
     <section
@@ -44,7 +47,7 @@ export function Content({ children = '' }) {
             value=''
             onChange={() => {}}
             style={{
-              minwidth: '441px'
+              minWidth: '441px'
             }}
           />
 
@@ -94,7 +97,7 @@ export function Content({ children = '' }) {
               جمع کل (ریال)
             </div>
           </div>
-          <table className='overflow-y-auto'>
+          <section className='overflow-y-auto'>
             {[...Array(50)].map((_, index) => (
               <div
                 key={index}
@@ -109,9 +112,13 @@ export function Content({ children = '' }) {
                   بستنی کالا
                 </div>
                 <div className='flex items-center justify-center min-w-[108px]'>
-                  <span className='bg-our-choice h-10 w-10 flex justify-center items-center rounded-md font-semibold'>
-                    ۲
-                  </span>
+                  <Tooltip
+                    component={<DialPad value={input} onChange={setInput} />}
+                  >
+                    <span className='bg-our-choice h-10 w-10 flex justify-center items-center rounded-md font-semibold'>
+                      ۲
+                    </span>
+                  </Tooltip>
                 </div>
                 <div className='h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[86px]'>
                   عدد
@@ -132,7 +139,7 @@ export function Content({ children = '' }) {
                 </div>
               </div>
             ))}
-          </table>
+          </section>
         </section>
       </div>
 
@@ -184,7 +191,7 @@ export function Content({ children = '' }) {
               <span>مبلغ کل</span>
               <span className=' font-16'>۱,۲۱۰,۰۰۰ ریال</span>
             </div>
-            <div className='flex justify-between text-lg font-bold text-green-700 bg-[#E7E7E7] rounded-lg px-4 py-2'>
+            <div className='flex justify-between text-lg font-bold bg-[#E7E7E7] rounded-lg px-4 py-2'>
               <span>مبلغ قابل پرداخت</span>
               <span>
                 {commaSeparator(1210000)} <span className=' font-16'>ریال</span>
@@ -200,12 +207,12 @@ export function Content({ children = '' }) {
             />
           </div>
 
-          <div className='flex justify-between items-center p-2 rounded-md'>
+          <div className='flex justify-between items-center py-5 rounded-md'>
             <span className='font-25 ml-2'>تحویل:</span>
             <div className='bg-[#E7E7E7] flex justify-between items-center flex-grow rounded-lg'>
               <button
                 onClick={() => setDeliveryMedivod('پیک')}
-                className={`flex-1 py-2 rounded-md text-sm font-medium font-23 ${
+                className={`flex-1 py-2 rounded-md text-sm font-medium font-23 h-12 ${
                   deliveryMedivod === 'پیک'
                     ? 'bg-success text-white'
                     : 'bg-[#E7E7E7]'
@@ -215,7 +222,7 @@ export function Content({ children = '' }) {
               </button>
               <button
                 onClick={() => setDeliveryMedivod('حضوری')}
-                className={`flex-1 py-2 rounded-md text-sm font-medium font-23 ${
+                className={`flex-1 py-2 rounded-md text-sm font-medium font-23 h-12 ${
                   deliveryMedivod === 'حضوری'
                     ? 'bg-success text-white'
                     : 'bg-[#E7E7E7]'
@@ -226,18 +233,18 @@ export function Content({ children = '' }) {
             </div>
           </div>
 
-          <div className='space-y-2 border rounded-xl p-6 relative'>
-            <div className='font-semibold bg-white absolute -top-3 px-2'>
+          <div className='space-y-2 border border-black rounded-xl p-6 relative'>
+            <div className='font-semibold bg-white absolute -top-5 px-2 font-25'>
               پرداخت:
             </div>
-            <div className='flex gap-2 items-center justify-between'>
+            <div className='flex gap-2 items-center justify-between font-25'>
               {['کارتی', 'نقدی', 'نسیه', 'اعتباری'].map((medivod) => (
                 <>
                   <Radio
                     name={paymentMedivod}
                     value={medivod}
                     selected={paymentMedivod === medivod}
-                    onChange={(e) => setPaymentMedivod(medivod)}
+                    onChange={() => setPaymentMedivod(medivod)}
                   >
                     {medivod}
                   </Radio>
@@ -246,12 +253,12 @@ export function Content({ children = '' }) {
             </div>
           </div>
 
-          <Button
+          {/* <Button
             className='w-full text-white py-2 rounded-lg text-lg font-semibold min-h-[70px]'
             label={''}
           >
             پرداخت
-          </Button>
+          </Button> */}
         </div>
       </div>
     </section>

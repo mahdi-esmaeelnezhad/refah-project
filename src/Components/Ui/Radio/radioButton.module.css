@@ -1,9 +1,10 @@
-/* RadioButton.module.css */
-
 .wrapper {
   display: inline-flex;
   align-items: center;
   cursor: pointer;
+  gap: 0.5rem;
+  position: relative;
+  transition: opacity 0.2s ease;
 }
 
 .hiddenRadio {
@@ -21,14 +22,34 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
+  position: relative;
 }
 
-.selected::after {
-  position: absolute;
-  content: "";
+.customRadio::after {
+  content: '';
   width: 12px;
   height: 12px;
   border-radius: 50%;
-  background-color: #4a4cd3;
-  display: block;
+  background-color: transparent;
+  transition: background-color 0.2s ease;
+}
+
+.selected::after {
+  background-color: var(--color-success, green);
+}
+
+.hiddenRadio:focus-visible + .customRadio {
+  outline: 2px solid #4d90fe;
+  outline-offset: 2px;
+}
+
+.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.hiddenRadio:disabled + .customRadio {
+  border-color: #ccc;
+  background-color: #f9f9f9;
+  cursor: not-allowed;
 }

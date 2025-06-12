@@ -1,12 +1,13 @@
-import React from "react";
-import styles from "./radioButton.module.css";
+import React from 'react'
+import styles from './radioButton.module.css'
 
 interface RadioButtonProps {
-  name: string;
-  value: string;
-  selected: boolean;
-  onChange: () => void;
-  disabled?: boolean;
+  name: string
+  value: string
+  selected: boolean
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  disabled?: boolean
+  children?: React.ReactNode
 }
 
 export const Radio: React.FC<RadioButtonProps> = ({
@@ -15,11 +16,15 @@ export const Radio: React.FC<RadioButtonProps> = ({
   selected,
   onChange,
   disabled = false,
+  children = null
 }) => {
+  const id = `${name}-${value}`
+
   return (
-    <label className={styles.wrapper}>
+    <div className={`${styles.wrapper} ${disabled ? styles.disabled : ''}`}>
       <input
-        type="radio"
+        type='radio'
+        id={id}
         name={name}
         value={value}
         checked={selected}
@@ -27,7 +32,14 @@ export const Radio: React.FC<RadioButtonProps> = ({
         disabled={disabled}
         className={styles.hiddenRadio}
       />
-      <span className={`${styles.customRadio} ${selected ? styles.selected : ""}`} />
-    </label>
-  );
-};
+      <label
+        role='radio'
+        htmlFor={id}
+        aria-checked={selected}
+        className={`${styles.customRadio} ${selected ? styles.selected : ''}`}
+      >
+        {children}
+      </label>
+    </div>
+  )
+}

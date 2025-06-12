@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
-import axios from "axios";
+// import axios from "axios";
 
 interface ChangePasswordProps {
   onBack: () => void;

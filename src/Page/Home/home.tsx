@@ -4,6 +4,8 @@ import ProductsIcon from '../../Components/Icons/ProductsIcon'
 import FactorIcon from '../../Components/Icons/FactorIcon'
 import HomeIcon from '../../Components/Icons/HomeIcon'
 import TypoImage from '../../assets/images/typo-logo.png'
+import Dialog from '../../Components/Ui/Dialog'
+import { NavBar } from '../../Components/Base/SideMenu/NavBar'
 
 export default function Home() {
   return (
@@ -99,18 +101,7 @@ export default function Home() {
           نسخه 1.2.4{' '}
         </span>
       </section>
-      <section
-        style={{
-          position: 'fixed',
-          width: '1575px',
-          height: '42px',
-          background: '#BFDBEA',
-          left: '53px',
-          top: '22px'
-        }}
-      >
-        Header
-      </section>
+      <NavBar></NavBar>
       <section
         style={{
           position: 'fixed',
@@ -124,6 +115,14 @@ export default function Home() {
         Content
         <h1 className='text-4xl font-bold text-complementary underline'>
           Tailwind 3.4.17 + Vite + React 🎉
+          <Dialog
+            title='Are you sure?'
+            onClose={() => console.log('Closed')}
+            onConfirm={() => console.log('Confirmed')}
+            onCancel={() => console.log('Cancelled')}
+          >
+            <button>Open Dialog</button>
+          </Dialog>
         </h1>
       </section>
     </>

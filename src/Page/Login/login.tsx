@@ -206,7 +206,7 @@ const Login = () => {
                     src={key}
                     alt="key icon"
                     style={{
-                      width: 20,
+                      width: 40,
                       height: 20,
                       position: "absolute",
                       right: "12px",
@@ -217,11 +217,11 @@ const Login = () => {
                     alt="toggle password"
                     onClick={() => setShowPassword((prev) => !prev)}
                     style={{
-                      width: 20,
+                      width: 40,
                       height: 20,
                       cursor: "pointer",
                       position: "absolute",
-                      left: "12px",
+                      right: "370px",
                     }}
                   />
                 </div>

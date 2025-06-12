@@ -1,38 +1,38 @@
-import React from "react";
-import styles from "./input.module.css";
+import React from 'react'
+import styles from './input.module.css'
 
 export type InputVariant =
-  | "default"
-  | "withIcon"
-  | "error"
-  | "disabled"
-  | "search"
-  | "amount"
-  | "dropdown"
-  | "tagged"
-  | "imageUpload";
+  | 'default'
+  | 'withIcon'
+  | 'error'
+  | 'disabled'
+  | 'search'
+  | 'amount'
+  | 'dropdown'
+  | 'tagged'
+  | 'imageUpload'
 
 interface InputProps {
-  label?: string;
-  placeholder?: string;
-  value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  disabled?: boolean;
-  error?: string;
-  type?: string;
-  required?: boolean;
-  variant?: InputVariant;
+  label?: string
+  placeholder?: string
+  value: string
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void
+  disabled?: boolean
+  error?: string
+  type?: string
+  required?: boolean
+  variant?: InputVariant
 
-  icon?: React.ReactNode;
-  style?: React.CSSProperties;
-  suffix?: string;
-  width?: string | number;
-  height?: string | number;
-  hasButton?: boolean;
-  buttonText?: string;
-  onButtonClick?: () => void;
+  icon?: React.ReactNode
+  style?: React.CSSProperties
+  suffix?: React.ReactNode
+  width?: string | number
+  height?: string | number
+  hasButton?: boolean
+  buttonText?: string
+  onButtonClick?: () => void
 
-  onUpload?: (file: File) => void;
+  onUpload?: (file: File) => void
 }
 
 const Input: React.FC<InputProps> = ({
@@ -44,7 +44,7 @@ const Input: React.FC<InputProps> = ({
   error,
   type,
   required,
-  variant = "default",
+  variant = 'default',
   icon,
   style,
   suffix,
@@ -53,42 +53,42 @@ const Input: React.FC<InputProps> = ({
   hasButton,
   buttonText,
   onButtonClick,
-  onUpload,
+  onUpload
 }) => {
   const renderInput = () => {
-    if (variant === "imageUpload") {
+    if (variant === 'imageUpload') {
       return (
         <div className={styles.imageUploadWrapper}>
           <input
-            type="file"
-            accept="image/*"
+            type='file'
+            accept='image/*'
             className={styles.hiddenInput}
             onChange={(e) => e.target.files && onUpload?.(e.target.files[0])}
           />
           <div className={styles.imageBox}>+</div>
         </div>
-      );
+      )
     }
 
     return (
       <div
-        className={`${styles.inputWrapper} ${error ? styles.error : ""} ${
-          disabled ? styles.disabled : ""
+        className={`${styles.inputWrapper} ${error ? styles.error : ''} ${
+          disabled ? styles.disabled : ''
         }`}
         style={{
-          height: typeof height === "number" ? `${height}px` : height,
+          height: typeof height === 'number' ? `${height}px` : height
         }}
       >
         {icon && <span className={styles.icon}>{icon}</span>}
         <input
           type={type}
-          className={`${styles.input} ${icon ? styles.withIcon : ""}`}
+          className={`${styles.input} ${icon ? styles.withIcon : ''}`}
           placeholder={placeholder}
           value={value}
           onChange={onChange}
           disabled={disabled}
           style={{
-            height: typeof height === "number" ? `${height}px` : height,
+            height: typeof height === 'number' ? `${height}px` : height
           }}
         />
         {suffix && <span className={styles.suffix}>{suffix}</span>}
@@ -98,16 +98,16 @@ const Input: React.FC<InputProps> = ({
           </button>
         )}
       </div>
-    );
-  };
+    )
+  }
 
   return (
     <div
       className={styles.container}
       style={{
-        width: typeof width === "number" ? `${width}px` : width,
-        height: typeof height === "number" ? `${height}px` : height,
-        ...style,
+        width: typeof width === 'number' ? `${width}px` : width,
+        height: typeof height === 'number' ? `${height}px` : height,
+        ...style
       }}
     >
       {label && (
@@ -118,7 +118,7 @@ const Input: React.FC<InputProps> = ({
       {renderInput()}
       {error && <div className={styles.errorText}>{error}</div>}
     </div>
-  );
-};
+  )
+}
 
-export default Input;
+export default Input

@@ -1,14 +1,18 @@
+import { useState } from 'react'
 import JalaliDate from '../../../utils/helper'
 import {
   CalendarIcon,
   NofiIcon,
   SavedFactorsIcon,
   WifiIcon,
-  ProductsIcon
+  ProductsIcon,
+  SearchIcon
 } from '../../icons'
 import Input from '../../Ui/Input/input'
 
 export function NavBar({ children = '' }) {
+  const [searchProduct, setSearchProduct] = useState('')
+
   return (
     <>
       <section
@@ -19,11 +23,11 @@ export function NavBar({ children = '' }) {
           left: '53px',
           top: '22px'
         }}
-        className='flex items-center gap-[18px]'
+        className='flex items-center gap-[26px]'
       >
         {children}
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4 min-w-[286px]'
           onClick={() => console.log('Clicked')}
         >
           <SavedFactorsIcon />
@@ -31,7 +35,7 @@ export function NavBar({ children = '' }) {
         </span>
 
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4 min-w-[186px]'
           onClick={() => console.log('Clicked')}
         >
           <ProductsIcon />
@@ -39,14 +43,16 @@ export function NavBar({ children = '' }) {
         </span>
 
         <Input
-          value={''}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>): void {
-            throw new Error('Function not implemented.')
-          }}
+          value={searchProduct}
+          onChange={(e) => setSearchProduct(e.target.value)}
+          placeholder='کالای مورد نظر خود را جستجو کنید'
+          style={{ minWidth: '484px', marginBottom: 0 }}
+          suffix={<SearchIcon />}
+          height={42}
         />
 
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4 min-w-36'
           onClick={() => console.log('Clicked')}
         >
           <NofiIcon />
@@ -54,7 +60,7 @@ export function NavBar({ children = '' }) {
         </span>
 
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 px-4'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 px-4  min-w-[302px]'
           onClick={() => console.log('Clicked')}
         >
           <JalaliDate />

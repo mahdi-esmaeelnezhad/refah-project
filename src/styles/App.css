@@ -5,6 +5,7 @@ body {
   height: 100%;
   max-height: 972px;
   margin: 0;
+  background: #eaeaea;
 }
 
 :root {

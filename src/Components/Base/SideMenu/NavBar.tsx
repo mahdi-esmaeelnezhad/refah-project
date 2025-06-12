@@ -27,7 +27,7 @@ export function NavBar({ children = '' }) {
       >
         {children}
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4 min-w-[286px]'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[286px] font-23'
           onClick={() => console.log('Clicked')}
         >
           <SavedFactorsIcon />
@@ -35,7 +35,7 @@ export function NavBar({ children = '' }) {
         </span>
 
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4 min-w-[186px]'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[186px] font-23'
           onClick={() => console.log('Clicked')}
         >
           <ProductsIcon />
@@ -52,7 +52,7 @@ export function NavBar({ children = '' }) {
         />
 
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-2 px-4 min-w-36'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 font-23 px-4 min-w-36'
           onClick={() => console.log('Clicked')}
         >
           <NofiIcon />
@@ -60,7 +60,7 @@ export function NavBar({ children = '' }) {
         </span>
 
         <span
-          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 px-4  min-w-[302px]'
+          className='bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 font-23 px-4  min-w-[302px]'
           onClick={() => console.log('Clicked')}
         >
           <JalaliDate />

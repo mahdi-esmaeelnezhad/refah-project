@@ -6,6 +6,8 @@ import rightPatern from "../../assets/img/Pattern - White 2.png";
 import paternRight from "../../assets/img/pattern 4.png";
 import logoAsset from "../../assets/img/Asset 46@2x copy 1.png";
 import logoGroup from "../../assets/img/Group 4483.png";
+import version from "../../assets/img/version.png";
+import orgLogo from "../../assets/img/orgLogo.png";
 import logoGroupOne from "../../assets/img/Group 4483 (1).png";
 import Input from "../../Components/Ui/Input/input";
 import { Button } from "../../Components/Ui/Button/button";
@@ -154,6 +156,7 @@ const Login = () => {
                 fontSize: "22px",
                 color: "#7E7E7E",
                 fontWeight: "600",
+                marginRight: "12px",
               }}
               width={"438px"}
               value={phoneNumber}
@@ -173,7 +176,7 @@ const Login = () => {
                 <img
                   src={user}
                   alt="user icon"
-                  style={{ width: 20, height: 20 }}
+                  style={{ width: 34, height: 34, marginLeft: "28px" }}
                 />
               }
             />
@@ -187,30 +190,52 @@ const Login = () => {
                 fontSize: "22px",
                 color: "#7E7E7E",
                 fontWeight: "600",
+                marginRight: "12px",
               }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               variant={submitted && !password ? "error" : "default"}
               error={submitted && !password ? " پسورد وارد نشده است" : ""}
               required
+              // icon={
+              //   <div
+              //     style={{
+              //       display: "flex",
+              //       alignItems: "center",
+              //       gap: "10px",
+              //       width: "100%",
+              //     }}
+              //   >
+              //     <img
+              //       src={key}
+              //       alt="key icon"
+              //       style={{
+              //         width: 34,
+              //         height: 34,
+              //         position: "absolute",
+              //         right: "12px",
+              //       }}
+              //     />
+              //     <img
+              //       src={pass}
+              //       alt="toggle password"
+              //       onClick={() => setShowPassword((prev) => !prev)}
+              //       style={{
+              //         width: 40,
+              //         height: 20,
+              //         cursor: "pointer",
+              //         position: "absolute",
+              //         right: "370px",
+              //       }}
+              //     />
+              //   </div>
+              // }
               icon={
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "10px",
-                    width: "100%",
-                  }}
-                >
+                <div style={{ display: "flex", alignItems: "center" }}>
                   <img
                     src={key}
-                    alt="key icon"
-                    style={{
-                      width: 40,
-                      height: 20,
-                      position: "absolute",
-                      right: "12px",
-                    }}
+                    alt="user icon"
+                    style={{ width: 48, height: 48, marginLeft: "28px" }}
                   />
                   <img
                     src={pass}
@@ -327,6 +352,9 @@ const Login = () => {
               justifyContent: "center",
             }}
           >
+            <div style={{ marginTop: "-30px", marginBottom: "60px" }}>
+              <img src={orgLogo} alt="main logo" />
+            </div>
             <div>
               <img
                 style={{ marginTop: "0px" }}
@@ -335,7 +363,9 @@ const Login = () => {
               />
             </div>
             <div style={{ marginTop: "70px" }}>
-              {renderStep()}
+              <div style={{ position: "relative", height: "300px" }}>
+                {renderStep()}
+              </div>
               <div
                 style={{
                   display: "flex",
@@ -349,6 +379,15 @@ const Login = () => {
                   src={phone}
                   alt="phone illustration"
                 />
+              </div>
+              <div
+                style={{
+                  marginTop: "60px",
+                  display: "flex",
+                  justifyContent: "center",
+                }}
+              >
+                <img src={version} alt="version" />
               </div>
             </div>
           </div>

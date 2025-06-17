@@ -12,6 +12,11 @@ import { DialPad } from "./DialPad";
 import NoBarcodeModal from "../../Modal/NoBarcodeModal";
 import { useModal } from "../../../hooks/useModal";
 import DeleteModal from "../../Modal/DeleteModal";
+import CartPaymentModal from "../../Modal/CartPaymentModal";
+import CartPaymentLoading from "../../Modal/CartPaymentLoading";
+import CartPaymentPassword from "../../Modal/CartPaymentPassword";
+import SuccessPaymentModal from "../../Modal/SuccessPaymentModal";
+import FailedPaymentModal from "../../Modal/FailedPaymentModal";
 
 interface Item {
   id: number;
@@ -24,7 +29,8 @@ interface Item {
 }
 
 const Content: React.FC = () => {
-  const { isOpen, barcode, openModal, closeModal } = useModal();
+  const { isOpen, barcode, openModal, closeModal, openCartPayment } =
+    useModal();
   const [deliveryMedivod, setDeliveryMedivod] = useState("حضوری");
   const [paymentMedivod, setPaymentMedivod] = useState("کارتی");
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
@@ -133,6 +139,16 @@ const Content: React.FC = () => {
     setIsDeleteModalOpen(false);
   };
 
+  const handlePayment = () => {
+    if (paymentMedivod === "کارتی") {
+      openCartPayment();
+    }
+  };
+
+  const handleCartPaymentConfirm = (amount: number) => {
+    console.log("Payment confirmed with amount:", amount);
+  };
+
   return (
     <section
       style={{
@@ -155,6 +171,28 @@ const Content: React.FC = () => {
         onClose={handleDeleteModalClose}
         onDelete={handleDeleteConfirm}
         invoiceNumber={invoiceNumber}
+      />
+      <CartPaymentModal
+        totalAmount={finalAmount}
+        onConfirm={handleCartPaymentConfirm}
+      />
+      <CartPaymentLoading amount={finalAmount} />
+      <CartPaymentPassword amount={finalAmount} />
+      <SuccessPaymentModal
+        amount={0}
+        transactionType="خرید"
+        date=""
+        time=""
+        trackingNumber=""
+        referenceNumber=""
+      />
+      <FailedPaymentModal
+        amount={0}
+        transactionType="خرید"
+        date=""
+        time=""
+        trackingNumber=""
+        referenceNumber=""
       />
       <div
         style={{
@@ -429,6 +467,7 @@ const Content: React.FC = () => {
           <Button
             className="w-full text-white py-2 rounded-lg text-lg font-semibold min-h-[70px]"
             label={""}
+            onClick={handlePayment}
           >
             پرداخت
           </Button>

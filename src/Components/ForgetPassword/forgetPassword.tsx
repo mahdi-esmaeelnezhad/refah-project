@@ -4,6 +4,8 @@ import "./forgetPassword.css";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
 import SendSms from "../SendSms/sendSms";
+import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
+import useRequest from "../../hooks/useRequest";
 
 interface ForgetPasswordProps {
   onBack: () => void;
@@ -19,44 +21,27 @@ const ForgetPassword: React.FC<ForgetPasswordProps> = ({
   const [phoneError, setPhoneError] = useState("");
   const [showSendSms, setShowSendSms] = useState(false);
 
-  const validatePhoneNumber = async () => {
-    try {
-      //   const response = await axios.post(
-      //     "https://fake-api.example.com/validate-phone",
-      //     {
-      //       phoneNumber: phoneNumber,
-      //     }
-      //   );
-      console.log(phoneNumber, "phoneNumber");
-
-      // For demo purposes, let's consider "09123456789" as a valid number
-      if (phoneNumber === "09123456789") {
-        console.log("valid");
-
-        setPhoneError("");
-        return true;
-      }
-
-      setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
-      return false;
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response && axiosError.response.status === 404) {
-        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
-      } else {
-        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
-      }
-      return false;
-    }
-  };
+  const { execute: resetPasswordRequest, loading } = useRequest<any>(
+    AUTH_ENDPOINTS.resetPassword,
+    "POST",
+    { validateStatus: () => true } // allow handling 204 manually
+  );
 
   const handleContinue = async () => {
     setSubmitted(true);
     if (!phoneNumber) return;
-
-    const isPhoneValid = await validatePhoneNumber();
-    if (isPhoneValid) {
-      onSuccess(phoneNumber);
+    try {
+      const response = await resetPasswordRequest({ mobile: phoneNumber });
+      if (response?.status === 200) {
+        setPhoneError("");
+        onSuccess(phoneNumber);
+      } else if (response?.status === 204) {
+        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
+      } else {
+        setPhoneError("خطایی رخ داده است");
+      }
+    } catch (error: any) {
+      setPhoneError(error?.response?.data?.message || "خطایی رخ داده است");
     }
   };
 

@@ -35,7 +35,14 @@ export function DialPad({ value, onChange, onConfirm, onClose }: DialPadProps) {
 
       onClose();
     } else {
-      if (value === "1" && input !== ".") {
+      // max number
+      if (value.length > 6) {
+        return;
+      }
+
+      if (value === "0" && input !== ".") {
+        onChange(input);
+      } else if (value === "1" && input !== ".") {
         onChange(input);
       } else if (value === "" && input === ".") {
         onChange("0.");

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
-// import axios from "axios";
+import useRequest from "../../hooks/useRequest";
+import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
 
 interface ChangePasswordProps {
   onBack: () => void;
@@ -16,6 +17,11 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
 
+  const { execute: changePasswordRequest, loading } = useRequest<any>(
+    AUTH_ENDPOINTS.changePassword,
+    "POST"
+  );
+
   const handleSubmit = async () => {
     if (newPassword !== confirmPassword) {
       setError("تکرار رمز عبور اشتباه وارد شده است");
@@ -23,15 +29,17 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
     }
 
     try {
-      // Fake API call
-      //   await axios.post("https://fake-api.example.com/change-password", {
-      //     newPassword,
-      //   });
+      const response = await changePasswordRequest({
+        currentPassword: newPassword,
+        newPassword: confirmPassword,
+      });
 
-      // If successful, go back to login
-      onSuccess();
-    } catch (error) {
-      setError("خطا در تغییر رمز عبور");
+      if (response?.status === 200) {
+        onSuccess();
+      }
+    } catch (error: any) {
+      const errorData = error?.response?.data;
+      setError(errorData?.title || "خطا در تغییر رمز عبور");
     }
   };
 
@@ -111,10 +119,11 @@ const ChangePassword: React.FC<ChangePasswordProps> = ({
           fontSize: "26px",
           fontWeight: "600",
         }}
-        label="ثبت"
+        label={loading ? "در حال ثبت..." : "ثبت"}
         color="#7889F5"
         radius={15}
         onClick={handleSubmit}
+        disabled={loading}
       />
     </div>
   );

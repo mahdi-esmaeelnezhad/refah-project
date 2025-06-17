@@ -8,14 +8,15 @@ export function numberToPersianToman(amount: string | number) {
     if (isNaN(amount)) return '';
 
     const rounded = Math.round(amount);
-    return `${Num2Persian(rounded)} تومان`;
+    return `${Num2Persian(rounded)} ریال`;
 }
 
 export function commaSeparator(number: string | number) {
+    // replace , with .
     if (number === null || number === undefined) return '';
 
     const num = Number(number.toString().replace(/,/g, ''));
     if (isNaN(num)) return '';
 
-    return num.toLocaleString('fa-IR'); // or 'fa-IR' if Persian numerals are needed
+    return num.toLocaleString('fa-IR');
 }

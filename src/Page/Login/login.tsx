@@ -1,4 +1,8 @@
 import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { setToken } from "../../store/authSlice";
+import useRequest from "../../hooks/useRequest";
+import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
 import axios, { AxiosError } from "axios";
 import leftPatter from "../../assets/img/Pattern - White 1.png";
 import patterleft from "../../assets/img/pattern 3.png";
@@ -24,6 +28,7 @@ import ChangePassword from "../../Components/ChangePassword/changePassword";
 type Step = "login" | "forgetPassword" | "sendSms" | "changePassword";
 
 const Login = () => {
+  const dispatch = useDispatch();
   const [showInitial, setShowInitial] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -34,8 +39,15 @@ const Login = () => {
   const [submitted, setSubmitted] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [error, setError] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
   const [currentStep, setCurrentStep] = useState<Step>("login");
+
+  const {
+    execute: loginRequest,
+    loading,
+    error: loginError,
+  } = useRequest<{ id_token: string }>(AUTH_ENDPOINTS.login, "POST");
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -73,15 +85,18 @@ const Login = () => {
     if (!phoneNumber || !password) return;
 
     try {
-      // Fake API call - consider "09123456789" and "123456" as valid credentials
-      if (phoneNumber === "09123456789" && password === "123456") {
-        // Redirect to dashboard
+      const response = await loginRequest({
+        username: phoneNumber,
+        password: password,
+        rememberMe: rememberMe,
+      });
+
+      if (response?.data?.id_token) {
+        dispatch(setToken(response.data.id_token));
         window.location.href = "/dashboard";
-      } else {
-        setError("نام کاربری یا رمز عبور اشتباه است");
       }
     } catch (error) {
-      setPhoneError("خطا در ورود به سیستم");
+      setError("نام کاربری یا رمز عبور اشتباه است");
     }
   };
 
@@ -280,10 +295,11 @@ const Login = () => {
                   fontSize: "26px",
                   fontWeight: "600",
                 }}
-                label="ورود"
+                label={loading ? "در حال ورود..." : "ورود"}
                 color="#7889F5"
                 radius={15}
                 onClick={handleLogin}
+                disabled={loading}
               />
             </div>
             <div

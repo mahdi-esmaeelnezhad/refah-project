@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-// import axios from "axios";
+import useRequest from "../../hooks/useRequest";
+import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
 import { Button } from "../Ui/Button/button";
 import changeNumber from "../../assets/changeNumber.svg";
 import ChangePassword from "../ChangePassword/changePassword";
@@ -23,6 +24,12 @@ const SendSms: React.FC<SendSmsProps> = ({
   const [showChangePassword, setShowChangePassword] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
 
+  const { execute: verifyCodeRequest, loading: verifyLoading } =
+    useRequest<any>(AUTH_ENDPOINTS.verifyMobileCode, "POST");
+
+  const { execute: resendCodeRequest, loading: resendLoading } =
+    useRequest<any>(AUTH_ENDPOINTS.resetPassword, "POST");
+
   useEffect(() => {
     const interval = setInterval(() => {
       setTimer((prev) => {
@@ -44,13 +51,19 @@ const SendSms: React.FC<SendSmsProps> = ({
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
 
-  const handleResend = () => {
+  const handleResend = async () => {
     if (canResend) {
-      setTimer(90);
-      setCanResend(false);
-      setResetTimer((prev) => prev + 1); // Increment to trigger useEffect
-      // Add your resend SMS logic here
-      console.log("Resending SMS...");
+      try {
+        const response = await resendCodeRequest({ mobile: phoneNumber });
+        if (response?.status === 204) {
+          setTimer(90);
+          setCanResend(false);
+          setResetTimer((prev) => prev + 1);
+          setOtpError("");
+        }
+      } catch (error: any) {
+        setOtpError(error?.response?.data?.title || "خطا در ارسال مجدد کد");
+      }
     }
   };
 
@@ -86,19 +99,18 @@ const SendSms: React.FC<SendSmsProps> = ({
     }
 
     try {
-      // Fake API call - consider "123456" as the valid OTP
-      if (otp === "123456") {
+      const response = await verifyCodeRequest({
+        mobile: phoneNumber,
+        code: otp,
+      });
+
+      if (response?.status === 200) {
+        setOtpError("");
         onSuccess();
-      } else {
-        setOtpError("کد وارد شده اشتباه است");
-        // Set red border for all inputs when there's an error
-        const inputs = document.querySelectorAll('input[type="text"]');
-        inputs.forEach((input) => {
-          (input as HTMLElement).style.borderColor = "#ff4d4f";
-        });
       }
-    } catch (error) {
-      setOtpError("خطا در تایید کد");
+    } catch (error: any) {
+      const errorData = error?.response?.data;
+      setOtpError(errorData?.title || "خطا در تایید کد");
     }
   };
 
@@ -171,11 +183,11 @@ const SendSms: React.FC<SendSmsProps> = ({
             height: "52px",
             backgroundColor: canResend ? "#479E55" : "#B4B4B4",
           }}
-          label="ارسال مجدد"
+          label={resendLoading ? "در حال ارسال..." : "ارسال مجدد"}
           color="#fff"
           radius={52}
           onClick={handleResend}
-          disabled={!canResend}
+          disabled={!canResend || resendLoading}
         />
         <span style={{ color: "#7E7E7E", fontSize: "25px", fontWeight: "600" }}>
           {formatTime(timer)} ثانیه
@@ -240,10 +252,11 @@ const SendSms: React.FC<SendSmsProps> = ({
           fontSize: "26px",
           fontWeight: "600",
         }}
-        label="تایید"
+        label={verifyLoading ? "در حال تایید..." : "تایید"}
         color="#7889F5"
         radius={15}
         onClick={handleContinue}
+        disabled={verifyLoading}
       />
     </div>
   );

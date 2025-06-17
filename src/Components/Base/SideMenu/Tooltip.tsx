@@ -57,7 +57,7 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
           }}
         >
           {component}
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 z-1"></div>
+          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 z-50"></div>
         </div>
       )}
     </div>

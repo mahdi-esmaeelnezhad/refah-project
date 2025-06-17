@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from "../../Ui/Button/button";
 import Input from "../../Ui/Input/input";
 import { Switch } from "../../Ui/switch/switch";
@@ -7,9 +7,11 @@ import {
   commaSeparator,
   numberToPersianToman,
 } from "../../../utils/numberToPersianWord";
-import { Radio } from "../../Ui/Radio/radio";
 import Tooltip from "./Tooltip";
 import { DialPad } from "./DialPad";
+import NoBarcodeModal from "../../Modal/NoBarcodeModal";
+import { useModal } from "../../../hooks/useModal";
+import DeleteModal from "../../Modal/DeleteModal";
 
 interface Item {
   id: number;
@@ -17,11 +19,12 @@ interface Item {
   quantity: string;
   unit: string;
   price: number;
-  discount: string;
+  discount: number | string;
   total: number;
 }
 
-export function Content({ children = "" }) {
+const Content: React.FC = () => {
+  const { isOpen, barcode, openModal, closeModal } = useModal();
   const [deliveryMedivod, setDeliveryMedivod] = useState("حضوری");
   const [paymentMedivod, setPaymentMedivod] = useState("کارتی");
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
@@ -33,11 +36,48 @@ export function Content({ children = "" }) {
       quantity: "1",
       unit: "عدد",
       price: 120000,
-      discount: "-",
+      discount: 10000,
       total: 120000,
     }))
   );
   const [tempQuantity, setTempQuantity] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [invoiceNumber, setInvoiceNumber] = useState("256");
+
+  // Calculate totals
+  const totalItems = items.length;
+  const totalAmount = items.reduce((sum, item) => {
+    const quantity = parseInt(item.quantity) || 0;
+    return sum + item.price * quantity;
+  }, 0);
+
+  const totalDiscount = items.reduce((sum, item) => {
+    if (item.discount !== "-") {
+      const discountAmount =
+        typeof item.discount === "number"
+          ? item.discount
+          : parseInt(item.discount.toString()) || 0;
+      return sum + discountAmount;
+    }
+    return sum;
+  }, 0);
+
+  const finalAmount = totalAmount - totalDiscount;
+
+  useEffect(() => {
+    // Show modal when component mounts
+    // openModal("6828989423921");
+  }, []);
+
+  const handleModalSubmit = (data: { productName: string; price: string }) => {
+    console.log("Modal submitted:", data);
+    closeModal();
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
 
   const handleQuantityClick = (itemId: number, currentQuantity: string) => {
     console.log(90);
@@ -79,6 +119,20 @@ export function Content({ children = "" }) {
     setTempQuantity("");
   };
 
+  const handleDeleteClick = () => {
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    // Handle delete logic here
+    console.log("Deleting invoice:", invoiceNumber);
+    setIsDeleteModalOpen(false);
+  };
+
+  const handleDeleteModalClose = () => {
+    setIsDeleteModalOpen(false);
+  };
+
   return (
     <section
       style={{
@@ -87,9 +141,21 @@ export function Content({ children = "" }) {
         height: "848px",
         left: "53px",
         top: "100px",
+        zIndex: 1,
       }}
     >
-      {children}
+      <NoBarcodeModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        onSubmit={handleModalSubmit}
+        barcode={barcode}
+      />
+      <DeleteModal
+        isOpen={isDeleteModalOpen}
+        onClose={handleDeleteModalClose}
+        onDelete={handleDeleteConfirm}
+        invoiceNumber={invoiceNumber}
+      />
       <div
         style={{
           position: "absolute",
@@ -116,12 +182,16 @@ export function Content({ children = "" }) {
 
           <Button label="مشتری" color="#DAA51A"></Button>
           <Button label="ذخیره" color="#4973DE"></Button>
-          <Button label="حذف" color="#DE4949"></Button>
+          <Button
+            label="حذف"
+            color="#DE4949"
+            onClick={handleDeleteClick}
+          ></Button>
         </div>
 
         <div className="flex items-center justify-between gap-8 max-h-10 mt-8">
           <span className="bg-[#D1D1D1] font-21 text-black px-4 py-2 rounded-md">
-            فاکتور فروش 256
+            فاکتور فروش {invoiceNumber}
           </span>
           <Input
             placeholder="معصومه ده بالا"
@@ -132,7 +202,7 @@ export function Content({ children = "" }) {
             }}
           />
           <span className="bg-[#D1D1D1] font-21 text-black px-4 py-2 rounded-md">
-            تعداد اقلام ۳
+            تعداد اقلام {totalItems}
           </span>
         </div>
 
@@ -160,7 +230,7 @@ export function Content({ children = "" }) {
               جمع کل (ریال)
             </div>
           </div>
-          <section className="overflow-y-auto">
+          <section className="overflow-y-auto relative">
             {items.map((item) => (
               <div
                 key={item.id}
@@ -200,7 +270,7 @@ export function Content({ children = "" }) {
                     }}
                   >
                     <span
-                      className="bg-our-choice h-10 w-10 flex justify-center items-center rounded-md font-semibold cursor-pointer"
+                      className="bg-our-choice h-10 min-w-10 px-2 overflow-hidden flex justify-center items-center rounded-md font-semibold cursor-pointer"
                       onClick={() =>
                         handleQuantityClick(item.id, item.quantity)
                       }
@@ -215,13 +285,13 @@ export function Content({ children = "" }) {
                   {item.unit}
                 </div>
                 <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[120px]">
-                  {item.price.toLocaleString()}
+                  {item.price.toLocaleString("fa-IR")}
                 </div>
                 <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
-                  {item.discount}
+                  {item.discount.toLocaleString("fa-IR")}
                 </div>
                 <div className="h-10 w-10 rounded-md flex items-center justify-center min-w-[158px] font-23 gap-3">
-                  {item.total.toLocaleString()}
+                  {item.total.toLocaleString("fa-IR")}
                   <CloseSmIcon
                     onClick={() => {
                       /* handle delete */
@@ -251,7 +321,7 @@ export function Content({ children = "" }) {
             <div className="flex justify-between px-4 py-2">
               <span>مبلغ</span>
               <span>
-                ۷۶۰,۰۰۰
+                {commaSeparator(totalAmount)}
                 <span className="mx-1 font-16">ریال</span>
               </span>
             </div>
@@ -267,29 +337,34 @@ export function Content({ children = "" }) {
                 />
               </span>
             </div>
-            <div className="flex justify-between  px-4 py-2">
+            <div className="flex justify-between px-4 py-2">
               <span>تخفیف</span>
               <span className="flex items-center">
-                <span className="mx-1">-</span>
+                <span className="mx-1">
+                  {totalDiscount > 0 ? commaSeparator(totalDiscount) : "-"}
+                </span>
                 <BinIcon />
               </span>
             </div>
             <div className="flex justify-between bg-[#EFEFEF] rounded-lg px-4 py-2">
               <span>تعداد اقلام</span>
-              <span className=" font-16">۸ عدد</span>
+              <span className="font-16">{totalItems} عدد</span>
             </div>
             <div className="flex justify-between font-semibold rounded-lg px-4 py-2">
               <span>مبلغ کل</span>
-              <span className=" font-16">۱,۲۱۰,۰۰۰ ریال</span>
+              <span className="font-16">
+                {commaSeparator(totalAmount)} ریال
+              </span>
             </div>
             <div className="flex justify-between text-lg font-bold bg-[#E7E7E7] rounded-lg px-4 py-2">
               <span>مبلغ قابل پرداخت</span>
               <span>
-                {commaSeparator(1210000)} <span className=" font-16">ریال</span>
+                {commaSeparator(finalAmount)}{" "}
+                <span className="font-16">ریال</span>
               </span>
             </div>
             <div className="text-center text-sm text-gray-600 font-19">
-              {numberToPersianToman(1210000)}
+              {numberToPersianToman(finalAmount)}
             </div>
             <input
               type="text"
@@ -330,28 +405,37 @@ export function Content({ children = "" }) {
             </div>
             <div className="flex gap-2 items-center justify-between font-25">
               {["کارتی", "نقدی", "نسیه", "اعتباری"].map((medivod) => (
-                <>
-                  <Radio
-                    name={paymentMedivod}
+                <div key={medivod} className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    id={`payment-${medivod}`}
+                    name="paymentMethod"
                     value={medivod}
-                    selected={paymentMedivod === medivod}
+                    checked={paymentMedivod === medivod}
                     onChange={() => setPaymentMedivod(medivod)}
+                    className="w-4 h-4 accent-primary"
+                  />
+                  <label
+                    htmlFor={`payment-${medivod}`}
+                    className="font-21 cursor-pointer"
                   >
                     {medivod}
-                  </Radio>
-                </>
+                  </label>
+                </div>
               ))}
             </div>
           </div>
 
-          {/* <Button
-            className='w-full text-white py-2 rounded-lg text-lg font-semibold min-h-[70px]'
-            label={''}
+          <Button
+            className="w-full text-white py-2 rounded-lg text-lg font-semibold min-h-[70px]"
+            label={""}
           >
             پرداخت
-          </Button> */}
+          </Button>
         </div>
       </div>
     </section>
   );
-}
+};
+
+export default Content;

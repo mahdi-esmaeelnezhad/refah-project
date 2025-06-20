@@ -50,6 +50,7 @@ const Content: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("256");
+  const [paymentAmount, setPaymentAmount] = useState(0);
 
   // Calculate totals
   const totalItems = items.length;
@@ -77,7 +78,6 @@ const Content: React.FC = () => {
   }, []);
 
   const handleModalSubmit = (data: { productName: string; price: string }) => {
-    console.log("Modal submitted:", data);
     closeModal();
   };
 
@@ -86,8 +86,6 @@ const Content: React.FC = () => {
   };
 
   const handleQuantityClick = (itemId: number, currentQuantity: string) => {
-    console.log(90);
-
     setSelectedItemId(itemId);
     setTempQuantity(currentQuantity);
     setOpenTooltipId(itemId);
@@ -113,12 +111,9 @@ const Content: React.FC = () => {
     }
   };
 
-  const handleQuantityConfirm = () => {
-    console.log(100);
-  };
+  const handleQuantityConfirm = () => {};
 
   const handleDialPadClose = () => {
-    console.log(100);
     // close dial pad
     setOpenTooltipId(null);
     setSelectedItemId(null);
@@ -131,7 +126,6 @@ const Content: React.FC = () => {
 
   const handleDeleteConfirm = () => {
     // Handle delete logic here
-    console.log("Deleting invoice:", invoiceNumber);
     setIsDeleteModalOpen(false);
   };
 
@@ -146,7 +140,7 @@ const Content: React.FC = () => {
   };
 
   const handleCartPaymentConfirm = (amount: number) => {
-    console.log("Payment confirmed with amount:", amount);
+    setPaymentAmount(amount);
   };
 
   return (
@@ -176,23 +170,23 @@ const Content: React.FC = () => {
         totalAmount={finalAmount}
         onConfirm={handleCartPaymentConfirm}
       />
-      <CartPaymentLoading amount={finalAmount} />
-      <CartPaymentPassword amount={finalAmount} />
+      <CartPaymentLoading amount={paymentAmount} />
+      <CartPaymentPassword amount={paymentAmount} />
       <SuccessPaymentModal
-        amount={0}
+        amount={paymentAmount}
         transactionType="خرید"
-        date=""
-        time=""
-        trackingNumber=""
-        referenceNumber=""
+        date={new Date().toLocaleDateString("fa-IR")}
+        time={new Date().toLocaleTimeString("fa-IR")}
+        trackingNumber={Math.random().toString(36).substring(7)}
+        referenceNumber={Math.random().toString(36).substring(7)}
       />
       <FailedPaymentModal
-        amount={0}
+        amount={paymentAmount}
         transactionType="خرید"
-        date=""
-        time=""
-        trackingNumber=""
-        referenceNumber=""
+        date={new Date().toLocaleDateString("fa-IR")}
+        time={new Date().toLocaleTimeString("fa-IR")}
+        trackingNumber={Math.random().toString(36).substring(7)}
+        referenceNumber={Math.random().toString(36).substring(7)}
       />
       <div
         style={{

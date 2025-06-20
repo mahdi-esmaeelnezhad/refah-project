@@ -2,6 +2,7 @@ export const BASE_URL = import.meta.env.VITE_BASE_URL || "https://api2.shopp.mar
 
 export const AUTH_ENDPOINTS = {
   login: `${BASE_URL}/api/authenticate_pardakhtyar`,
+  shoppInfo: `${BASE_URL}/api/account_shop_biz`,
   resetPassword: `${BASE_URL}/api/account/reset_mobile_password/init`,
   verifyMobileCode: `${BASE_URL}/api/account/reset_mobile_password/mobile_code_verification`,
   changePassword: `${BASE_URL}/api/account/change_password`,

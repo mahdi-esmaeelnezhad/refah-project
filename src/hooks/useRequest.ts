@@ -41,13 +41,14 @@ const useRequest = <T>(
     async (data?: any) => {
       try {
         setState((prev) => ({ ...prev, loading: true, error: null }));
-
         const response: AxiosResponse<T> = await axios({
           url,
           method,
-          ...config,
+          headers: config.headers,
           data,
+          ...config,
         });
+
 
         setState({
           data: response.data,
@@ -58,8 +59,13 @@ const useRequest = <T>(
         return response;
       } catch (error) {
         const axiosError = error as AxiosError<any>;
+        console.error("Request error:", axiosError);
+        console.error("Response status:", axiosError.response?.status);
+        console.error("Response data:", axiosError.response?.data);
+        
         const errorMessage =
           axiosError.response?.data?.message ||
+          axiosError.response?.data?.error ||
           axiosError.message ||
           "خطایی رخ داده است";
 

@@ -10,7 +10,12 @@ interface CartPaymentPasswordProps {
 const CartPaymentPassword: React.FC<CartPaymentPasswordProps> = ({
   amount,
 }) => {
-  const { isCartPaymentPassword, closeCartPaymentPassword } = useModal();
+  const {
+    isCartPaymentPassword,
+    closeCartPaymentPassword,
+    openSuccessPayment,
+    openFailedPayment,
+  } = useModal();
   const [password, setPassword] = useState<string[]>(Array(4).fill(""));
   const inputRefs = useRef<(HTMLInputElement | null)[]>(Array(4).fill(null));
 
@@ -42,16 +47,40 @@ const CartPaymentPassword: React.FC<CartPaymentPasswordProps> = ({
     }
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     const pin = password.join("");
     if (pin.length !== 4) {
       alert("لطفا رمز کارت را کامل وارد کنید");
       return;
     }
 
-    // اینجا باید رمز را به دستگاه کارت‌خوان ارسال کنید
-    // pos.sendPin(pin);
-    console.log("Processing payment with PIN:", pin);
+    try {
+      // اینجا باید رمز را به دستگاه کارت‌خوان ارسال کنید
+      // const response = await pos.sendPin(pin);
+
+      // برای تست، اگر رمز 1234 باشد، پرداخت موفق است
+      const isSuccess = pin === "1234";
+
+      closeCartPaymentPassword();
+
+      if (isSuccess) {
+        // در حالت واقعی، این اطلاعات از دستگاه کارت‌خوان می‌آید
+        const transactionData = {
+          amount,
+          transactionType: "خرید",
+          date: new Date().toLocaleDateString("fa-IR"),
+          time: new Date().toLocaleTimeString("fa-IR"),
+          trackingNumber: Math.random().toString(36).substring(7),
+          referenceNumber: Math.random().toString(36).substring(7),
+        };
+        openSuccessPayment();
+      } else {
+        openFailedPayment();
+      }
+    } catch (error) {
+      console.error("خطا در پردازش پرداخت:", error);
+      alert("خطا در پردازش پرداخت");
+    }
   };
 
   return (

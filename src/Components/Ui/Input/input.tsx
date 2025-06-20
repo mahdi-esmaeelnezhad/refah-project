@@ -91,7 +91,7 @@ const Input: React.FC<InputProps> = ({
           onChange={onChange}
           disabled={disabled}
           style={{
-            height: typeof height === "number" ? `${height}px` : height,
+            height: typeof height === "number" ? `${height - 30}px` : height,
             ...placeholderStyle,
             ...errorStyle,
           }}

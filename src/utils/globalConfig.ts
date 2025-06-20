@@ -26,5 +26,4 @@ Number.prototype.toString = function(this: number): string {
 
 export const setupPersianNumbers = () => {
   // This function can be called in your app's entry point
-  console.log('Persian number formatting has been set up globally');
 }; 

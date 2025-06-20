@@ -7,6 +7,7 @@ import rial from "../../assets/img/rial.png";
 import editIcon from "../../assets/edit.svg";
 import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";
+import { usePaymentStore } from "../../hooks/usePaymentStore";
 
 interface CartPaymentModalProps {
   totalAmount: number;
@@ -25,6 +26,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     openCartPaymentPassword,
   } = useModal();
   const [editableAmount, setEditableAmount] = useState(totalAmount);
+  const setPaymentAmount = usePaymentStore((state) => state.setEditableAmount);
 
   if (!isCartPaymentOpen) return null;
 
@@ -46,6 +48,9 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
 
       // ارسال مبلغ به دستگاه
       // await pos.sendAmount(editableAmount);
+
+      // ذخیره مبلغ در store
+      setPaymentAmount(editableAmount);
 
       // بستن مدال فعلی و باز کردن مدال لودینگ
       closeCartPayment();

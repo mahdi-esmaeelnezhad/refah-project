@@ -51,9 +51,7 @@ export function NavBar({ children = "" }) {
     },
   ]);
 
-  const handleDeleteFactor = (id: string) => {
-    console.log("Deleting factor:", id);
-  };
+  const handleDeleteFactor = (id: string) => {};
 
   return (
     <>

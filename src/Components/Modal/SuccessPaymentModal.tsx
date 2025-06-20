@@ -1,10 +1,13 @@
 import React from "react";
 import closeIcon from "../../assets/close.svg";
+import likeIcon from "../../assets/Like.svg";
+import shaparakIcon from "../../assets/img/shaparak.png";
+import iranKishIcon from "../../assets/img/iranKish.png";
 import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";
+import { usePaymentStore } from "../../hooks/usePaymentStore";
 
 interface SuccessPaymentModalProps {
-  amount: number;
   transactionType: string;
   date: string;
   time: string;
@@ -13,7 +16,6 @@ interface SuccessPaymentModalProps {
 }
 
 const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
-  amount,
   transactionType,
   date,
   time,
@@ -21,6 +23,7 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   referenceNumber,
 }) => {
   const { isSuccessPaymentOpen, closeSuccessPayment } = useModal();
+  const editableAmount = usePaymentStore((state) => state.editableAmount);
 
   if (!isSuccessPaymentOpen) return null;
 
@@ -29,13 +32,11 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   };
 
   const handlePrint = () => {
-    // اینجا باید منطق چاپ رسید پیاده‌سازی شود
-    console.log("Printing receipt...");
+    // اینجا باید منطق چاپ فاکتور پیاده‌سازی شود
   };
 
   const handleSendDigital = () => {
-    // اینجا باید منطق ارسال رسید دیجیتال پیاده‌سازی شود
-    console.log("Sending digital receipt...");
+    // اینجا باید منطق ارسال فاکتور دیجیتال پیاده‌سازی شود
   };
 
   return (
@@ -46,92 +47,156 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
       {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[499px] bg-white rounded-[15px] shadow-lg z-50">
         <div className="flex flex-col p-6 relative">
-          <div className="flex justify-between mb-5">
+          <div className="flex justify-between">
             <div onClick={closeSuccessPayment} style={{ cursor: "pointer" }}>
               <img src={closeIcon} alt="close" className="w-10 h-10" />
             </div>
           </div>
 
           <div className="flex flex-col items-center">
+            <img src={likeIcon} alt="Success" />
+
             <div
               style={{
                 textAlign: "center",
                 fontSize: "23px",
-                fontWeight: 500,
+                fontWeight: 700,
                 marginBottom: "20px",
                 color: "#479E55",
               }}
             >
-              پرداخت با موفقیت انجام شد
+              پرداخت موفق
             </div>
+            <div className="flex flex-col items-center">
+              <div className="flex flex-col gap-2 w-full">
+                <div
+                  style={{
+                    width: "366px",
+                    height: "36px",
+                    backgroundColor: "#F8F8F8",
+                    borderRadius: "15px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0 15px",
+                  }}
+                >
+                  <span>مبلغ:</span>
+                  <span>{formatNumber(editableAmount)} ریال</span>
+                </div>
 
-            <div
-              style={{
-                width: "100%",
-                backgroundColor: "#F5F5F5",
-                borderRadius: "15px",
-                padding: "20px",
-                marginBottom: "20px",
-              }}
-            >
-              <div className="flex justify-between mb-3">
-                <span style={{ color: "#666" }}>نوع تراکنش:</span>
-                <span style={{ fontWeight: 500 }}>{transactionType}</span>
-              </div>
-              <div className="flex justify-between mb-3">
-                <span style={{ color: "#666" }}>مبلغ:</span>
-                <span style={{ fontWeight: 500 }}>
-                  {formatNumber(amount)} ریال
-                </span>
-              </div>
-              <div className="flex justify-between mb-3">
-                <span style={{ color: "#666" }}>تاریخ:</span>
-                <span style={{ fontWeight: 500 }}>{date}</span>
-              </div>
-              <div className="flex justify-between mb-3">
-                <span style={{ color: "#666" }}>ساعت:</span>
-                <span style={{ fontWeight: 500 }}>{time}</span>
-              </div>
-              <div className="flex justify-between mb-3">
-                <span style={{ color: "#666" }}>شماره پیگیری:</span>
-                <span style={{ fontWeight: 500 }}>{trackingNumber}</span>
-              </div>
-              <div className="flex justify-between">
-                <span style={{ color: "#666" }}>شماره مرجع:</span>
-                <span style={{ fontWeight: 500 }}>{referenceNumber}</span>
-              </div>
-            </div>
+                <div
+                  style={{
+                    width: "366px",
+                    height: "36px",
+                    backgroundColor: "#F8F8F8",
+                    borderRadius: "15px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0 15px",
+                  }}
+                >
+                  <span>نوع تراکنش:</span>
+                  <span>{transactionType}</span>
+                </div>
 
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: "84px",
-                marginTop: "20px",
-              }}
-            >
-              <Button
-                label="چاپ رسید"
-                color="#479E55"
-                onClick={handlePrint}
+                <div
+                  style={{
+                    width: "366px",
+                    height: "36px",
+                    backgroundColor: "#F8F8F8",
+                    borderRadius: "15px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0 15px",
+                  }}
+                >
+                  <span>تاریخ و زمان:</span>
+                  <span>
+                    {date} - {time}
+                  </span>
+                </div>
+
+                <div
+                  style={{
+                    width: "366px",
+                    height: "36px",
+                    backgroundColor: "#DEDEDE",
+                    borderRadius: "15px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0 15px",
+                  }}
+                >
+                  <span>شماره پیگیری:</span>
+                  <span>{trackingNumber}</span>
+                </div>
+
+                <div
+                  style={{
+                    width: "366px",
+                    height: "36px",
+                    backgroundColor: "#DEDEDE",
+                    borderRadius: "15px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "0 15px",
+                  }}
+                >
+                  <span>شماره مرجع:</span>
+                  <span>{referenceNumber}</span>
+                </div>
+              </div>
+
+              <div
                 style={{
-                  width: "166px",
-                  height: "48px",
-                  color: "white",
-                  borderRadius: "15px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  width: "366px",
+                  marginTop: "20px",
+                  marginBottom: "20px",
                 }}
-              />
-              <Button
-                label="ارسال رسید دیجیتال"
-                color="#479E55"
-                onClick={handleSendDigital}
-                style={{
-                  width: "166px",
-                  height: "48px",
-                  color: "white",
-                  borderRadius: "15px",
-                }}
-              />
+              >
+                <img
+                  src={shaparakIcon}
+                  alt="Shaparak"
+                  style={{ width: "120px" }}
+                />
+                <img
+                  src={iranKishIcon}
+                  alt="IranKish"
+                  style={{ width: "120px" }}
+                />
+              </div>
+
+              <div className="flex flex-col gap-2 w-full mt-10 mb-10">
+                <Button
+                  label="چاپ فاکتور"
+                  color="#7485E5"
+                  onClick={handlePrint}
+                  style={{
+                    width: "366px",
+                    height: "48px",
+                    color: "white",
+                    borderRadius: "15px",
+                  }}
+                />
+                <Button
+                  label="ارسال فاکتور دیجیتال"
+                  color="#7485E5B2"
+                  onClick={handleSendDigital}
+                  style={{
+                    width: "366px",
+                    height: "48px",
+                    color: "white",
+                    borderRadius: "15px",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>

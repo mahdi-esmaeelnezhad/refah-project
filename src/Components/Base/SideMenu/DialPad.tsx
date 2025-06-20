@@ -31,8 +31,6 @@ export function DialPad({ value, onChange, onConfirm, onClose }: DialPadProps) {
         onChange("1");
       }
     } else if (input === "tick") {
-      console.log(2);
-
       onClose();
     } else {
       // max number

@@ -2,6 +2,7 @@ import { create } from 'zustand';
 
 interface ModalState {
   isOpen: boolean;
+  isCategoryOpen: boolean;
   barcode: string;
   isCartPaymentOpen: boolean;
   isCartPaymentLoading: boolean;
@@ -24,6 +25,7 @@ interface ModalState {
 
 export const useModal = create<ModalState>((set) => ({
   isOpen: false,
+  isCategoryOpen: false,
   barcode: '',
   isCartPaymentOpen: false,
   isCartPaymentLoading: false,
@@ -42,4 +44,5 @@ export const useModal = create<ModalState>((set) => ({
   closeSuccessPayment: () => set({ isSuccessPaymentOpen: false }),
   openFailedPayment: () => set({ isFailedPaymentOpen: true }),
   closeFailedPayment: () => set({ isFailedPaymentOpen: false }),
+  
 })); 

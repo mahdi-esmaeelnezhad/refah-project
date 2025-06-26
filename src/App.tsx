@@ -5,6 +5,8 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setToken } from "./store/authSlice";
 import Products from "./Page/Products/products";
+import Factors from "./Page/Factors/Factors";
+import Unregistered from "./Page/Unregistered/Unregistered";
 import "./styles/index.css";
 import "./styles/fonts.css";
 import "./styles/App.css";
@@ -25,6 +27,8 @@ const App = () => {
           <Route path="/" element={<Login />} />
           <Route path="/dashboard" element={<Home />} />
           <Route path="/products" element={<Products />} />
+          <Route path="/factors" element={<Factors />} />
+          <Route path="/unregistered" element={<Unregistered />} />
         </Routes>
       </main>
     </Router>

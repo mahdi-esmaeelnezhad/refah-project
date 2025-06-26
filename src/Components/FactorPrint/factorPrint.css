@@ -1,0 +1,81 @@
+/* FactorPrintWeb.css */
+.factor-container {
+  position: fixed;
+  width: 1575px;
+  height: 848px;
+  left: 53px;
+  top: 90px;
+  background-color: #fff;
+  padding: 30px;
+  font-family: "Vazirmatn", sans-serif;
+  direction: rtl;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  box-sizing: border-box;
+}
+
+.factor-header {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.close-button {
+  font-size: 24px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+.factor-row {
+  display: flex;
+  justify-content: space-between;
+  margin: 10px 0;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.factor-table-header,
+.factor-table-row {
+  display: grid;
+  grid-template-columns: 25% 25% 25% 25%;
+  padding: 8px 0;
+  font-size: 14px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.factor-table-header {
+  background-color: #000;
+  color: #fff;
+  font-weight: bold;
+  border-radius: 5px;
+}
+
+.factor-summary {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  font-size: 15px;
+}
+
+.factor-total {
+  display: flex;
+  justify-content: space-between;
+  background-color: #888;
+  color: #fff;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 10px;
+}
+
+.factor-debt {
+  display: flex;
+  justify-content: space-between;
+  background-color: #000;
+  color: #fff;
+  padding: 10px;
+  font-size: 16px;
+  font-weight: bold;
+  margin-top: 5px;
+}

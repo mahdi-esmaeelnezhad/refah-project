@@ -1,6 +1,5 @@
 import React from "react";
 import styles from "./input.module.css";
-
 export type InputVariant =
   | "default"
   | "withIcon"

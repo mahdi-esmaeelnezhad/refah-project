@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Button } from "../../Components/Ui/Button/button";
 import Input from "../../Components/Ui/Input/input";
-import { BinIcon, CloseSmIcon } from "../../Components/icons";
+import { CloseSmIcon } from "../../Components/icons";
 import {
   commaSeparator,
   numberToPersianToman,

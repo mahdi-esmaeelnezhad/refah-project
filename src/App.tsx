@@ -5,6 +5,7 @@ import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { setToken } from "./store/authSlice";
 import Products from "./Page/Products/products";
+import Delivery from "./Page/Delivery/Delivery";
 import Factors from "./Page/Factors/Factors";
 import Unregistered from "./Page/Unregistered/Unregistered";
 import Customers from "./Page/Customers/Customers";
@@ -36,6 +37,7 @@ const App = () => {
             <Route path="/factors" element={<Factors />} />
             <Route path="/unregistered" element={<Unregistered />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/delivery" element={<Delivery />} />
           </Routes>
         </PageWrapper>
       </main>

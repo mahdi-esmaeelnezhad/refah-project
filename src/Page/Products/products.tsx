@@ -1,6 +1,4 @@
-import React, { useEffect, useState, useRef, useMemo } from "react";
-import axios from "axios";
-// import { useShopItems } from "../../endpoint/product/product";
+import React, { useEffect, useState, useMemo } from "react";
 import { Button } from "../../Components/Ui/Button/button";
 import filterIcon from "../../assets/filter.svg";
 import { useModal } from "../../hooks/useModal";
@@ -20,104 +18,67 @@ import CategoryOptiob from "../../Components/ToolTipProduct/categortOption";
 
 import type { RootState } from "../../store/store";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
-import nextArrow from "../../assets/nextArrow.svg";
-import previousArrow from "../../assets/perviosArrow.svg";
 import Pagination from "../../Components/Pagination/Pagination";
 import ProductsFilter from "../../Components/ProductsFilter/ProductsFilter";
 import AddProductModal from "../../Components/Modal/AddProductModal";
 
 interface ProductItem {
   id: string;
+  name: string;
   price: number;
-  statusType: string;
-  createdBy: string;
-  createdDate: string;
-  lastModifiedBy: string;
-  lastModifiedDate: string;
-  itemDto: {
-    id: string;
-    name: string;
-    sku: string;
-    itemPictureDefaultId: number;
-    description: string;
-    price: number;
-    categoryId: {
-      id: string;
-      title: string;
-    };
-    categoryName: string;
-    rootCategoryName: string;
-    defaultImageUrl: string;
-    unitType: string;
-  };
-  isAvailable: boolean;
-  sellType: string;
-  packingCost: number;
+  categoryId: string;
+  categoryName: string;
+  unitType: string;
   onlineStockThreshold: number;
-  offlineStockThreshold: number;
-  instantStock: number;
-  instantOnlineStock: number;
-  instantOfflineStock: number;
+  discount?: number;
 }
-interface categoryResponse {
+
+interface Category {
   id: string;
   title: string;
 }
 
-interface ProductsResponse {
-  items: ProductItem[];
-  count: number;
-  page: number;
-  row: number;
+interface CategoryOption {
+  categoryId: string;
+  categoryName: string;
 }
 
 const Products: React.FC = () => {
   const { isOpen, openModal, closeModal } = useModal();
   const [currentPage, setCurrentPage] = useState(1);
-  const [isNoShowModalOpen, setIsNoShowModalOpen] = useState(false);
 
   const [showFilter, setShowFilter] = useState(false);
   const [categoryDelete, setCategoryDelete] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterCategory, setFilterCategory] = useState("");
-  const [filterBrand, setFilterBrand] = useState("");
-  const [filterStock, setFilterStock] = useState("");
-  const [filterDiscount, setFilterDiscount] = useState("");
-  const [filterUnit, setFilterUnit] = useState("");
-  const [finalData, setFinalData] = useState(null);
-  const [allFinalData, setAllFinalData] = useState(null);
-  const [availableCategories, setAvailableCategories] = useState(null);
-  const [categoriesCount, setCategoriesCount] = useState<Number | null>(null);
-  const [searchProduct, setSearchProduct] = useState<string>("");
-  const [isOptionOpen, setIsOptionOpen] = useState(false);
-  const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
-  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
-  const [filterMinPrice, setFilterMinPrice] = useState("");
-  const [filterMaxPrice, setFilterMaxPrice] = useState("");
-  const [currentRow, setCurrentRow] = useState<string | null>(null);
+  const [searchTerm] = useState("");
+  const [finalData, setFinalData] = useState<ProductItem[]>([]);
+  const [allFinalData, setAllFinalData] = useState<ProductItem[]>([]);
+  const [availableCategories, setAvailableCategories] = useState<
+    CategoryOption[]
+  >([]);
+  const [categoriesCount, setCategoriesCount] = useState<number>(0);
+
+  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
+  const [, setSelectedItemId] = useState<number | null>(null);
   const [showCategoryId, setShowCategoryId] = useState<string | null>(null);
-  const hasCalledApi = useRef(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   //   const { execute, data, loading, error } = useShopItems();
   const token = useSelector((state: RootState) => state.auth.token);
-  let categories: any;
+  // let categories: any;
 
-  const {
-    execute: itemRequest,
-    loading,
-    error: loginError,
-  } = useRequest<ProductsResponse>(PRODUCT_ENDPOINTS.shopItems, "POST", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  const { execute: itemRequest } = useRequest<any>(
+    PRODUCT_ENDPOINTS.shopItems,
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
 
-  const {
-    execute: categoryRequest,
-    loadingCategory,
-    error,
-  } = useRequest<categoryResponse>(
+  const { execute: categoryRequest } = useRequest<Category[]>(
     PRODUCT_ENDPOINTS.cacheCategoryList,
     "POST",
     {
@@ -127,111 +88,110 @@ const Products: React.FC = () => {
       },
     }
   );
+
   useEffect(() => {
-    categories = [];
     getVersion();
-    getcategory();
+    getCategory();
     getInfo();
   }, []);
 
-  const deleteProduct = async (id: any) => {
-    console.log(id, "ia");
-
-    try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Custom-Header": "Custom Value",
-        },
-      };
-      axios
-        .get(
-          `https://api2.shopp.market/api/operator/item/uV90PEhmKR7GYmhxXju73w،3D،3D`,
-          config
-        )
-        .then((res) => {});
-    } catch (error) {}
-  };
   const getVersion = async () => {
     const shopId = localStorage.getItem("shoppId");
+    if (!shopId) return;
+
     try {
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Custom-Header": "Custom Value",
-        },
-      };
-      axios
-        .get(
-          `https://api2.shopp.market/api/shop_biz/cache/version/${shopId}`,
-          config
-        )
-        .then((res) => {
-          localStorage.setItem("cacheVersion", JSON.stringify(res?.data));
-        });
-    } catch (error) {}
+      const response = await fetch(
+        `https://api2.shopp.market/api/shop_biz/cache/version/${shopId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      if (response.ok) {
+        const data = await response.json();
+        localStorage.setItem("cacheVersion", JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error("Error fetching version:", error);
+    }
   };
-  const getcategory = async () => {
+
+  const getCategory = async () => {
     const shopId = localStorage.getItem("shoppId");
-    const token = localStorage.getItem("token");
+    if (!shopId) return;
 
     try {
-      const response = await categoryRequest({
-        shopId: shopId,
-      });
-
-      categories = response?.data;
-    } catch (error) {}
+      const response = await categoryRequest({ shopId });
+      if (response?.data) {
+        setCategoriesCount(response.data.length);
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
   };
+
   const getInfo = async () => {
     const shopId = localStorage.getItem("shoppId");
-    const token = localStorage.getItem("token");
-    // let cacheVersionStorage = localStorage.getItem("cacheVersion");
+    if (!shopId) return;
 
     try {
+      setIsLoading(true);
+      setError(null);
+
       const response = await itemRequest({
         page: 8,
         row: 5,
         shopId: shopId,
-        // data: JSON.parse(cacheVersionStorage)?.category,
       });
 
-      if (response) {
-        let availableCategoriesArray: any = [];
-        // const data: any = response.data;
-        for (let i = 0; i < response.data.length; i++) {
-          categories?.map((category: { id: any; title: any }) => {
-            if (response.data[i].categoryId === category.id) {
-              response.data[i].categoryName = category.title;
-              availableCategoriesArray.push({
-                categoryName: response.data[i].categoryName,
-                categoryId: response.data[i].categoryId,
-              });
+      if (response?.data && Array.isArray(response.data)) {
+        const processedData: ProductItem[] = response.data.map((item: any) => ({
+          id: item.id || item.itemDto?.id || "",
+          name: item.name || item.itemDto?.name || "",
+          price: item.price || item.itemDto?.price || 0,
+          categoryId: item.categoryId || "",
+          categoryName: item.categoryName || "",
+          unitType: item.unitType || "",
+          onlineStockThreshold: item.onlineStockThreshold || 0,
+          discount: item.discount || 0,
+        }));
+
+        setFinalData(processedData);
+        setAllFinalData(processedData);
+        localStorage.setItem("finalDataStorage", JSON.stringify(processedData));
+
+        // Process categories
+        const categoriesResponse = await categoryRequest({ shopId });
+        if (categoriesResponse?.data) {
+          const categoryMap = new Map(
+            categoriesResponse.data.map((cat) => [cat.id, cat.title])
+          );
+
+          const availableCategoriesArray: CategoryOption[] = [];
+          processedData.forEach((item) => {
+            if (item.categoryId && categoryMap.has(item.categoryId)) {
+              const existing = availableCategoriesArray.find(
+                (cat) => cat.categoryId === item.categoryId
+              );
+              if (!existing) {
+                availableCategoriesArray.push({
+                  categoryId: item.categoryId,
+                  categoryName: categoryMap.get(item.categoryId) || "",
+                });
+              }
             }
           });
-        }
-        availableCategoriesArray = availableCategoriesArray.filter(
-          (
-            obj: { categoryId: any; categoryName: any },
-            index: any,
-            self: any[]
-          ) =>
-            index ===
-            self.findIndex(
-              (t) =>
-                t.categoryId === obj.categoryId &&
-                t.categoryName === obj.categoryName
-            )
-        );
-        // availableCategoriesArray = [...new Set(availableCategoriesArray)];
-        setAvailableCategories(availableCategoriesArray);
 
-        setCategoriesCount(categories.length);
-        setFinalData(response.data);
-        setAllFinalData(response.data);
-        localStorage.setItem("finalDataStorage", JSON.stringify(response.data));
+          setAvailableCategories(availableCategoriesArray);
+        }
       }
-    } catch (error) {}
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      setError("خطا در بارگذاری محصولات");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   //   useEffect(() => {
@@ -240,61 +200,58 @@ const Products: React.FC = () => {
   //     }
   //   }, [currentPage]);
 
-  const handleSearch = (value: string) => {
-    setSearchTerm(value);
-    setCurrentPage(1);
-    // در اینجا می‌توانید فیلتر جستجو را اعمال کنید
-  };
+  // const handleSearch = (value: string) => {
+  //   setSearchTerm(value);
+  //   setCurrentPage(1);
+  //   // در اینجا می‌توانید فیلتر جستجو را اعمال کنید
+  // };
   const handleSeachProduct = (value: string) => {
-    let searchData: any = [];
-    allFinalData?.map(
-      (item: { name: string | string[]; sku: string | string[] }) => {
-        if (item.name.includes(value) || item.sku === value) {
-          searchData.push(item);
-        }
-      }
-    );
+    if (!allFinalData) return;
 
-    if (!value) {
-      setFinalData(allFinalData);
-    } else {
-      setFinalData(searchData);
-    }
+    let searchData: ProductItem[] = [];
+    allFinalData.forEach((item) => {
+      if (
+        item.name.toLowerCase().includes(value.toLowerCase()) ||
+        item.id.includes(value)
+      ) {
+        searchData.push(item);
+      }
+    });
+
+    setFinalData(value ? searchData : allFinalData);
     setCurrentPage(1);
   };
   const closeCategoryModal = () => {
     setCategoryDelete(false);
   };
   const deleteCategoryHandler = () => {
-    const index = availableCategories?.findIndex(
-      (item: { categoryId: string | null }) =>
-        item.categoryId === showCategoryId
+    if (!showCategoryId || !availableCategories || !finalData) return;
+
+    const filteredData = finalData.filter(
+      (item) => item.categoryId !== showCategoryId
     );
-    const filteCategoryFinalData = finalData.filter(
-      (item: { categoryId: string | null }) =>
-        item.categoryId !== showCategoryId
+
+    setFinalData(filteredData);
+    setAllFinalData(filteredData);
+    localStorage.setItem("finalDataStorage", JSON.stringify(filteredData));
+
+    const updatedCategories = availableCategories.filter(
+      (item) => item.categoryId !== showCategoryId
     );
-    setFinalData(filteCategoryFinalData);
-    setAllFinalData(filteCategoryFinalData);
-    localStorage.setItem(
-      "finalDataStorage",
-      JSON.stringify(filteCategoryFinalData)
-    );
-    allOfData = filteCategoryFinalData;
-    availableCategories.splice(index, 1);
+    setAvailableCategories(updatedCategories);
     setCategoryDelete(false);
   };
   const handleEditCategory = (id: string) => {
-    console.log(id);
+    console.log("Edit category:", id);
   };
   const handleDeleteCategory = (id: string) => {
     setOpenTooltipId(null);
     setCategoryDelete(true);
     setShowCategoryId(id);
   };
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
-  };
+  // const handlePageChange = (page: number) => {
+  //   setCurrentPage(page);
+  // };
 
   const formatNumber = (num: number) => {
     return num.toLocaleString("fa-ir").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -304,29 +261,28 @@ const Products: React.FC = () => {
     return stock === 0 ? "عدم موجودی" : stock.toString();
   };
 
-  const getStockColor = (stock: number) => {
-    return stock === 0 ? "#DE4949" : "#000000";
-  };
+  // const getStockColor = (stock: number) => {
+  //   return stock === 0 ? "#DE4949" : "#000000";
+  // };
 
   const itemsPerPage = 20;
   const totalPages = Math.ceil((finalData?.length || 0) / itemsPerPage);
 
   const paginatedData = useMemo(() => {
-    return finalData?.slice(
+    if (!finalData) return [];
+    return finalData.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
     );
   }, [finalData, currentPage]);
 
   const categoryOptions = useMemo(() => {
-    return availableCategories?.map((item) => ({
-      categoryId: item.categoryId,
-      categoryName: item.categoryName,
-    }));
+    return availableCategories || [];
   }, [availableCategories]);
 
   const unitTypes = useMemo(() => {
-    const types = allFinalData?.map((item) => item.unitType);
+    if (!allFinalData) return [];
+    const types = allFinalData.map((item) => item.unitType);
     return [...new Set(types)];
   }, [allFinalData]);
 
@@ -335,6 +291,30 @@ const Products: React.FC = () => {
   // Sample brands array (replace with real data if available)
   const brands = ["برند نمونه ۱", "برند نمونه ۲", "برند نمونه ۳"];
   const unitsItem = ["عدد", "کیلوگرم", "گرم", "لیتر"];
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="text-red-500 text-xl mb-4">{error}</div>
+          <button
+            onClick={getInfo}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            تلاش مجدد
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-xl">در حال بارگذاری...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -346,11 +326,10 @@ const Products: React.FC = () => {
       <AddProductModal
         isOpen={isOpen}
         onClose={closeModal}
-        categories={categoryOptions || []}
-        units={unitsItem || []}
+        categories={categoryOptions}
+        units={unitsItem}
         brands={brands}
         onAdd={(data) => {
-          // اینجا می‌توانید داده را به سرور ارسال کنید یا به لیست اضافه کنید
           console.log("محصول جدید:", data);
         }}
       />
@@ -379,6 +358,7 @@ const Products: React.FC = () => {
               fontWeight: "400",
             }}
             onChange={(e) => handleSeachProduct(e.target.value)}
+            value={searchTerm}
             style={{
               borderRadius: "55px",
               backgroundColor: "#fff",
@@ -441,6 +421,8 @@ const Products: React.FC = () => {
             categories={categoryOptions}
             unitTypes={unitTypes}
             onApply={(filters) => {
+              if (!allFinalData) return;
+
               let filtered = allFinalData;
               if (filters.category) {
                 filtered = filtered.filter(
@@ -480,18 +462,18 @@ const Products: React.FC = () => {
         )}
         <section className="flex flex-wrap mt-2">
           <div
-            className="flex mx-1 mt-2 p-4 "
+            className="flex mx-1 mt-2 p-4"
             style={{
               borderRadius: "5px",
               backgroundColor: "#DEDEDE",
             }}
           >
-            <img style={{ marginBottom: "5px" }} src={starFull} />
+            <img style={{ marginBottom: "5px" }} src={starFull} alt="star" />
           </div>
           {availableCategories?.map((item) => (
             <div
-              key={item}
-              className="flex justify-between al mx-1 mt-2 px-4 py-2"
+              key={item.categoryId}
+              className="flex justify-between mx-1 mt-2 px-4 py-2"
               style={{
                 borderRadius: "5px",
                 backgroundColor: "#DEDEDE",
@@ -530,6 +512,7 @@ const Products: React.FC = () => {
                       marginTop: "12px",
                     }}
                     src={optionIcon}
+                    alt="options"
                   />
                 </Tooltip>
               </div>
@@ -545,10 +528,10 @@ const Products: React.FC = () => {
           <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[400px]">
             نام کالا
           </div>
-          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center  w-[180px]">
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[180px]">
             قیمت اولیه (ریال)
           </div>
-          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center  w-[180px]">
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[180px]">
             قیمت فروش (ریال)
           </div>
           <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[300px]">
@@ -565,105 +548,39 @@ const Products: React.FC = () => {
           className="overflow-y-auto relative"
           style={{ maxHeight: productSectionMaxHeight }}
         >
-          {paginatedData?.map(
-            (
-              item: {
-                id: React.Key | null | undefined;
-                name:
-                  | string
-                  | number
-                  | bigint
-                  | boolean
-                  | React.ReactElement<
-                      unknown,
-                      string | React.JSXElementConstructor<any>
-                    >
-                  | Iterable<React.ReactNode>
-                  | React.ReactPortal
-                  | Promise<
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | React.ReactPortal
-                      | React.ReactElement<
-                          unknown,
-                          string | React.JSXElementConstructor<any>
-                        >
-                      | Iterable<React.ReactNode>
-                      | null
-                      | undefined
-                    >
-                  | null
-                  | undefined;
-                price: number;
-                categoryName:
-                  | string
-                  | number
-                  | bigint
-                  | boolean
-                  | React.ReactElement<
-                      unknown,
-                      string | React.JSXElementConstructor<any>
-                    >
-                  | Iterable<React.ReactNode>
-                  | React.ReactPortal
-                  | Promise<
-                      | string
-                      | number
-                      | bigint
-                      | boolean
-                      | React.ReactPortal
-                      | React.ReactElement<
-                          unknown,
-                          string | React.JSXElementConstructor<any>
-                        >
-                      | Iterable<React.ReactNode>
-                      | null
-                      | undefined
-                    >
-                  | null
-                  | undefined;
-                onlineStockThreshold: number;
-              },
-              index: number
-            ) => (
-              <div
-                key={item.id}
-                className={`flex justify-between py-1 font-21 ${
-                  (index + 1) % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
-                }`}
-              >
-                <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[50px]">
-                  {(index + 1).toLocaleString("fa-ir")}
-                </div>
-                <div
-                  className="h-[49px] p-4 rounded-md flex items-center justify-center w-[400px]"
-                  style={{ textAlign: "center" }}
-                  onClick={() => deleteProduct(item.id)}
-                >
-                  {item.name}
-                </div>
-                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
-                  {formatNumber(item.price)}
-                </div>
-                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
-                  {formatNumber(item.price)}
-                </div>
-                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[300px]">
-                  {item.categoryName}
-                </div>
-                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[150px]">
-                  {item.onlineStockThreshold
-                    ? getStockStatus(item.onlineStockThreshold)
-                    : "عدم موجودی"}
-                </div>
-                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
-                  -
-                </div>
+          {paginatedData?.map((item, index) => (
+            <div
+              key={item.id}
+              className={`flex justify-between py-1 font-21 ${
+                (index + 1) % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
+              }`}
+            >
+              <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[50px]">
+                {(index + 1).toLocaleString("fa-ir")}
               </div>
-            )
-          )}
+              <div
+                className="h-[49px] p-4 rounded-md flex items-center justify-center w-[400px]"
+                style={{ textAlign: "center" }}
+              >
+                {item.name}
+              </div>
+              <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
+                {formatNumber(item.price)}
+              </div>
+              <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
+                {formatNumber(item.price)}
+              </div>
+              <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[300px]">
+                {item.categoryName}
+              </div>
+              <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[150px]">
+                {getStockStatus(item.onlineStockThreshold)}
+              </div>
+              <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
+                {item.discount ? formatNumber(item.discount) : "-"}
+              </div>
+            </div>
+          ))}
         </section>
       </section>
     </>

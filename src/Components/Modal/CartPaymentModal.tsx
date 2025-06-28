@@ -17,7 +17,6 @@ interface CartPaymentModalProps {
 
 const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
   totalAmount,
-  onConfirm,
   paymentType = "card",
 }) => {
   const {

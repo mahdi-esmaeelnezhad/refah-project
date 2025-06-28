@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import productLabel from "../../assets/productLabel.svg";
 import Pagination from "../../Components/Pagination/Pagination";
-import closeIcon from "../../assets/close.svg";
 import arrowDownn from "../../assets/arrow-down.svg";
 import ProductRegistrationTooltip from "../../Components/Modal/ProductRegistrationTooltip";
 
@@ -16,7 +15,7 @@ interface Item {
 const pageSize = 20;
 
 const Unregistered: React.FC = () => {
-  const [items, setItems] = useState<Item[]>(
+  const [items] = useState<Item[]>(
     [...Array(150)].map((_, index) => ({
       id: index + 1,
       name: Math.random().toString(36).substring(2, 15),

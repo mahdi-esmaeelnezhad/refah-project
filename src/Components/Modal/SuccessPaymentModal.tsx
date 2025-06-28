@@ -19,7 +19,6 @@ interface SuccessPaymentModalProps {
 }
 
 const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
-  amount,
   transactionType,
   date,
   time,

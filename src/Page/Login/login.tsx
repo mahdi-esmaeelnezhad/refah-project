@@ -3,7 +3,7 @@ import { useDispatch } from "react-redux";
 import { setToken } from "../../store/authSlice";
 import useRequest from "../../hooks/useRequest";
 import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
-import axios, { AxiosError } from "axios";
+// import  { AxiosError } from "axios";
 import leftPatter from "../../assets/img/Pattern - White 1.png";
 import patterleft from "../../assets/img/pattern 3.png";
 import rightPatern from "../../assets/img/Pattern - White 2.png";
@@ -39,28 +39,28 @@ const Login = () => {
   const [submitted, setSubmitted] = useState(false);
   const [phoneError, setPhoneError] = useState("");
   const [error, setError] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe] = useState(false);
 
   const [currentStep, setCurrentStep] = useState<Step>("login");
 
   const {
     execute: loginRequest,
     loading,
-    error: loginError,
+    // error: loginError,
   } = useRequest<{ id_token: string }>(AUTH_ENDPOINTS.login, "POST");
   const token = localStorage.getItem("token");
   console.log(token, "tokentokentokentoken");
 
-  const {
-    execute: shopRequest,
-    loadingShop,
-    error: shopError,
-  } = useRequest<{ extraData: any }>(AUTH_ENDPOINTS.shoppInfo, "GET", {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-  });
+  // const {
+  //   execute: shopRequest,
+  //   loadingShop,
+  //   error: shopError,
+  // } = useRequest<{ extraData: any }>(AUTH_ENDPOINTS.shoppInfo, "GET", {
+  //   headers: {
+  //     Authorization: `Bearer ${token}`,
+  //     "Content-Type": "application/json",
+  //   },
+  // });
   useEffect(() => {
     const timer = setTimeout(() => {
       setFadeOut(true);
@@ -70,27 +70,27 @@ const Login = () => {
     return () => clearTimeout(timer);
   }, []);
 
-  const validatePhoneNumber = async () => {
-    try {
-      // const response = await axios.post(
-      //   "https://fake-api.example.com/validate-phone",
-      //   {
-      //     phoneNumber: phoneNumber,
-      //   }
-      // );
+  // const validatePhoneNumber = async () => {
+  //   try {
+  //     // const response = await axios.post(
+  //     //   "https://fake-api.example.com/validate-phone",
+  //     //   {
+  //     //     phoneNumber: phoneNumber,
+  //     //   }
+  //     // );
 
-      setPhoneError("");
-      return true;
-    } catch (error: unknown) {
-      const axiosError = error as AxiosError;
-      if (axiosError.response && axiosError.response.status === 404) {
-        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
-      } else {
-        setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
-      }
-      return false;
-    }
-  };
+  //     setPhoneError("");
+  //     return true;
+  //   } catch (error: unknown) {
+  //     const axiosError = error as AxiosError;
+  //     if (axiosError.response && axiosError.response.status === 404) {
+  //       setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
+  //     } else {
+  //       setPhoneError("برای این شماره فروشگاهی ثبت نشده است");
+  //     }
+  //     return false;
+  //   }
+  // };
 
   const handleLogin = async () => {
     setSubmitted(true);
@@ -111,9 +111,9 @@ const Login = () => {
         dispatch(setToken(response.data.id_token));
 
         localStorage.setItem("token", response.data.id_token);
-        const shopData = await shopRequest({});
-        localStorage.setItem("shoppId", shopData.data?.extraData?.shopId);
-        localStorage.setItem("shopName", shopData.data?.extraData?.shopName);
+        // const shopData = await shopRequest({});
+        // localStorage.setItem("shoppId", shopData.data?.extraData?.shopId);
+        // localStorage.setItem("shopName", shopData.data?.extraData?.shopName);
         window.location.href = "/dashboard";
       }
     } catch (error) {

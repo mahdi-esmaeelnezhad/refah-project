@@ -1,14 +1,6 @@
 import React from "react";
 import { Button } from "../Ui/Button/button";
 
-interface Factor {
-  id: string;
-  amount: number;
-  customerName: string;
-  time: string;
-  products: string[];
-}
-
 interface SavedFactorsTooltipProps {
   category: any;
   onEdit: (id: string) => void;

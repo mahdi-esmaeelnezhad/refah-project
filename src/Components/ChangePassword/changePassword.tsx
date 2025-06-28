@@ -9,10 +9,7 @@ interface ChangePasswordProps {
   onSuccess: () => void;
 }
 
-const ChangePassword: React.FC<ChangePasswordProps> = ({
-  onBack,
-  onSuccess,
-}) => {
+const ChangePassword: React.FC<ChangePasswordProps> = ({ onSuccess }) => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");

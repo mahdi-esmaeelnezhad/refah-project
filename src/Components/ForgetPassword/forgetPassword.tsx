@@ -1,5 +1,4 @@
 import { useState } from "react";
-import axios, { AxiosError } from "axios";
 import "./forgetPassword.css";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
@@ -21,7 +20,7 @@ const ForgetPassword: React.FC<ForgetPasswordProps> = ({
   const [phoneError, setPhoneError] = useState("");
   const [showSendSms, setShowSendSms] = useState(false);
 
-  const { execute: resetPasswordRequest, loading } = useRequest<any>(
+  const { execute: resetPasswordRequest } = useRequest<any>(
     AUTH_ENDPOINTS.resetPassword,
     "POST",
     { validateStatus: () => true } // allow handling 204 manually

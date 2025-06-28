@@ -37,7 +37,7 @@ const tabFilters: Record<TabKey, (f: Factor) => boolean> = {
 const pageSize = 20;
 
 const Factors: React.FC = () => {
-  const [fakeFactors, setFakeFactors] = useState<Factor[]>(
+  const [fakeFactors] = useState<Factor[]>(
     [...Array(150)].map((_, index) => ({
       id: index + 1,
       receiptCode: Math.random().toString(36).substring(2, 15),

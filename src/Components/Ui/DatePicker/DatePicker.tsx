@@ -28,8 +28,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
   // Persian calendar conversion functions
   const gregorianToPersian = (date: Date) => {
     const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
+    // const month = date.getMonth() + 1;
+    // const day = date.getDate();
 
     // More accurate Persian calendar conversion
     // Persian year starts around March 21st (spring equinox)

@@ -38,8 +38,7 @@ interface Customer {
 }
 
 const Content: React.FC = () => {
-  const { isOpen, barcode, openModal, closeModal, openCartPayment } =
-    useModal();
+  const { isOpen, barcode, closeModal, openCartPayment } = useModal();
   const [deliveryMedivod, setDeliveryMedivod] = useState("حضوری");
   const [paymentMedivod, setPaymentMedivod] = useState("کارتی");
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
@@ -62,9 +61,8 @@ const Content: React.FC = () => {
     }))
   );
   const [tempQuantity, setTempQuantity] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [invoiceNumber, setInvoiceNumber] = useState("256");
+  const [invoiceNumber] = useState("256");
   const [paymentAmount, setPaymentAmount] = useState(0);
 
   // Calculate totals
@@ -94,11 +92,12 @@ const Content: React.FC = () => {
 
   const handleModalSubmit = (data: { productName: string; price: string }) => {
     closeModal();
+    console.log(data);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  // const handleCloseModal = () => {
+  //   setIsModalOpen(false);
+  // };
 
   const handleQuantityClick = (itemId: number, currentQuantity: string) => {
     setSelectedItemId(itemId);

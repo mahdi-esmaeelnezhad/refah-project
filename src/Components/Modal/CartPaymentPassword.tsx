@@ -7,9 +7,7 @@ interface CartPaymentPasswordProps {
   amount: number;
 }
 
-const CartPaymentPassword: React.FC<CartPaymentPasswordProps> = ({
-  amount,
-}) => {
+const CartPaymentPassword: React.FC<CartPaymentPasswordProps> = ({}) => {
   const {
     isCartPaymentPassword,
     closeCartPaymentPassword,
@@ -65,14 +63,14 @@ const CartPaymentPassword: React.FC<CartPaymentPasswordProps> = ({
 
       if (isSuccess) {
         // در حالت واقعی، این اطلاعات از دستگاه کارت‌خوان می‌آید
-        const transactionData = {
-          amount,
-          transactionType: "خرید",
-          date: new Date().toLocaleDateString("fa-IR"),
-          time: new Date().toLocaleTimeString("fa-IR"),
-          trackingNumber: Math.random().toString(36).substring(7),
-          referenceNumber: Math.random().toString(36).substring(7),
-        };
+        // const transactionData = {
+        //   amount,
+        //   transactionType: "خرید",
+        //   date: new Date().toLocaleDateString("fa-IR"),
+        //   time: new Date().toLocaleTimeString("fa-IR"),
+        //   trackingNumber: Math.random().toString(36).substring(7),
+        //   referenceNumber: Math.random().toString(36).substring(7),
+        // };
         openSuccessPayment();
       } else {
         openFailedPayment();

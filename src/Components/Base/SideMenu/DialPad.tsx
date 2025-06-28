@@ -22,7 +22,7 @@ interface DialPadProps {
   onClose: () => void;
 }
 
-export function DialPad({ value, onChange, onConfirm, onClose }: DialPadProps) {
+export function DialPad({ value, onChange, onClose }: DialPadProps) {
   const handlePress = (input: string) => {
     if (input === "delete") {
       if (value.length > 1) {

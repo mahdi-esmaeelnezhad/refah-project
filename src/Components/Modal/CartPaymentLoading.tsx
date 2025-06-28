@@ -3,15 +3,15 @@ import closeIcon from "../../assets/close.svg";
 import atmImage from "../../assets/img/atm.png";
 import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";
-import { usePaymentStore } from "../../hooks/usePaymentStore";
+// import { usePaymentStore } from "../../hooks/usePaymentStore";
 
-const CartPaymentLoading: React.FC<{ amount: number }> = ({ amount }) => {
+const CartPaymentLoading: React.FC<{ amount: number }> = ({}) => {
   const {
     isCartPaymentLoading,
     closeCartPaymentLoading,
     openCartPaymentPassword,
   } = useModal();
-  const editableAmount = usePaymentStore((state) => state.editableAmount);
+  // const editableAmount = usePaymentStore((state) => state.editableAmount);
 
   useEffect(() => {
     // شبیه‌سازی کشیدن کارت

@@ -29,7 +29,7 @@ interface Item {
 const pageSize = 20;
 
 const Customers: React.FC = () => {
-  const [allFinalData, setAllFinalData] = useState<Item[]>([]);
+  const [allFinalData] = useState<Item[]>([]);
   const [items, setItems] = useState<Item[]>(
     [...Array(150)].map((_, index) => ({
       id: index + 1,
@@ -52,7 +52,6 @@ const Customers: React.FC = () => {
   );
   //   setAllFinalData(items);
   const [currentPage, setCurrentPage] = useState(1);
-  const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
   const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
     useState(false);
 

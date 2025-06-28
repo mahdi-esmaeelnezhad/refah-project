@@ -1,5 +1,5 @@
-import React, { useState, useRef } from "react";
-import { BiBorderRadius } from "react-icons/bi";
+import React, { useState } from "react";
+// import { BiBorderRadius } from "react-icons/bi";
 import DropDownCustom from "../Ui/DropDownCustom/DropDownCustom";
 
 interface ProductsFilterProps {
@@ -23,16 +23,6 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
   const [unitType, setUnitType] = useState<any>(null);
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
-
-  // Dropdown open states
-  const [brandOpen, setBrandOpen] = useState(false);
-  const [categoryOpen, setCategoryOpen] = useState(false);
-  const [unitTypeOpen, setUnitTypeOpen] = useState(false);
-
-  // Refs for positioning
-  const brandRef = useRef<HTMLDivElement>(null);
-  const categoryRef = useRef<HTMLDivElement>(null);
-  const unitTypeRef = useRef<HTMLDivElement>(null);
 
   const handleApply = () => {
     onApply({ brand, category, discount, unitType, minPrice, maxPrice });
@@ -106,26 +96,6 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
     fontSize: 16,
     outline: "none",
     cursor: "pointer",
-  };
-  const dropdownStyle = {
-    position: "absolute" as const,
-    top: 38,
-    left: 0,
-    width: "100%",
-    background: "#fff",
-    border: "1px solid #D1D1D1",
-    borderRadius: 8,
-    boxShadow: "0 2px 8px rgba(0,0,0,0.08)",
-    zIndex: 100,
-    maxHeight: 180,
-    overflowY: "auto" as const,
-  };
-  const dropdownItemStyle = {
-    padding: "8px 12px",
-    cursor: "pointer",
-    fontSize: 16,
-    color: "#222",
-    background: "#fff",
   };
   const verticalLine = (
     <div

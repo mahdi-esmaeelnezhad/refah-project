@@ -17,7 +17,6 @@ interface FailedPaymentModalProps {
 }
 
 const FailedPaymentModal: React.FC<FailedPaymentModalProps> = ({
-  amount,
   transactionType,
   date,
   time,

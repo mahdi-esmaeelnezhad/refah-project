@@ -19,7 +19,7 @@ const persianNumberFormat = new Intl.NumberFormat('fa-IR', {
 });
 
 // Override default number formatting
-const originalToString = Number.prototype.toString;
+// const originalToString = Number.prototype.toString;
 Number.prototype.toString = function(this: number): string {
   return persianNumberFormat.format(this);
 };

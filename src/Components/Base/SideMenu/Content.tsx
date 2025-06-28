@@ -19,6 +19,8 @@ import SuccessPaymentModal from "../../Modal/SuccessPaymentModal";
 import FailedPaymentModal from "../../Modal/FailedPaymentModal";
 import CustomerTooltip from "./CustomerTooltip";
 import CustomerDefinitionModal from "../../Modal/CustomerDefinitionModal";
+import CreditPaymentModal from "../../Modal/CreditPaymentModal";
+import BarcodeCreditModal from "../../Modal/BarcodeCreditModal";
 
 interface Item {
   id: number;
@@ -49,6 +51,16 @@ const Content: React.FC = () => {
   );
   const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
     useState(false);
+  const [isCreditPaymentModalOpen, setIsCreditPaymentModalOpen] =
+    useState(false);
+  const [isBarcodeCreditModalOpen, setIsBarcodeCreditModalOpen] =
+    useState(false);
+  const [selectedCreditMethod, setSelectedCreditMethod] = useState<
+    "tara" | "digipay" | null
+  >(null);
+  const [, setIsCreditSuccessModalOpen] = useState(false);
+  const [creditPaymentAmount, setCreditPaymentAmount] = useState(0);
+  const [, setCreditRemainingAmount] = useState(0);
   const [items, setItems] = useState<Item[]>(
     [...Array(50)].map((_, index) => ({
       id: index + 1,
@@ -148,9 +160,9 @@ const Content: React.FC = () => {
   };
 
   const handlePayment = () => {
-    if (paymentMedivod === "کارتی") {
-      openCartPayment();
-    } else if (paymentMedivod === "نقدی") {
+    if (paymentMedivod === "اعتباری") {
+      setIsCreditPaymentModalOpen(true);
+    } else if (paymentMedivod === "کارتی" || paymentMedivod === "نقدی") {
       openCartPayment();
     }
   };
@@ -158,6 +170,29 @@ const Content: React.FC = () => {
   const handleCartPaymentConfirm = (amount: number) => {
     setPaymentAmount(amount);
   };
+
+  const handleCreditMethodSelect = (method: "tara" | "digipay") => {
+    setSelectedCreditMethod(method);
+    setIsCreditPaymentModalOpen(false);
+    setIsBarcodeCreditModalOpen(true);
+  };
+
+  const handleCreditPaymentSuccess = (
+    creditAmount: number,
+    remainingAmount: number
+  ) => {
+    setIsBarcodeCreditModalOpen(false);
+    setSelectedCreditMethod(null);
+    setCreditPaymentAmount(creditAmount);
+    setCreditRemainingAmount(remainingAmount);
+    setIsCreditSuccessModalOpen(true);
+  };
+
+  // const handleCreditSuccessModalClose = () => {
+  //   setIsCreditSuccessModalOpen(false);
+  //   setCreditPaymentAmount(0);
+  //   setCreditRemainingAmount(0);
+  // };
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -228,6 +263,40 @@ const Content: React.FC = () => {
         isOpen={isCustomerDefinitionModalOpen}
         onClose={() => setIsCustomerDefinitionModalOpen(false)}
         onAdd={handleAddCustomer}
+      />
+      <CreditPaymentModal
+        isOpen={isCreditPaymentModalOpen}
+        onClose={() => setIsCreditPaymentModalOpen(false)}
+        onSelectMethod={handleCreditMethodSelect}
+      />
+      <BarcodeCreditModal
+        isOpen={isBarcodeCreditModalOpen}
+        onClose={() => {
+          setIsBarcodeCreditModalOpen(false);
+          setSelectedCreditMethod(null);
+        }}
+        paymentMethod={selectedCreditMethod || "tara"}
+        totalAmount={finalAmount}
+        onSuccess={handleCreditPaymentSuccess}
+      />
+      <SuccessPaymentModal
+        amount={creditPaymentAmount}
+        transactionType="اعتباری"
+        date={new Date().toLocaleDateString("fa-IR")}
+        time={new Date().toLocaleTimeString("fa-IR")}
+        trackingNumber={Math.random().toString(36).substring(7)}
+        referenceNumber={Math.random().toString(36).substring(7)}
+        totalAmount={finalAmount}
+        paymentType={
+          paymentMedivod === "نقدی"
+            ? "cash"
+            : paymentMedivod === "اعتباری"
+            ? "credit"
+            : "card"
+        }
+        // remainingAmount={creditRemainingAmount}
+        // isOpen={isCreditSuccessModalOpen}
+        // onClose={handleCreditSuccessModalClose}
       />
       <div
         style={{

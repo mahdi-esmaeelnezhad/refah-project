@@ -15,7 +15,7 @@ interface SuccessPaymentModalProps {
   trackingNumber: string;
   referenceNumber: string;
   totalAmount?: number;
-  paymentType?: "cash" | "card";
+  paymentType?: "cash" | "card" | "credit";
 }
 
 const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({

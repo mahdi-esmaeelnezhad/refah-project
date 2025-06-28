@@ -31,7 +31,7 @@ interface InputProps {
   hasButton?: boolean;
   buttonText?: string;
   onButtonClick?: () => void;
-
+  backgroundColor?: string;
   onUpload?: (file: File) => void;
 }
 
@@ -55,6 +55,7 @@ const Input: React.FC<InputProps> = ({
   hasButton,
   buttonText,
   onButtonClick,
+  backgroundColor = "#f2f2f2",
   onUpload,
 }) => {
   const renderInput = () => {
@@ -79,6 +80,7 @@ const Input: React.FC<InputProps> = ({
         }`}
         style={{
           height: typeof height === "number" ? `${height}px` : height,
+          backgroundColor: backgroundColor,
         }}
       >
         {icon && <span className={styles.icon}>{icon}</span>}

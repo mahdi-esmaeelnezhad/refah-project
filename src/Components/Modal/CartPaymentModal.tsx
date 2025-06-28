@@ -76,10 +76,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 bg-[#92929280] backdrop-blur-sm z-40" />
-
-      {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[499px] bg-white rounded-[15px] shadow-lg z-50">
         <div className="flex flex-col p-6 relative">
           <div className="flex justify-between mb-5">
@@ -228,9 +225,9 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
               }}
             >
               <Button
-                label="انصراف"
-                color="#DE4949"
-                onClick={closeCartPayment}
+                label="تایید"
+                color="#479E55"
+                onClick={handleConfirm}
                 style={{
                   width: "166px",
                   height: "48px",
@@ -239,9 +236,9 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 }}
               />
               <Button
-                label="تایید"
-                color="#479E55"
-                onClick={handleConfirm}
+                label="انصراف"
+                color="#DE4949"
+                onClick={closeCartPayment}
                 style={{
                   width: "166px",
                   height: "48px",

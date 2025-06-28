@@ -232,7 +232,7 @@ const Content: React.FC = () => {
       <div
         style={{
           position: "absolute",
-          width: "988px",
+          width: "1030px",
           height: "846px",
           right: 0,
           top: 0,

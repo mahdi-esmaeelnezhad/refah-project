@@ -8,6 +8,7 @@ import { useModal } from "../../hooks/useModal";
 import { usePaymentStore } from "../../hooks/usePaymentStore";
 
 interface FailedPaymentModalProps {
+  amount: number;
   transactionType: string;
   date: string;
   time: string;
@@ -16,6 +17,7 @@ interface FailedPaymentModalProps {
 }
 
 const FailedPaymentModal: React.FC<FailedPaymentModalProps> = ({
+  amount,
   transactionType,
   date,
   time,

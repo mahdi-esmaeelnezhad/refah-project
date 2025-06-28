@@ -1,11 +1,10 @@
 import React, { type CSSProperties, type ReactNode } from "react";
-
 interface MenuItemProps {
   children: ReactNode;
   textClassName?: string;
   style?: CSSProperties;
   className?: string;
-  icon?: JSX.Element | string;
+  icon?: React.ReactNode;
   onClick?: () => void;
 }
 

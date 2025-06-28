@@ -8,21 +8,28 @@ import { useModal } from "../../hooks/useModal";
 import { usePaymentStore } from "../../hooks/usePaymentStore";
 
 interface SuccessPaymentModalProps {
+  amount: number;
   transactionType: string;
   date: string;
   time: string;
   trackingNumber: string;
   referenceNumber: string;
+  totalAmount?: number;
+  paymentType?: "cash" | "card";
 }
 
 const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
+  amount,
   transactionType,
   date,
   time,
   trackingNumber,
   referenceNumber,
+  totalAmount,
+  paymentType = "card",
 }) => {
-  const { isSuccessPaymentOpen, closeSuccessPayment } = useModal();
+  const { isSuccessPaymentOpen, closeSuccessPayment, openCartPayment } =
+    useModal();
   const editableAmount = usePaymentStore((state) => state.editableAmount);
 
   if (!isSuccessPaymentOpen) return null;
@@ -38,6 +45,15 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   const handleSendDigital = () => {
     // اینجا باید منطق ارسال فاکتور دیجیتال پیاده‌سازی شود
   };
+
+  const handleRemainingPayment = () => {
+    closeSuccessPayment();
+    openCartPayment();
+  };
+
+  const remainingAmount = totalAmount ? totalAmount - editableAmount : 0;
+  const showRemainingAmount =
+    paymentType === "cash" && totalAmount && remainingAmount > 0;
 
   return (
     <>
@@ -67,6 +83,29 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
             >
               پرداخت موفق
             </div>
+
+            {showRemainingAmount && (
+              <div
+                style={{
+                  width: "366px",
+                  height: "46px",
+                  backgroundColor: "#E99C43",
+                  borderRadius: "7px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  padding: "0 15px",
+                  marginBottom: "20px",
+                  color: "white",
+                  fontSize: "18px",
+                  fontWeight: 500,
+                }}
+              >
+                <span>مبلغ باقی‌مانده:</span>
+                <span>{formatNumber(remainingAmount)} ریال</span>
+              </div>
+            )}
+
             <div className="flex flex-col items-center">
               <div className="flex flex-col gap-2 w-full">
                 <div
@@ -119,83 +158,107 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
                   </span>
                 </div>
 
-                <div
-                  style={{
-                    width: "366px",
-                    height: "36px",
-                    backgroundColor: "#DEDEDE",
-                    borderRadius: "15px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "0 15px",
-                  }}
-                >
-                  <span>شماره پیگیری:</span>
-                  <span>{trackingNumber}</span>
-                </div>
+                {paymentType === "card" && (
+                  <>
+                    <div
+                      style={{
+                        width: "366px",
+                        height: "36px",
+                        backgroundColor: "#DEDEDE",
+                        borderRadius: "15px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "0 15px",
+                      }}
+                    >
+                      <span>شماره پیگیری:</span>
+                      <span>{trackingNumber}</span>
+                    </div>
 
-                <div
-                  style={{
-                    width: "366px",
-                    height: "36px",
-                    backgroundColor: "#DEDEDE",
-                    borderRadius: "15px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    padding: "0 15px",
-                  }}
-                >
-                  <span>شماره مرجع:</span>
-                  <span>{referenceNumber}</span>
-                </div>
+                    <div
+                      style={{
+                        width: "366px",
+                        height: "36px",
+                        backgroundColor: "#DEDEDE",
+                        borderRadius: "15px",
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        padding: "0 15px",
+                      }}
+                    >
+                      <span>شماره مرجع:</span>
+                      <span>{referenceNumber}</span>
+                    </div>
+                  </>
+                )}
               </div>
 
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  width: "366px",
-                  marginTop: "20px",
-                  marginBottom: "20px",
-                }}
-              >
-                <img
-                  src={shaparakIcon}
-                  alt="Shaparak"
-                  style={{ width: "120px" }}
-                />
-                <img
-                  src={iranKishIcon}
-                  alt="IranKish"
-                  style={{ width: "120px" }}
-                />
-              </div>
+              {paymentType === "card" && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    width: "366px",
+                    marginTop: "20px",
+                    marginBottom: "20px",
+                  }}
+                >
+                  <img
+                    src={shaparakIcon}
+                    alt="Shaparak"
+                    style={{ width: "120px" }}
+                  />
+                  <img
+                    src={iranKishIcon}
+                    alt="IranKish"
+                    style={{ width: "120px" }}
+                  />
+                </div>
+              )}
 
               <div className="flex flex-col gap-2 w-full mt-10 mb-10">
-                <Button
-                  label="چاپ فاکتور"
-                  color="#7485E5"
-                  onClick={handlePrint}
-                  style={{
-                    width: "366px",
-                    height: "48px",
-                    color: "white",
-                    borderRadius: "15px",
-                  }}
-                />
-                <Button
-                  label="ارسال فاکتور دیجیتال"
-                  color="#7485E5B2"
-                  onClick={handleSendDigital}
-                  style={{
-                    width: "366px",
-                    height: "48px",
-                    color: "white",
-                    borderRadius: "15px",
-                  }}
-                />
+                {showRemainingAmount ? (
+                  <Button
+                    label="پرداخت مبلغ باقی‌مانده"
+                    color="#479E55"
+                    onClick={handleRemainingPayment}
+                    style={{
+                      width: "366px",
+                      height: "46px",
+                      color: "white",
+                      borderRadius: "7px",
+                      fontSize: "18px",
+                      fontWeight: 500,
+                    }}
+                  />
+                ) : (
+                  <>
+                    <Button
+                      label="چاپ فاکتور"
+                      color="#7485E5"
+                      onClick={handlePrint}
+                      style={{
+                        width: "366px",
+                        height: "48px",
+                        color: "white",
+                        borderRadius: "15px",
+                      }}
+                    />
+                    <Button
+                      label="ارسال فاکتور دیجیتال"
+                      color="#7485E5B2"
+                      onClick={handleSendDigital}
+                      style={{
+                        width: "366px",
+                        height: "48px",
+                        color: "white",
+                        borderRadius: "15px",
+                      }}
+                    />
+                  </>
+                )}
               </div>
             </div>
           </div>

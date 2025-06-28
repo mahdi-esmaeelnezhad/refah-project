@@ -5,7 +5,7 @@ import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";
 import { usePaymentStore } from "../../hooks/usePaymentStore";
 
-const CartPaymentLoading: React.FC = () => {
+const CartPaymentLoading: React.FC<{ amount: number }> = ({ amount }) => {
   const {
     isCartPaymentLoading,
     closeCartPaymentLoading,

@@ -12,11 +12,13 @@ import { usePaymentStore } from "../../hooks/usePaymentStore";
 interface CartPaymentModalProps {
   totalAmount: number;
   onConfirm: (amount: number) => void;
+  paymentType?: "cash" | "card";
 }
 
 const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
   totalAmount,
   onConfirm,
+  paymentType = "card",
 }) => {
   const {
     isCartPaymentOpen,
@@ -24,6 +26,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     openCartPaymentLoading,
     closeCartPaymentLoading,
     openCartPaymentPassword,
+    openSuccessPayment,
   } = useModal();
   const [editableAmount, setEditableAmount] = useState(totalAmount);
   const setPaymentAmount = usePaymentStore((state) => state.setEditableAmount);
@@ -36,40 +39,27 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
       return;
     }
 
-    try {
-      // اینجا باید کتابخانه کارت‌خوان را import کنید
-      // import { POSPayment } from 'pos-payment';
-
-      // اتصال به دستگاه کارت‌خوان
-      // const pos = new POSPayment({
-      //   port: 'COM3', // پورت دستگاه
-      //   baudRate: 9600,
-      // });
-
-      // ارسال مبلغ به دستگاه
-      // await pos.sendAmount(editableAmount);
-
-      // ذخیره مبلغ در store
+    if (paymentType === "cash") {
+      // For cash payment, directly show success modal
       setPaymentAmount(editableAmount);
-
-      // بستن مدال فعلی و باز کردن مدال لودینگ
       closeCartPayment();
-      openCartPaymentLoading();
+      openSuccessPayment();
+    } else {
+      // For card payment, use existing logic
+      try {
+        setPaymentAmount(editableAmount);
+        closeCartPayment();
+        openCartPaymentLoading();
 
-      // گوش دادن به رویداد کشیدن کارت
-      // pos.on('cardSwiped', () => {
-      //   closeCartPaymentLoading();
-      //   openCartPaymentPassword();
-      // });
-
-      // برای تست، فعلاً با تایمر شبیه‌سازی می‌کنیم
-      setTimeout(() => {
-        closeCartPaymentLoading();
-        openCartPaymentPassword();
-      }, 2000);
-    } catch (error) {
-      console.error("خطا در اتصال به دستگاه کارت‌خوان:", error);
-      alert("خطا در اتصال به دستگاه کارت‌خوان");
+        // Simulate card payment process
+        setTimeout(() => {
+          closeCartPaymentLoading();
+          openCartPaymentPassword();
+        }, 2000);
+      } catch (error) {
+        console.error("خطا در اتصال به دستگاه کارت‌خوان:", error);
+        alert("خطا در اتصال به دستگاه کارت‌خوان");
+      }
     }
   };
 
@@ -110,7 +100,9 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 marginBottom: "20px",
               }}
             >
-              لطفا کارت را بکشید
+              {paymentType === "cash"
+                ? "آیا وجه نقد دریافت گردید؟"
+                : "لطفا کارت را بکشید"}
             </div>
 
             <div
@@ -216,15 +208,17 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
               {numberToPersianToman(editableAmount)}
             </div>
 
-            <img
-              src={cartPayment}
-              alt="Cart Payment"
-              style={{
-                width: "100%",
-                marginBottom: "20px",
-                borderRadius: "15px",
-              }}
-            />
+            {paymentType === "card" && (
+              <img
+                src={cartPayment}
+                alt="Cart Payment"
+                style={{
+                  width: "100%",
+                  marginBottom: "20px",
+                  borderRadius: "15px",
+                }}
+              />
+            )}
 
             <div
               style={{

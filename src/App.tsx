@@ -7,6 +7,9 @@ import { setToken } from "./store/authSlice";
 import Products from "./Page/Products/products";
 import Factors from "./Page/Factors/Factors";
 import Unregistered from "./Page/Unregistered/Unregistered";
+import Customers from "./Page/Customers/Customers";
+import GlobalHeader from "./Components/Base/SideMenu/GlobalHeader";
+import PageWrapper from "./Components/Layout/PageWrapper";
 import "./styles/index.css";
 import "./styles/fonts.css";
 import "./styles/App.css";
@@ -20,16 +23,21 @@ const App = () => {
       dispatch(setToken(token));
     }
   }, []);
+
   return (
     <Router>
       <main>
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/dashboard" element={<Home />} />
-          <Route path="/products" element={<Products />} />
-          <Route path="/factors" element={<Factors />} />
-          <Route path="/unregistered" element={<Unregistered />} />
-        </Routes>
+        <GlobalHeader />
+        <PageWrapper>
+          <Routes>
+            <Route path="/" element={<Login />} />
+            <Route path="/dashboard" element={<Home />} />
+            <Route path="/products" element={<Products />} />
+            <Route path="/factors" element={<Factors />} />
+            <Route path="/unregistered" element={<Unregistered />} />
+            <Route path="/customers" element={<Customers />} />
+          </Routes>
+        </PageWrapper>
       </main>
     </Router>
   );

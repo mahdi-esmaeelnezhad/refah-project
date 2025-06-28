@@ -5,7 +5,6 @@ import { Button } from "../../Components/Ui/Button/button";
 import filterIcon from "../../assets/filter.svg";
 import { useModal } from "../../hooks/useModal";
 import Input from "../../Components/Ui/Input/input";
-import SideMenu from "../../Components/Base/SideMenu/SideMenu";
 import useRequest from "../../hooks/useRequest";
 import { useSelector } from "react-redux";
 import productLabel from "../../assets/productLabel.svg";
@@ -338,350 +337,336 @@ const Products: React.FC = () => {
   const unitsItem = ["عدد", "کیلوگرم", "گرم", "لیتر"];
 
   return (
-    <div className="flex">
-      <SideMenu />
-      <section
-        style={{
-          position: "fixed",
-          width: "1575px",
-          height: "848px",
-          left: "53px",
-          top: "90px",
-          zIndex: 1,
-          backgroundColor: "#fff",
-          padding: "30px",
+    <>
+      <NoShowCategoryModal
+        isCategoryOpen={categoryDelete}
+        onClose={closeCategoryModal}
+        onCategoryDelete={deleteCategoryHandler}
+      />
+      <AddProductModal
+        isOpen={isOpen}
+        onClose={closeModal}
+        categories={categoryOptions || []}
+        units={unitsItem || []}
+        brands={brands}
+        onAdd={(data) => {
+          // اینجا می‌توانید داده را به سرور ارسال کنید یا به لیست اضافه کنید
+          console.log("محصول جدید:", data);
         }}
-      >
-        <NoShowCategoryModal
-          isCategoryOpen={categoryDelete}
-          onClose={closeCategoryModal}
-          onCategoryDelete={deleteCategoryHandler}
-        />
-        <AddProductModal
-          isOpen={isOpen}
-          onClose={closeModal}
-          categories={categoryOptions || []}
-          units={unitsItem || []}
-          brands={brands}
-          onAdd={(data) => {
-            // اینجا می‌توانید داده را به سرور ارسال کنید یا به لیست اضافه کنید
-            console.log("محصول جدید:", data);
-          }}
-        />
-        <div className="flex items-center mb-4">
-          <img src={productLabel} alt="" />
-          <span
-            className="text-black mr-2"
-            style={{ fontSize: "30px", fontWeight: 500 }}
+      />
+      <div className="flex items-center mb-4">
+        <img src={productLabel} alt="" />
+        <span
+          className="text-black mr-2"
+          style={{ fontSize: "30px", fontWeight: 500 }}
+        >
+          محصولات -{" "}
+        </span>
+        <span style={{ fontSize: "23px", fontWeight: 400, color: "#7E7E7E" }}>
+          {finalData?.length || 0} محصول / {categoriesCount || 0} دسته بندی
+        </span>
+      </div>
+      <div>
+        <div className="flex">
+          <Input
+            type="text"
+            width={"603px"}
+            height={48}
+            placeholder="کالا را با نام یا بارکدجست‌وجو کنید"
+            placeholderStyle={{
+              fontSize: "19px",
+              color: "#7E7E7E",
+              fontWeight: "400",
+            }}
+            onChange={(e) => handleSeachProduct(e.target.value)}
+            style={{
+              borderRadius: "55px",
+              backgroundColor: "#fff",
+              border: "2px solid #7485E5",
+              marginBottom: "5px",
+              marginLeft: "15px",
+            }}
+          />
+          <Button
+            label="فیلتر"
+            color="#7485E5"
+            radius={15}
+            style={{
+              width: "175px",
+              height: "48px",
+              marginLeft: "15px",
+              position: "relative",
+            }}
+            onClick={() => setShowFilter((prev) => !prev)}
           >
-            محصولات -{" "}
-          </span>
-          <span style={{ fontSize: "23px", fontWeight: 400, color: "#7E7E7E" }}>
-            {finalData?.length || 0} محصول / {categoriesCount || 0} دسته بندی
-          </span>
-        </div>
-        <div>
-          <div className="flex">
-            <Input
-              type="text"
-              width={"603px"}
-              height={48}
-              placeholder="کالا را با نام یا بارکدجست‌وجو کنید"
-              placeholderStyle={{
-                fontSize: "19px",
-                color: "#7E7E7E",
-                fontWeight: "400",
-              }}
-              onChange={(e) => handleSeachProduct(e.target.value)}
-              style={{
-                borderRadius: "55px",
-                backgroundColor: "#fff",
-                border: "2px solid #7485E5",
-                marginBottom: "5px",
-                marginLeft: "15px",
-              }}
+            <img
+              src={filterIcon}
+              style={{ position: "relative", bottom: "25px", right: "13px" }}
             />
-            <Button
-              label="فیلتر"
-              color="#7485E5"
-              radius={15}
+            <img
+              src={arrowDownn}
               style={{
-                width: "175px",
-                height: "48px",
-                marginLeft: "15px",
                 position: "relative",
+                bottom: "48px",
+                right: "108px",
+                transition: "transform 0.2s",
+                transform: showFilter ? "rotate(180deg)" : "rotate(0deg)",
               }}
-              onClick={() => setShowFilter((prev) => !prev)}
-            >
-              <img
-                src={filterIcon}
-                style={{ position: "relative", bottom: "25px", right: "13px" }}
-              />
-              <img
-                src={arrowDownn}
-                style={{
-                  position: "relative",
-                  bottom: "48px",
-                  right: "108px",
-                  transition: "transform 0.2s",
-                  transform: showFilter ? "rotate(180deg)" : "rotate(0deg)",
-                }}
-                alt="arrow"
-              />
-            </Button>
-            <Button
-              label=""
-              color="#7485E5"
-              radius={15}
-              style={{ width: "175px", height: "48px" }}
-              onClick={() => openModal("")}
-            >
-              <span style={{ position: "relative", left: "-15px" }}>
-                افزودن کالا
-              </span>
-              <img
-                src={addIcon}
-                style={{ position: "relative", bottom: "30px", left: "5px" }}
-              />
-            </Button>
-            <Pagination
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={setCurrentPage}
+              alt="arrow"
             />
+          </Button>
+          <Button
+            label=""
+            color="#7485E5"
+            radius={15}
+            style={{ width: "175px", height: "48px" }}
+            onClick={() => openModal("")}
+          >
+            <span style={{ position: "relative", left: "-15px" }}>
+              افزودن کالا
+            </span>
+            <img
+              src={addIcon}
+              style={{ position: "relative", bottom: "30px", left: "5px" }}
+            />
+          </Button>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+          />
+        </div>
+        {showFilter && (
+          <ProductsFilter
+            categories={categoryOptions}
+            unitTypes={unitTypes}
+            onApply={(filters) => {
+              let filtered = allFinalData;
+              if (filters.category) {
+                filtered = filtered.filter(
+                  (item) => item.categoryId === filters.category
+                );
+              }
+              if (filters.unitType) {
+                filtered = filtered.filter(
+                  (item) => item.unitType === filters.unitType
+                );
+              }
+              if (filters.discount) {
+                filtered = filtered.filter(
+                  (item) =>
+                    Number(item.discount || 0) >= Number(filters.discount)
+                );
+              }
+              if (filters.minPrice) {
+                filtered = filtered.filter(
+                  (item) => Number(item.price) >= Number(filters.minPrice)
+                );
+              }
+              if (filters.maxPrice) {
+                filtered = filtered.filter(
+                  (item) => Number(item.price) <= Number(filters.maxPrice)
+                );
+              }
+              setFinalData(filtered);
+              setCurrentPage(1);
+            }}
+            onReset={() => {
+              setFinalData(allFinalData);
+              setCurrentPage(1);
+            }}
+            showReset={finalData !== allFinalData}
+          />
+        )}
+        <section className="flex flex-wrap mt-2">
+          <div
+            className="flex mx-1 mt-2 p-4 "
+            style={{
+              borderRadius: "5px",
+              backgroundColor: "#DEDEDE",
+            }}
+          >
+            <img style={{ marginBottom: "5px" }} src={starFull} />
           </div>
-          {showFilter && (
-            <ProductsFilter
-              categories={categoryOptions}
-              unitTypes={unitTypes}
-              onApply={(filters) => {
-                let filtered = allFinalData;
-                if (filters.category) {
-                  filtered = filtered.filter(
-                    (item) => item.categoryId === filters.category
-                  );
-                }
-                if (filters.unitType) {
-                  filtered = filtered.filter(
-                    (item) => item.unitType === filters.unitType
-                  );
-                }
-                if (filters.discount) {
-                  filtered = filtered.filter(
-                    (item) =>
-                      Number(item.discount || 0) >= Number(filters.discount)
-                  );
-                }
-                if (filters.minPrice) {
-                  filtered = filtered.filter(
-                    (item) => Number(item.price) >= Number(filters.minPrice)
-                  );
-                }
-                if (filters.maxPrice) {
-                  filtered = filtered.filter(
-                    (item) => Number(item.price) <= Number(filters.maxPrice)
-                  );
-                }
-                setFinalData(filtered);
-                setCurrentPage(1);
-              }}
-              onReset={() => {
-                setFinalData(allFinalData);
-                setCurrentPage(1);
-              }}
-              showReset={finalData !== allFinalData}
-            />
-          )}
-          <section className="flex flex-wrap mt-2">
+          {availableCategories?.map((item) => (
             <div
-              className="flex mx-1 mt-2 p-4 "
+              key={item}
+              className="flex justify-between al mx-1 mt-2 px-4 py-2"
               style={{
                 borderRadius: "5px",
                 backgroundColor: "#DEDEDE",
               }}
             >
-              <img style={{ marginBottom: "5px" }} src={starFull} />
-            </div>
-            {availableCategories?.map((item) => (
-              <div
-                key={item}
-                className="flex justify-between al mx-1 mt-2 px-4 py-2"
-                style={{
-                  borderRadius: "5px",
-                  backgroundColor: "#DEDEDE",
-                }}
+              <span
+                className="ml-8 py-2"
+                style={{ fontSize: "20px", fontWeight: 500 }}
               >
-                <span
-                  className="ml-8 py-2"
-                  style={{ fontSize: "20px", fontWeight: 500 }}
-                >
-                  {item.categoryName}
-                </span>
+                {item.categoryName}
+              </span>
 
-                <div className="relative">
-                  <Tooltip
-                    component={
-                      <CategoryOptiob
-                        category={item}
-                        onDelete={handleDeleteCategory}
-                        onEdit={handleEditCategory}
-                      />
-                    }
-                    isOpen={openTooltipId === item.categoryId}
-                    setIsOpen={(isOpen) => {
-                      if (!isOpen) {
-                        setOpenTooltipId(null);
-                        setSelectedItemId(null);
-                      } else {
-                        setOpenTooltipId(item.categoryId);
-                      }
-                    }}
-                  >
-                    <img
-                      style={{
-                        height: "25px",
-                        width: "5px",
-                        marginTop: "12px",
-                      }}
-                      src={optionIcon}
+              <div className="relative">
+                <Tooltip
+                  component={
+                    <CategoryOptiob
+                      category={item}
+                      onDelete={handleDeleteCategory}
+                      onEdit={handleEditCategory}
                     />
-                  </Tooltip>
+                  }
+                  isOpen={openTooltipId === item.categoryId}
+                  setIsOpen={(isOpen) => {
+                    if (!isOpen) {
+                      setOpenTooltipId(null);
+                      setSelectedItemId(null);
+                    } else {
+                      setOpenTooltipId(item.categoryId);
+                    }
+                  }}
+                >
+                  <img
+                    style={{
+                      height: "25px",
+                      width: "5px",
+                      marginTop: "12px",
+                    }}
+                    src={optionIcon}
+                  />
+                </Tooltip>
+              </div>
+            </div>
+          ))}
+        </section>
+      </div>
+      <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto">
+        <div className="flex justify-between">
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[50px]">
+            #
+          </div>
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[400px]">
+            نام کالا
+          </div>
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center  w-[180px]">
+            قیمت اولیه (ریال)
+          </div>
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center  w-[180px]">
+            قیمت فروش (ریال)
+          </div>
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[300px]">
+            دسته‌بندی
+          </div>
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[150px]">
+            موجودی
+          </div>
+          <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[180px]">
+            تخفیف (ریال)
+          </div>
+        </div>
+        <section
+          className="overflow-y-auto relative"
+          style={{ maxHeight: productSectionMaxHeight }}
+        >
+          {paginatedData?.map(
+            (
+              item: {
+                id: React.Key | null | undefined;
+                name:
+                  | string
+                  | number
+                  | bigint
+                  | boolean
+                  | React.ReactElement<
+                      unknown,
+                      string | React.JSXElementConstructor<any>
+                    >
+                  | Iterable<React.ReactNode>
+                  | React.ReactPortal
+                  | Promise<
+                      | string
+                      | number
+                      | bigint
+                      | boolean
+                      | React.ReactPortal
+                      | React.ReactElement<
+                          unknown,
+                          string | React.JSXElementConstructor<any>
+                        >
+                      | Iterable<React.ReactNode>
+                      | null
+                      | undefined
+                    >
+                  | null
+                  | undefined;
+                price: number;
+                categoryName:
+                  | string
+                  | number
+                  | bigint
+                  | boolean
+                  | React.ReactElement<
+                      unknown,
+                      string | React.JSXElementConstructor<any>
+                    >
+                  | Iterable<React.ReactNode>
+                  | React.ReactPortal
+                  | Promise<
+                      | string
+                      | number
+                      | bigint
+                      | boolean
+                      | React.ReactPortal
+                      | React.ReactElement<
+                          unknown,
+                          string | React.JSXElementConstructor<any>
+                        >
+                      | Iterable<React.ReactNode>
+                      | null
+                      | undefined
+                    >
+                  | null
+                  | undefined;
+                onlineStockThreshold: number;
+              },
+              index: number
+            ) => (
+              <div
+                key={item.id}
+                className={`flex justify-between py-1 font-21 ${
+                  (index + 1) % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
+                }`}
+              >
+                <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[50px]">
+                  {(index + 1).toLocaleString("fa-ir")}
+                </div>
+                <div
+                  className="h-[49px] p-4 rounded-md flex items-center justify-center w-[400px]"
+                  style={{ textAlign: "center" }}
+                  onClick={() => deleteProduct(item.id)}
+                >
+                  {item.name}
+                </div>
+                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
+                  {formatNumber(item.price)}
+                </div>
+                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
+                  {formatNumber(item.price)}
+                </div>
+                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[300px]">
+                  {item.categoryName}
+                </div>
+                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[150px]">
+                  {item.onlineStockThreshold
+                    ? getStockStatus(item.onlineStockThreshold)
+                    : "عدم موجودی"}
+                </div>
+                <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
+                  -
                 </div>
               </div>
-            ))}
-          </section>
-        </div>
-        <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto">
-          <div className="flex justify-between">
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[50px]">
-              #
-            </div>
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[400px]">
-              نام کالا
-            </div>
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center  w-[180px]">
-              قیمت اولیه (ریال)
-            </div>
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center  w-[180px]">
-              قیمت فروش (ریال)
-            </div>
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[300px]">
-              دسته‌بندی
-            </div>
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[150px]">
-              موجودی
-            </div>
-            <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center min-w-[180px]">
-              تخفیف (ریال)
-            </div>
-          </div>
-          <section
-            className="overflow-y-auto relative"
-            style={{ maxHeight: productSectionMaxHeight }}
-          >
-            {paginatedData?.map(
-              (
-                item: {
-                  id: React.Key | null | undefined;
-                  name:
-                    | string
-                    | number
-                    | bigint
-                    | boolean
-                    | React.ReactElement<
-                        unknown,
-                        string | React.JSXElementConstructor<any>
-                      >
-                    | Iterable<React.ReactNode>
-                    | React.ReactPortal
-                    | Promise<
-                        | string
-                        | number
-                        | bigint
-                        | boolean
-                        | React.ReactPortal
-                        | React.ReactElement<
-                            unknown,
-                            string | React.JSXElementConstructor<any>
-                          >
-                        | Iterable<React.ReactNode>
-                        | null
-                        | undefined
-                      >
-                    | null
-                    | undefined;
-                  price: number;
-                  categoryName:
-                    | string
-                    | number
-                    | bigint
-                    | boolean
-                    | React.ReactElement<
-                        unknown,
-                        string | React.JSXElementConstructor<any>
-                      >
-                    | Iterable<React.ReactNode>
-                    | React.ReactPortal
-                    | Promise<
-                        | string
-                        | number
-                        | bigint
-                        | boolean
-                        | React.ReactPortal
-                        | React.ReactElement<
-                            unknown,
-                            string | React.JSXElementConstructor<any>
-                          >
-                        | Iterable<React.ReactNode>
-                        | null
-                        | undefined
-                      >
-                    | null
-                    | undefined;
-                  onlineStockThreshold: number;
-                },
-                index: number
-              ) => (
-                <div
-                  key={item.id}
-                  className={`flex justify-between py-1 font-21 ${
-                    (index + 1) % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
-                  }`}
-                >
-                  <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[50px]">
-                    {(index + 1).toLocaleString("fa-ir")}
-                  </div>
-                  <div
-                    className="h-[49px] p-4 rounded-md flex items-center justify-center w-[400px]"
-                    style={{ textAlign: "center" }}
-                    onClick={() => deleteProduct(item.id)}
-                  >
-                    {item.name}
-                  </div>
-                  <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
-                    {formatNumber(item.price)}
-                  </div>
-                  <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px] font-semibold">
-                    {formatNumber(item.price)}
-                  </div>
-                  <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[300px]">
-                    {item.categoryName}
-                  </div>
-                  <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[150px]">
-                    {item.onlineStockThreshold
-                      ? getStockStatus(item.onlineStockThreshold)
-                      : "عدم موجودی"}
-                  </div>
-                  <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
-                    -
-                  </div>
-                </div>
-              )
-            )}
-          </section>
+            )
+          )}
         </section>
       </section>
-    </div>
+    </>
   );
 };
 

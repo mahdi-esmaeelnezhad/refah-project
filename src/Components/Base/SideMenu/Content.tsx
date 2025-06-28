@@ -17,6 +17,8 @@ import CartPaymentLoading from "../../Modal/CartPaymentLoading";
 import CartPaymentPassword from "../../Modal/CartPaymentPassword";
 import SuccessPaymentModal from "../../Modal/SuccessPaymentModal";
 import FailedPaymentModal from "../../Modal/FailedPaymentModal";
+import CustomerTooltip from "./CustomerTooltip";
+import CustomerDefinitionModal from "../../Modal/CustomerDefinitionModal";
 
 interface Item {
   id: number;
@@ -28,6 +30,13 @@ interface Item {
   total: number;
 }
 
+interface Customer {
+  id: number;
+  name: string;
+  phone: string;
+  debt: number;
+}
+
 const Content: React.FC = () => {
   const { isOpen, barcode, openModal, closeModal, openCartPayment } =
     useModal();
@@ -35,6 +44,12 @@ const Content: React.FC = () => {
   const [paymentMedivod, setPaymentMedivod] = useState("کارتی");
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
+  const [isCustomerTooltipOpen, setIsCustomerTooltipOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
+    null
+  );
+  const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
+    useState(false);
   const [items, setItems] = useState<Item[]>(
     [...Array(50)].map((_, index) => ({
       id: index + 1,
@@ -136,11 +151,28 @@ const Content: React.FC = () => {
   const handlePayment = () => {
     if (paymentMedivod === "کارتی") {
       openCartPayment();
+    } else if (paymentMedivod === "نقدی") {
+      openCartPayment();
     }
   };
 
   const handleCartPaymentConfirm = (amount: number) => {
     setPaymentAmount(amount);
+  };
+
+  const handleCustomerSelect = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setIsCustomerTooltipOpen(false);
+  };
+
+  const handleOpenCustomerDefinition = () => {
+    setIsCustomerDefinitionModalOpen(true);
+  };
+
+  const handleAddCustomer = (customerData: any) => {
+    // Handle adding new customer
+    console.log("New customer data:", customerData);
+    // You can add the customer to your system here
   };
 
   return (
@@ -150,8 +182,10 @@ const Content: React.FC = () => {
         width: "1575px",
         height: "848px",
         left: "53px",
-        top: "100px",
+        top: "90px",
         zIndex: 1,
+        backgroundColor: "#fff",
+        padding: "30px",
       }}
     >
       <NoBarcodeModal
@@ -169,16 +203,19 @@ const Content: React.FC = () => {
       <CartPaymentModal
         totalAmount={finalAmount}
         onConfirm={handleCartPaymentConfirm}
+        paymentType={paymentMedivod === "نقدی" ? "cash" : "card"}
       />
       <CartPaymentLoading amount={paymentAmount} />
       <CartPaymentPassword amount={paymentAmount} />
       <SuccessPaymentModal
         amount={paymentAmount}
-        transactionType="خرید"
+        transactionType={paymentMedivod === "نقدی" ? "نقدی" : "خرید"}
         date={new Date().toLocaleDateString("fa-IR")}
         time={new Date().toLocaleTimeString("fa-IR")}
         trackingNumber={Math.random().toString(36).substring(7)}
         referenceNumber={Math.random().toString(36).substring(7)}
+        totalAmount={finalAmount}
+        paymentType={paymentMedivod === "نقدی" ? "cash" : "card"}
       />
       <FailedPaymentModal
         amount={paymentAmount}
@@ -187,6 +224,11 @@ const Content: React.FC = () => {
         time={new Date().toLocaleTimeString("fa-IR")}
         trackingNumber={Math.random().toString(36).substring(7)}
         referenceNumber={Math.random().toString(36).substring(7)}
+      />
+      <CustomerDefinitionModal
+        isOpen={isCustomerDefinitionModalOpen}
+        onClose={() => setIsCustomerDefinitionModalOpen(false)}
+        onAdd={handleAddCustomer}
       />
       <div
         style={{
@@ -212,7 +254,19 @@ const Content: React.FC = () => {
             }}
           />
 
-          <Button label="مشتری" color="#DAA51A"></Button>
+          <div style={{ position: "relative" }}>
+            <Button
+              label="مشتری"
+              color="#DAA51A"
+              onClick={() => setIsCustomerTooltipOpen(!isCustomerTooltipOpen)}
+            />
+            <CustomerTooltip
+              isOpen={isCustomerTooltipOpen}
+              setIsOpen={setIsCustomerTooltipOpen}
+              onSelectCustomer={handleCustomerSelect}
+              onOpenCustomerDefinition={handleOpenCustomerDefinition}
+            />
+          </div>
           <Button label="ذخیره" color="#4973DE"></Button>
           <Button
             label="حذف"
@@ -226,8 +280,10 @@ const Content: React.FC = () => {
             فاکتور فروش {invoiceNumber}
           </span>
           <Input
-            placeholder="معصومه ده بالا"
-            value=""
+            placeholder={
+              selectedCustomer ? selectedCustomer.name : "معصومه ده بالا"
+            }
+            value={selectedCustomer ? selectedCustomer.name : ""}
             onChange={() => {}}
             style={{
               minWidth: "441px",

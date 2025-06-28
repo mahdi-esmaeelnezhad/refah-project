@@ -6,6 +6,8 @@ interface DatePickerProps {
   onDateSelect: (date: Date) => void;
   onClose: () => void;
   anchorRef?: React.RefObject<HTMLInputElement>;
+  top?: number;
+  left?: number;
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({
@@ -13,6 +15,8 @@ const DatePicker: React.FC<DatePickerProps> = ({
   onDateSelect,
   onClose,
   anchorRef,
+  top,
+  left,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
@@ -205,11 +209,17 @@ const DatePicker: React.FC<DatePickerProps> = ({
     if (anchorRef?.current) {
       const rect = anchorRef.current.getBoundingClientRect();
       setPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: rect.left + window.scrollX,
+        top:
+          top !== undefined
+            ? rect.bottom + window.scrollY + top
+            : rect.bottom + window.scrollY + 4,
+        left:
+          left !== undefined
+            ? rect.left + window.scrollX + left
+            : rect.left + window.scrollX,
       });
     }
-  }, [anchorRef]);
+  }, [anchorRef, top, left]);
 
   // Close on outside click
   useEffect(() => {

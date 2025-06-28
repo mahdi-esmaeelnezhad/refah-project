@@ -34,7 +34,7 @@ const FactorTabs: React.FC<Props> = ({ activeTab, onChange }) => (
           onClick={() => onChange(tab.key)}
           style={{
             width: 245,
-            height: 50,
+            height: 60,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",

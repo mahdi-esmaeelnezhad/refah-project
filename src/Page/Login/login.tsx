@@ -20,7 +20,6 @@ import user from "../../assets/user.svg";
 import pass from "../../assets/pass.svg";
 import key from "../../assets/key.svg";
 import back from "../../assets/back.svg";
-import "./Login.css";
 import ForgetPassword from "../../Components/ForgetPassword/forgetPassword";
 import SendSms from "../../Components/SendSms/sendSms";
 import ChangePassword from "../../Components/ChangePassword/changePassword";
@@ -348,9 +347,28 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div
+      style={{
+        position: "relative",
+        width: "1920px",
+        height: "972px",
+      }}
+    >
       {showInitial ? (
-        <div className={`initial-screen ${fadeOut ? "fade-out" : ""}`}>
+        <div
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            backgroundColor: "var(--color-primary)",
+            opacity: fadeOut ? 0 : 1,
+            transition: "opacity 0.5s ease-out",
+          }}
+        >
           <div>
             <img src={rightPatern} alt="right pattern" />
           </div>
@@ -377,7 +395,30 @@ const Login = () => {
           </div>
         </div>
       ) : (
-        <div className="main-screen fade-in">
+        <div
+          style={{
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+            backgroundColor: "#ffffff",
+            opacity: 0,
+            animation: "fadeIn 0.5s ease-in forwards",
+            animationDelay: "0.5s",
+          }}
+        >
+          <style>
+            {`
+              @keyframes fadeIn {
+                from {
+                  opacity: 0;
+                }
+                to {
+                  opacity: 1;
+                }
+              }
+            `}
+          </style>
           <div>
             <img src={paternRight} alt="right pattern" />
           </div>

@@ -1,7 +1,7 @@
 import React from "react";
 import closeIcon from "../../assets/close.svg";
 import likeIcon from "../../assets/Like.svg";
-import shaparakIcon from "../../assets/img/shaparak.png";
+import shaparakIcon from "../../assets/img/Shaparak.png";
 import iranKishIcon from "../../assets/img/iranKish.png";
 import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";

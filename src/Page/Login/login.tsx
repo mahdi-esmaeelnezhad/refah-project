@@ -20,7 +20,7 @@ import user from "../../assets/user.svg";
 import pass from "../../assets/pass.svg";
 import key from "../../assets/key.svg";
 import back from "../../assets/back.svg";
-import "./Login.css";
+import "./login.css";
 import ForgetPassword from "../../Components/ForgetPassword/forgetPassword";
 import SendSms from "../../Components/SendSms/sendSms";
 import ChangePassword from "../../Components/ChangePassword/changePassword";

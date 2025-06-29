@@ -48,7 +48,7 @@ const Products: React.FC = () => {
 
   const [showFilter, setShowFilter] = useState(false);
   const [categoryDelete, setCategoryDelete] = useState(false);
-  const [searchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
   const [finalData, setFinalData] = useState<ProductItem[]>([]);
   const [allFinalData, setAllFinalData] = useState<ProductItem[]>([]);
   const [availableCategories, setAvailableCategories] = useState<
@@ -192,6 +192,8 @@ const Products: React.FC = () => {
   };
   const handleSeachProduct = (value: string) => {
     if (!allFinalData) return;
+
+    setSearchTerm(value);
 
     let searchData: ProductItem[] = [];
     allFinalData.forEach((item) => {

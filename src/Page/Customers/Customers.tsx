@@ -29,8 +29,7 @@ interface Item {
 const pageSize = 20;
 
 const Customers: React.FC = () => {
-  const [allFinalData] = useState<Item[]>([]);
-  const [items, setItems] = useState<Item[]>(
+  const [allFinalData] = useState<Item[]>(
     [...Array(150)].map((_, index) => ({
       id: index + 1,
       customerName: Math.random().toString(36).substring(2, 15) + " امین خانی",
@@ -50,7 +49,8 @@ const Customers: React.FC = () => {
       totalDue: Math.floor(1000000 + Math.random() * 9000000),
     }))
   );
-  //   setAllFinalData(items);
+  const [items, setItems] = useState<Item[]>(allFinalData);
+  const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
     useState(false);
@@ -67,21 +67,20 @@ const Customers: React.FC = () => {
   };
 
   const handleSeachCustomer = (value: string) => {
-    let searchData: any = [];
-    allFinalData?.map(
-      (item: {
-        customerName: string | string[];
-        mobile: string | string[];
-      }) => {
-        if (item.customerName.includes(value) || item.mobile === value) {
-          searchData.push(item);
-        }
-      }
-    );
+    setSearchTerm(value);
 
-    if (!value) {
+    if (!value.trim()) {
       setItems(allFinalData);
     } else {
+      const searchData = allFinalData.filter((item) => {
+        const customerName = item.customerName.toLowerCase();
+        const mobile = item.mobile;
+        const searchValue = value.toLowerCase();
+
+        return (
+          customerName.includes(searchValue) || mobile.includes(searchValue)
+        );
+      });
       setItems(searchData);
     }
     setCurrentPage(1);
@@ -153,7 +152,7 @@ const Customers: React.FC = () => {
             marginBottom: "5px",
             marginLeft: "15px",
           }}
-          value={""}
+          value={searchTerm}
         />
         <Button
           label="فیلتر"

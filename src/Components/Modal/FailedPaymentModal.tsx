@@ -1,7 +1,7 @@
 import React from "react";
 import closeIcon from "../../assets/close.svg";
-import dislikeIcon from "../../assets/dislike.svg";
-import shaparakIcon from "../../assets/img/shaparak.png";
+import dislikeIcon from "../../assets/disLike.svg";
+import shaparakIcon from "../../assets/img/Shaparak.png";
 import iranKishIcon from "../../assets/img/iranKish.png";
 import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";

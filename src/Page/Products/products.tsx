@@ -11,7 +11,6 @@ import NoShowCategoryModal from "../../Components/Modal/NoShowCategoryModal";
 import optionIcon from "../../assets/option.svg";
 import arrowDownn from "../../assets/arrow-down.svg";
 
-// import star from "../../assets/star.svg";
 import starFull from "../../assets/starFull.svg";
 import Tooltip from "../../Components/Base/SideMenu/Tooltip";
 import CategoryOptiob from "../../Components/ToolTipProduct/categortOption";
@@ -63,9 +62,7 @@ const Products: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  //   const { execute, data, loading, error } = useShopItems();
   const token = useSelector((state: RootState) => state.auth.token);
-  // let categories: any;
 
   const { execute: itemRequest } = useRequest<any>(
     PRODUCT_ENDPOINTS.shopItems,
@@ -146,12 +143,21 @@ const Products: React.FC = () => {
       });
 
       if (response?.data && Array.isArray(response.data)) {
+        const categoriesResponse = await categoryRequest({ shopId });
+        const categoryMap = new Map<string, string>();
+
+        if (categoriesResponse?.data) {
+          categoriesResponse.data.forEach((cat) => {
+            categoryMap.set(cat.id, cat.title);
+          });
+        }
         const processedData: ProductItem[] = response.data.map((item: any) => ({
           id: item.id || item.itemDto?.id || "",
           name: item.name || item.itemDto?.name || "",
           price: item.price || item.itemDto?.price || 0,
           categoryId: item.categoryId || "",
-          categoryName: item.categoryName || "",
+          categoryName:
+            categoryMap.get(item.categoryId) || item.categoryName || "",
           unitType: item.unitType || "",
           onlineStockThreshold: item.onlineStockThreshold || 0,
           discount: item.discount || 0,
@@ -160,31 +166,22 @@ const Products: React.FC = () => {
         setFinalData(processedData);
         setAllFinalData(processedData);
         localStorage.setItem("finalDataStorage", JSON.stringify(processedData));
-
-        // Process categories
-        const categoriesResponse = await categoryRequest({ shopId });
-        if (categoriesResponse?.data) {
-          const categoryMap = new Map(
-            categoriesResponse.data.map((cat) => [cat.id, cat.title])
-          );
-
-          const availableCategoriesArray: CategoryOption[] = [];
-          processedData.forEach((item) => {
-            if (item.categoryId && categoryMap.has(item.categoryId)) {
-              const existing = availableCategoriesArray.find(
-                (cat) => cat.categoryId === item.categoryId
-              );
-              if (!existing) {
-                availableCategoriesArray.push({
-                  categoryId: item.categoryId,
-                  categoryName: categoryMap.get(item.categoryId) || "",
-                });
-              }
+        const availableCategoriesArray: CategoryOption[] = [];
+        processedData.forEach((item) => {
+          if (item.categoryId && categoryMap.has(item.categoryId)) {
+            const existing = availableCategoriesArray.find(
+              (cat) => cat.categoryId === item.categoryId
+            );
+            if (!existing) {
+              availableCategoriesArray.push({
+                categoryId: item.categoryId,
+                categoryName: categoryMap.get(item.categoryId) || "",
+              });
             }
-          });
+          }
+        });
 
-          setAvailableCategories(availableCategoriesArray);
-        }
+        setAvailableCategories(availableCategoriesArray);
       }
     } catch (error) {
       console.error("Error fetching products:", error);
@@ -193,18 +190,6 @@ const Products: React.FC = () => {
       setIsLoading(false);
     }
   };
-
-  //   useEffect(() => {
-  //     if (hasCalledApi.current) {
-  //       execute();
-  //     }
-  //   }, [currentPage]);
-
-  // const handleSearch = (value: string) => {
-  //   setSearchTerm(value);
-  //   setCurrentPage(1);
-  //   // در اینجا می‌توانید فیلتر جستجو را اعمال کنید
-  // };
   const handleSeachProduct = (value: string) => {
     if (!allFinalData) return;
 
@@ -249,9 +234,6 @@ const Products: React.FC = () => {
     setCategoryDelete(true);
     setShowCategoryId(id);
   };
-  // const handlePageChange = (page: number) => {
-  //   setCurrentPage(page);
-  // };
 
   const formatNumber = (num: number) => {
     return num.toLocaleString("fa-ir").replace(/\B(?=(\d{3})+(?!\d))/g, ",");
@@ -261,15 +243,13 @@ const Products: React.FC = () => {
     return stock === 0 ? "عدم موجودی" : stock.toString();
   };
 
-  // const getStockColor = (stock: number) => {
-  //   return stock === 0 ? "#DE4949" : "#000000";
-  // };
-
   const itemsPerPage = 20;
   const totalPages = Math.ceil((finalData?.length || 0) / itemsPerPage);
 
   const paginatedData = useMemo(() => {
     if (!finalData) return [];
+    console.log(finalData, "finalData");
+
     return finalData.slice(
       (currentPage - 1) * itemsPerPage,
       currentPage * itemsPerPage
@@ -288,7 +268,6 @@ const Products: React.FC = () => {
 
   const productSectionMaxHeight = showFilter ? 230 : 400;
 
-  // Sample brands array (replace with real data if available)
   const brands = ["برند نمونه ۱", "برند نمونه ۲", "برند نمونه ۳"];
   const unitsItem = ["عدد", "کیلوگرم", "گرم", "لیتر"];
 

@@ -7,8 +7,10 @@ import { setToken } from "./store/authSlice";
 import Products from "./Page/Products/products";
 import Delivery from "./Page/Delivery/Delivery";
 import Factors from "./Page/Factors/Factors";
+import Credit from "./Page/Credit/Credit";
 import Settings from "./Page/Settings/Settings";
 import Unregistered from "./Page/Unregistered/Unregistered";
+import Discounts from "./Page/Discounts/Discounts";
 import Customers from "./Page/Customers/Customers";
 import Waste from "./Page/Waste/Waste";
 import GlobalHeader from "./Components/Base/SideMenu/GlobalHeader";
@@ -40,8 +42,10 @@ const App = () => {
             <Route path="/unregistered" element={<Unregistered />} />
             <Route path="/customers" element={<Customers />} />
             <Route path="/delivery" element={<Delivery />} />
+            <Route path="/discounts" element={<Discounts />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/waste" element={<Waste />} />
+            <Route path="/credit" element={<Credit />} />
           </Routes>
         </PageWrapper>
       </main>

@@ -8,6 +8,7 @@ interface DatePickerProps {
   anchorRef?: React.RefObject<HTMLInputElement>;
   top?: number;
   left?: number;
+  style?: React.CSSProperties;
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({
@@ -17,6 +18,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   anchorRef,
   top,
   left,
+  style,
 }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [showMonthDropdown, setShowMonthDropdown] = useState(false);
@@ -260,6 +262,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
         zIndex: 9999,
         padding: 16,
         border: "1px solid #D1D1D1",
+        ...style,
       }}
     >
       {/* Close icon */}

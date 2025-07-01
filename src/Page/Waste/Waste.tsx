@@ -158,6 +158,7 @@ const Waste: React.FC = () => {
         {`
         ._inputWrapper_uxij4_18 {
           padding: 0px !important;
+          padding-right: 16px !important;
           height: 48px !important;
         }
         ._tagButton_uxij4_53 {

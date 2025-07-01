@@ -14,10 +14,10 @@
 }
 
 .customBox {
-  width: 24px;
-  height: 24px;
+  width: 35px;
+  height: 35px;
   border: 2px solid black;
-  border-radius: 4px;
+  border-radius: 5px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -28,8 +28,8 @@
 .checked::after {
   position: absolute;
   content: "";
-  width: 12px;
-  height: 12px;
+  width: 18px;
+  height: 18px;
   background-color: #4a4cd3;
   clip-path: polygon(14% 44%, 0% 65%, 50% 100%, 100% 30%, 80% 15%, 43% 62%);
   display: block;

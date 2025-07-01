@@ -5,6 +5,7 @@ type ClickTooltipProps = {
   children: React.ReactNode;
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  position?: "left" | "bottom";
 };
 
 const ClickTooltip: React.FC<ClickTooltipProps> = ({
@@ -12,6 +13,7 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
   children,
   isOpen,
   setIsOpen,
+  position = "bottom",
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -34,6 +36,48 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
     };
   }, [setIsOpen]);
 
+  const getTooltipStyles = () => {
+    if (position === "left") {
+      return {
+        top: "50%",
+        right: "calc(100% + 8px)",
+        transform: "translateY(-50%)",
+      };
+    }
+    // default bottom position
+    return {
+      top: "calc(100% + 8px)",
+      left: "50%",
+      transform: "translateX(-50%)",
+    };
+  };
+
+  const getArrowStyles = () => {
+    if (position === "left") {
+      return {
+        position: "absolute" as const,
+        top: "50%",
+        right: "-4px",
+        transform: "translateY(-50%) rotate(45deg)",
+        width: "8px",
+        height: "8px",
+        backgroundColor: "white",
+        zIndex: 50,
+      };
+    }
+    // default bottom position
+    return {
+      position: "absolute" as const,
+      top: "-4px",
+      left: "50%",
+      transform: "translateX(-50%) rotate(45deg)",
+      width: "8px",
+      height: "8px",
+      backgroundColor: "white",
+      zIndex: 50,
+    };
+  };
+
   return (
     <div className="relative inline-block">
       {/* Button */}
@@ -49,15 +93,11 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
       {isOpen && (
         <div
           ref={tooltipRef}
-          className="absolute z-50 whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal  focus:outline-none"
-          style={{
-            top: "calc(100% + 8px)",
-            left: "50%",
-            transform: "translateX(-50%)",
-          }}
+          className="absolute z-50 whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
+          style={getTooltipStyles()}
         >
           {component}
-          <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-white rotate-45 z-50"></div>
+          <div style={getArrowStyles()}></div>
         </div>
       )}
     </div>

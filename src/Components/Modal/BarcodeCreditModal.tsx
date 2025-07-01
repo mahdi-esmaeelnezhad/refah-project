@@ -47,13 +47,9 @@ const BarcodeCreditModal: React.FC<BarcodeCreditModalProps> = ({
 
   return (
     <>
-      {/* Backdrop */}
       <div className="fixed inset-0 bg-[#92929280] backdrop-blur-sm z-40" />
-
-      {/* Modal */}
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[1368px] h-[826px] bg-white rounded-[15px] shadow-lg z-50 overflow-hidden">
         <div className="flex h-full">
-          {/* Right Side */}
           <div className="w-[400] flex-1 p-8 flex flex-col">
             <div className="flex items-center my-6">
               <img
@@ -127,8 +123,6 @@ const BarcodeCreditModal: React.FC<BarcodeCreditModalProps> = ({
               </div>
             </div>
           </div>
-
-          {/* Left Side */}
           <div
             style={{
               backgroundColor: "#F8F8F8",
@@ -280,8 +274,6 @@ const BarcodeCreditModal: React.FC<BarcodeCreditModalProps> = ({
             </div>
           </div>
         </div>
-
-        {/* Close Button */}
         <div
           onClick={onClose}
           style={{

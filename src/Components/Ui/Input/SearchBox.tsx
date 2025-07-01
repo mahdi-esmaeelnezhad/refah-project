@@ -5,9 +5,15 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  style?: React.CSSProperties;
 }
 
-const SearchBox: React.FC<Props> = ({ value, onChange, placeholder }) => (
+const SearchBox: React.FC<Props> = ({
+  value,
+  onChange,
+  placeholder,
+  style,
+}) => (
   <input
     type="text"
     value={value}
@@ -23,6 +29,7 @@ const SearchBox: React.FC<Props> = ({ value, onChange, placeholder }) => (
       marginLeft: 12,
       outline: "none",
       direction: "rtl",
+      ...style,
     }}
   />
 );

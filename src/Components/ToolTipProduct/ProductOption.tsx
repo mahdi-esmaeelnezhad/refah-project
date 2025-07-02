@@ -3,8 +3,8 @@ import { Button } from "../Ui/Button/button";
 
 interface ProductOptionProps {
   product: any;
-  onEdit: () => void;
-  onDelete: () => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
 }
 
 const ProductOption: React.FC<ProductOptionProps> = ({
@@ -25,7 +25,7 @@ const ProductOption: React.FC<ProductOptionProps> = ({
           fontWeight: 500,
           padding: 0,
         }}
-        onClick={onEdit}
+        onClick={() => onEdit(product.id)}
       ></Button>
       <Button
         label="حذف"
@@ -39,7 +39,7 @@ const ProductOption: React.FC<ProductOptionProps> = ({
           fontWeight: 500,
           padding: 0,
         }}
-        onClick={onDelete}
+        onClick={() => onDelete(product.id)}
       ></Button>
     </div>
   );

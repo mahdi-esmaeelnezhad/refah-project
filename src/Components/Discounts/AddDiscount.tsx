@@ -49,7 +49,7 @@ const AddDiscount: React.FC<AddDiscountProps> = ({ onBack }) => {
   const token = useSelector((state: RootState) => state.auth.token);
 
   const { execute: itemRequest } = useRequest<any>(
-    PRODUCT_ENDPOINTS.shopItems,
+    PRODUCT_ENDPOINTS.shoppInfo,
     "POST",
     {
       headers: {

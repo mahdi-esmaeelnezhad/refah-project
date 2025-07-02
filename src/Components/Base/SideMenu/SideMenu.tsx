@@ -5,6 +5,7 @@ import ProductsIcon from "../../Icons/ProductsIcon";
 import SuperMarket from "../../Icons/SuperMarket";
 import MenuItem from "./MenuItem";
 import TypoImage from "../../../assets/images/typo-logo.png"; // ensure this path is correct
+import { useEffect, useState } from "react";
 
 const menuItems = [
   { label: "صفحه نخست", icon: <HomeIcon />, path: "/dashboard" },
@@ -20,17 +21,28 @@ const menuItems = [
 ];
 
 export default function SideMenu() {
+  const [shopInfo, setShopInfo] = useState<any>(null);
   const navigate = useNavigate();
 
   const goTo = (path: string) => {
     navigate(path);
   };
 
+  useEffect(() => {
+    const shopInfo = localStorage.getItem("shopInfo");
+    setShopInfo(JSON.parse(shopInfo || "{}"));
+  }, []);
   return (
     <section className="fixed w-[246px] h-[972px] bg-[var(--color-primary)] text-white p-7 flex flex-col justify-between">
       <ul className="flex flex-col gap-[30px]">
-        <MenuItem textClassName="font-23 text-bold" icon={<SuperMarket />}>
-          سوپرمارکت آبی
+        <MenuItem
+          style={{
+            textAlign: "unset",
+          }}
+          textClassName="font-23 text-bold gap-[0px]"
+          icon={<SuperMarket />}
+        >
+          {shopInfo?.extraData?.shopName}
         </MenuItem>
         <hr className="border-white/20" />
 

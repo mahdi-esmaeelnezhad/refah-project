@@ -48,19 +48,7 @@ const Login = () => {
     loading,
     // error: loginError,
   } = useRequest<{ id_token: string }>(AUTH_ENDPOINTS.login, "POST");
-  const token = localStorage.getItem("token");
-  console.log(token, "tokentokentokentoken");
 
-  // const {
-  //   execute: shopRequest,
-  //   loadingShop,
-  //   error: shopError,
-  // } = useRequest<{ extraData: any }>(AUTH_ENDPOINTS.shoppInfo, "GET", {
-  //   headers: {
-  //     Authorization: `Bearer ${token}`,
-  //     "Content-Type": "application/json",
-  //   },
-  // });
   useEffect(() => {
     const timer = setTimeout(() => {
       setFadeOut(true);
@@ -111,9 +99,6 @@ const Login = () => {
         dispatch(setToken(response.data.id_token));
 
         localStorage.setItem("token", response.data.id_token);
-        // const shopData = await shopRequest({});
-        // localStorage.setItem("shoppId", shopData.data?.extraData?.shopId);
-        // localStorage.setItem("shopName", shopData.data?.extraData?.shopName);
         window.location.href = "/dashboard";
       }
     } catch (error) {

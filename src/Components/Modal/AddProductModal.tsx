@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Input from "../Ui/Input/input";
 import DropDownCustom from "../Ui/DropDownCustom/DropDownCustom";
 import { Button } from "../Ui/Button/button";
@@ -12,21 +12,26 @@ interface AddProductModalProps {
   units: string[];
   brands: string[];
   onAdd: (data: any) => void;
+  isEdit?: boolean;
+  initialData?: any;
 }
 
 const initialState = {
   name: "",
-  barcode: "",
-  category: null,
-  brand: null,
+  sku: "",
+  category: null as { categoryId: string; categoryName: string } | null,
+  brand: null as { name: string } | null,
   salePrice: "",
-  basePrice: "",
   stock: "",
   minStock: "",
-  unit: null,
+  unit: null as { name: string } | null,
   description: "",
   show: true,
+  id: "",
+  vatRate: 0 as number, // 👈 type LONG → number
+  govId: "",
 };
+
 const labelProdeut = {
   paddingRight: 10,
   marginTop: 8,
@@ -40,9 +45,46 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   units,
   brands,
   onAdd,
+  isEdit = false,
+  initialData,
 }) => {
   const [form, setForm] = useState(initialState);
   const [errors, setErrors] = useState<any>({});
+  const cacheBrandList = JSON.parse(
+    localStorage.getItem("cacheBrandList") || "[]"
+  );
+  useEffect(() => {
+    if (isEdit && initialData) {
+      console.log(initialData, "initialData");
+
+      setForm({
+        name: initialData.name || "",
+        sku: initialData.sku || "",
+        category:
+          categories.find((c) => c.categoryId === initialData.categoryId) ||
+          null,
+        brand:
+          brands
+            .map((b) => ({ name: b }))
+            .find((b) => b.name === initialData.brandName) || null,
+        salePrice: initialData.price || initialData.salePrice || "",
+        stock: initialData.stock || initialData.onlineStockThreshold || "",
+        minStock: initialData.minStock || "",
+        unit:
+          units
+            .map((u) => ({ name: u }))
+            .find((u) => u.name === initialData.unitType) || null,
+        description: initialData.description || "",
+        show: typeof initialData.show === "boolean" ? initialData.show : true,
+        id: initialData.id || "",
+        vatRate: initialData.vatRate || 0,
+        govId: initialData.govId || "",
+      });
+    } else if (!isOpen) {
+      setForm(initialState);
+    }
+  }, [isEdit, initialData, isOpen, categories, brands, units]);
+
   const handleChange = (field: string, value: any) => {
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev: any) => ({ ...prev, [field]: undefined }));
@@ -50,11 +92,10 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
   const validate = () => {
     const newErrors: any = {};
     if (!form.name) newErrors.name = "این فیلد اجباری است";
-    if (!form.barcode) newErrors.barcode = "این فیلد اجباری است";
+    if (!form.sku) newErrors.sku = "این فیلد اجباری است";
     if (!form.category) newErrors.category = "این فیلد اجباری است";
     if (!form.brand) newErrors.brand = "این فیلد اجباری است";
     if (!form.salePrice) newErrors.salePrice = "این فیلد اجباری است";
-    if (!form.basePrice) newErrors.basePrice = "این فیلد اجباری است";
     return newErrors;
   };
   const handleSubmit = () => {
@@ -98,7 +139,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             marginBottom: 32,
           }}
         >
-          <span style={{ fontSize: 22, fontWeight: 700 }}>تعریف کالا</span>
+          <span style={{ fontSize: 22, fontWeight: 700 }}>
+            {isEdit ? "ویرایش کالا" : "تعریف کالا"}
+          </span>
           <img
             src={closeIcon}
             alt="close"
@@ -133,6 +176,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   fontWeight: 500,
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
+                backgroundColor="#E7E7E7"
               />
             </div>
             <div style={{ flex: 1 }}>
@@ -144,9 +188,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </span>
               <Input
                 required
-                value={form.barcode}
-                onChange={(e) => handleChange("barcode", e.target.value)}
-                error={errors.barcode}
+                value={form.sku}
+                onChange={(e) => handleChange("sku", e.target.value)}
+                error={errors.sku}
                 width={299}
                 height={48}
                 placeholder="بارکد"
@@ -156,10 +200,16 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                   fontWeight: 500,
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
+                backgroundColor="#E7E7E7"
               />
             </div>
             <div style={{ flex: 1 }}>
               <span style={labelProdeut}>دسته‌بندی :</span>
+              <span
+                style={{ color: "#DE4949", fontSize: 25, marginBottom: "20px" }}
+              >
+                *
+              </span>
               <DropDownCustom
                 options={categories}
                 value={form.category}
@@ -197,7 +247,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               </span>
 
               <DropDownCustom
-                options={brands.map((b) => ({ name: b }))}
+                options={[
+                  ...cacheBrandList.map((brand: any) => ({
+                    name: brand.name,
+                  })),
+                ]}
                 value={form.brand}
                 borderRadius={55}
                 onChange={(v) => handleChange("brand", v)}
@@ -243,35 +297,9 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
                 type="number"
+                backgroundColor="#E7E7E7"
               />
             </div>
-            <div style={{ flex: 1 }}>
-              <span style={labelProdeut}>قیمت اولیه (ریال) :</span>
-              <span
-                style={{ color: "#DE4949", fontSize: 25, marginBottom: "20px" }}
-              >
-                *
-              </span>
-              <Input
-                required
-                value={form.basePrice}
-                onChange={(e) => handleChange("basePrice", e.target.value)}
-                error={errors.basePrice}
-                width={299}
-                height={48}
-                placeholder="قیمت اولیه"
-                placeholderStyle={{
-                  color: "#7E7E7E",
-                  fontSize: 17,
-                  fontWeight: 500,
-                }}
-                style={{ borderRadius: 55, background: "#E7E7E7" }}
-                type="number"
-              />
-            </div>
-          </div>
-          {/* Row 3 */}
-          <div style={{ display: "flex", gap: 32 }}>
             <div style={{ flex: 1 }}>
               <span style={labelProdeut}>موجودی :</span>
 
@@ -288,8 +316,12 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
                 type="number"
+                backgroundColor="#E7E7E7"
               />
             </div>
+          </div>
+          {/* Row 3 */}
+          <div style={{ display: "flex", gap: 32 }}>
             <div style={{ flex: 1 }}>
               <span style={labelProdeut}>حداقل موجودی (دریافت اعلان) : </span>
               <Input
@@ -305,6 +337,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
                 type="number"
+                backgroundColor="#E7E7E7"
               />
             </div>
             <div style={{ flex: 1 }}>
@@ -323,6 +356,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                 inputBackgroundColor="#E7E7E7"
               />
             </div>
+            <div style={{ flex: 1 }}></div>
           </div>
         </div>
         {/* توضیحات و دکمه و چک باکس */}
@@ -348,6 +382,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
                 fontWeight: 500,
               }}
               style={{ borderRadius: 55, background: "#E7E7E7" }}
+              backgroundColor="#E7E7E7"
             />
           </div>
           <div
@@ -377,7 +412,7 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
               نمایش کالا
             </label>
             <Button
-              label="افزودن کالا"
+              label={isEdit ? "ویرایش کالا" : "افزودن کالا"}
               color="#7485E5"
               radius={15}
               style={{ width: 242, height: 48, fontSize: 20, fontWeight: 600 }}

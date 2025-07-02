@@ -7,12 +7,14 @@ interface NoShowModalProps {
   isCategoryOpen: boolean;
   onClose: () => void;
   onCategoryDelete: () => void;
+  message?: string;
 }
 
 const NoShowCategoryModal: React.FC<NoShowModalProps> = ({
   isCategoryOpen,
   onClose,
   onCategoryDelete,
+  message,
 }) => {
   if (!isCategoryOpen) return null;
 
@@ -32,13 +34,13 @@ const NoShowCategoryModal: React.FC<NoShowModalProps> = ({
           <img src={infored} alt="trash" className="w-10 h-10 mb-4 mt-2" />
 
           <p className="text-[23px] font-[500] mb-6">
-            در صورت عدم نمایش یک دسته‌بندی، لیست محصولات در داخل لیست
-            دسته‌بندی‌ها هم نمایش داده نمی‌شود.
+            {message ||
+              "در صورت عدم نمایش یک دسته‌بندی، لیست محصولات در داخل لیست دسته‌بندی‌ها هم نمایش داده نمی‌شود."}
           </p>
 
           <div className="flex gap-4 my-4">
             <Button
-              label="عدم نمایش"
+              label=""
               color="#DE4949"
               radius={15}
               style={{
@@ -49,7 +51,9 @@ const NoShowCategoryModal: React.FC<NoShowModalProps> = ({
                 padding: 0,
               }}
               onClick={onCategoryDelete}
-            />
+            >
+              <span>{message ? "حذف" : "عدم نمایش"}</span>
+            </Button>
             <Button
               label="انصراف"
               color="#DE4949"

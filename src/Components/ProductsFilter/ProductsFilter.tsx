@@ -28,6 +28,9 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
     onApply({ brand, category, discount, unitType, minPrice, maxPrice });
   };
 
+  const cacheBrandList = JSON.parse(
+    localStorage.getItem("cacheBrandList") || "[]"
+  );
   const handleReset = () => {
     setBrand(null);
     setCategory(null);
@@ -118,9 +121,9 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
             <label style={labelStyle}>برند</label>
             <DropDownCustom
               options={[
-                { name: "برند نمونه ۱" },
-                { name: "برند نمونه ۲" },
-                { name: "برند نمونه ۳" },
+                ...cacheBrandList.map((brand: any) => ({
+                  name: brand.name,
+                })),
               ]}
               value={brand}
               onChange={setBrand}
@@ -128,6 +131,7 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
               placeholder="انتخاب کنید"
               width={220}
               height={39}
+              inputBackgroundColor="#fff"
               style={{ borderRadius: 15 }}
             />
           </div>
@@ -141,6 +145,7 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
               onChange={setCategory}
               getLabel={(o) => o.categoryName}
               placeholder="انتخاب کنید"
+              inputBackgroundColor="#fff"
               width={220}
               height={39}
               style={{ borderRadius: 15 }}
@@ -174,6 +179,7 @@ const ProductsFilter: React.FC<ProductsFilterProps> = ({
               placeholder="انتخاب کنید"
               width={220}
               height={39}
+              inputBackgroundColor="#fff"
               style={{ borderRadius: 15 }}
             />
           </div>

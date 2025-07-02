@@ -3,8 +3,6 @@ import { Button } from "../../Components/Ui/Button/button";
 import filterIcon from "../../assets/filter.svg";
 import { useModal } from "../../hooks/useModal";
 import Input from "../../Components/Ui/Input/input";
-import useRequest from "../../hooks/useRequest";
-import { useSelector } from "react-redux";
 import productLabel from "../../assets/productLabel.svg";
 import addIcon from "../../assets/add.svg";
 import NoShowCategoryModal from "../../Components/Modal/NoShowCategoryModal";
@@ -13,29 +11,37 @@ import arrowDownn from "../../assets/arrow-down.svg";
 
 import starFull from "../../assets/starFull.svg";
 import Tooltip from "../../Components/Base/SideMenu/Tooltip";
-import CategoryOptiob from "../../Components/ToolTipProduct/categortOption";
-
-import type { RootState } from "../../store/store";
-import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
+import CategoryOption from "../../Components/ToolTipProduct/categortOption";
+import ProductOption from "../../Components/ToolTipProduct/ProductOption";
 import Pagination from "../../Components/Pagination/Pagination";
 import ProductsFilter from "../../Components/ProductsFilter/ProductsFilter";
 import AddProductModal from "../../Components/Modal/AddProductModal";
+import useRequest from "../../hooks/useRequest";
+import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
+import { useSelector } from "react-redux";
+import axios from "axios";
+import type { RootState } from "../../store/store";
 
 interface ProductItem {
   id: string;
   name: string;
   price: number;
   categoryId: string;
+  brandId: string;
   categoryName: string;
+  brandName: string;
+  sku: string;
   unitType: string;
   onlineStockThreshold: number;
   discount?: number;
+  govId: string;
+  vatRate: string;
 }
 
-interface Category {
-  id: string;
-  title: string;
-}
+// interface Category {
+//   id: string;
+//   title: string;
+// }
 
 interface CategoryOption {
   categoryId: string;
@@ -56,27 +62,26 @@ const Products: React.FC = () => {
   >([]);
   const [categoriesCount, setCategoriesCount] = useState<number>(0);
 
-  const [openTooltipId, setOpenTooltipId] = useState<string | null>(null);
+  const [, setOpenTooltipId] = useState<string | null>(null);
   const [, setSelectedItemId] = useState<number | null>(null);
   const [showCategoryId, setShowCategoryId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [openCategoryTooltipId, setOpenCategoryTooltipId] = useState<
+    string | null
+  >(null);
+  const [openProductTooltipId, setOpenProductTooltipId] = useState<
+    string | null
+  >(null);
+  const [editProduct, setEditProduct] = useState<ProductItem | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [deleteProduct, setDeleteProduct] = useState<ProductItem | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const token = useSelector((state: RootState) => state.auth.token);
-
-  const { execute: itemRequest } = useRequest<any>(
-    PRODUCT_ENDPOINTS.shopItems,
-    "POST",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  const { execute: categoryRequest } = useRequest<Category[]>(
-    PRODUCT_ENDPOINTS.cacheCategoryList,
+  const shopId = localStorage.getItem("shopId");
+  const { execute: addProductRequest } = useRequest(
+    PRODUCT_ENDPOINTS.addProduct,
     "POST",
     {
       headers: {
@@ -87,45 +92,14 @@ const Products: React.FC = () => {
   );
 
   useEffect(() => {
-    getVersion();
     getCategory();
     getInfo();
   }, []);
 
-  const getVersion = async () => {
-    const shopId = localStorage.getItem("shoppId");
-    if (!shopId) return;
-
-    try {
-      const response = await fetch(
-        `https://api2.shopp.market/api/shop_biz/cache/version/${shopId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem("cacheVersion", JSON.stringify(data));
-      }
-    } catch (error) {
-      console.error("Error fetching version:", error);
-    }
-  };
-
   const getCategory = async () => {
-    const shopId = localStorage.getItem("shoppId");
-    if (!shopId) return;
-
-    try {
-      const response = await categoryRequest({ shopId });
-      if (response?.data) {
-        setCategoriesCount(response.data.length);
-      }
-    } catch (error) {
-      console.error("Error fetching categories:", error);
-    }
+    const cacheCategoryList = localStorage.getItem("cacheCategoryList");
+    if (!cacheCategoryList) return;
+    setCategoriesCount(cacheCategoryList.length);
   };
 
   const getInfo = async () => {
@@ -135,33 +109,52 @@ const Products: React.FC = () => {
     try {
       setIsLoading(true);
       setError(null);
+      // please json parse
+      const cacheCategoryList = JSON.parse(
+        localStorage.getItem("cacheCategoryList") || "[]"
+      );
+      const cacheBrandList = JSON.parse(
+        localStorage.getItem("cacheBrandList") || "[]"
+      );
+      const cacheProductList = JSON.parse(
+        localStorage.getItem("cacheProductList") || "[]"
+      );
 
-      const response = await itemRequest({
-        page: 8,
-        row: 5,
-        shopId: shopId,
-      });
-
-      if (response?.data && Array.isArray(response.data)) {
-        const categoriesResponse = await categoryRequest({ shopId });
+      if (
+        cacheProductList &&
+        Array.isArray(cacheProductList) &&
+        cacheCategoryList &&
+        Array.isArray(cacheCategoryList) &&
+        cacheBrandList &&
+        Array.isArray(cacheBrandList)
+      ) {
+        // const categoriesResponse = await categoryRequest({ shopId });
         const categoryMap = new Map<string, string>();
+        const brandMap = new Map<string, string>();
 
-        if (categoriesResponse?.data) {
-          categoriesResponse.data.forEach((cat) => {
+        if (cacheCategoryList) {
+          cacheCategoryList?.forEach((cat: any) => {
             categoryMap.set(cat.id, cat.title);
           });
         }
-        const processedData: ProductItem[] = response.data.map((item: any) => ({
-          id: item.id || item.itemDto?.id || "",
-          name: item.name || item.itemDto?.name || "",
-          price: item.price || item.itemDto?.price || 0,
-          categoryId: item.categoryId || "",
-          categoryName:
-            categoryMap.get(item.categoryId) || item.categoryName || "",
-          unitType: item.unitType || "",
-          onlineStockThreshold: item.onlineStockThreshold || 0,
-          discount: item.discount || 0,
-        }));
+        const processedData: ProductItem[] = cacheProductList.map(
+          (item: any) => ({
+            id: item.id || item.itemDto?.id || "",
+            name: item.name || item.itemDto?.name || "",
+            price: item.price || item.itemDto?.price || 0,
+            categoryId: item.categoryId || "",
+            brandId: item.brandId || "",
+            brandName: brandMap.get(item.brandId) || item.brandName || "",
+            sku: item.sku || "",
+            govId: item.govId || "",
+            vatRate: item.vatRate || "",
+            categoryName:
+              categoryMap.get(item.categoryId) || item.categoryName || "",
+            unitType: item.unitType || "",
+            onlineStockThreshold: item.onlineStockThreshold || 0,
+            discount: item.discount || 0,
+          })
+        );
 
         setFinalData(processedData);
         setAllFinalData(processedData);
@@ -228,11 +221,9 @@ const Products: React.FC = () => {
     setAvailableCategories(updatedCategories);
     setCategoryDelete(false);
   };
-  const handleEditCategory = (id: string) => {
-    console.log("Edit category:", id);
-  };
   const handleDeleteCategory = (id: string) => {
     setOpenTooltipId(null);
+    setOpenCategoryTooltipId(null);
     setCategoryDelete(true);
     setShowCategoryId(id);
   };
@@ -250,7 +241,6 @@ const Products: React.FC = () => {
 
   const paginatedData = useMemo(() => {
     if (!finalData) return [];
-    console.log(finalData, "finalData");
 
     return finalData.slice(
       (currentPage - 1) * itemsPerPage,
@@ -272,6 +262,44 @@ const Products: React.FC = () => {
 
   const brands = ["برند نمونه ۱", "برند نمونه ۲", "برند نمونه ۳"];
   const unitsItem = ["عدد", "کیلوگرم", "گرم", "لیتر"];
+
+  const handleEditProduct = (item: ProductItem) => {
+    setEditProduct(item);
+    setIsEditModalOpen(true);
+  };
+  const submitEditProduct = async (data: any) => {
+    const body = {
+      categoryId: {
+        id: data.category?.categoryId || "",
+      },
+      id: data.id || "",
+      name: data.name || "",
+      price: String(data.salePrice) || "",
+      shopId: shopId,
+      sku: data.sku || "",
+      unitType: data.unit?.name || "0",
+      vatRate: data.vatRate || 0,
+      govId: data.govId || "",
+    };
+    await addProductRequest(body);
+    setIsEditModalOpen(false);
+    getInfo();
+  };
+  const handleDeleteProduct = (item: ProductItem) => {
+    setDeleteProduct(item);
+    setIsDeleteModalOpen(true);
+  };
+  const submitDeleteProduct = async () => {
+    if (!deleteProduct) return;
+    console.log(deleteProduct, "deleteProduct");
+    await axios.delete(PRODUCT_ENDPOINTS.deleteProduct(deleteProduct.id), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setIsDeleteModalOpen(false);
+    getInfo();
+  };
 
   if (error) {
     return (
@@ -310,9 +338,40 @@ const Products: React.FC = () => {
         categories={categoryOptions}
         units={unitsItem}
         brands={brands}
-        onAdd={(data) => {
-          console.log("محصول جدید:", data);
+        onAdd={async (data) => {
+          const body = {
+            categoryId: {
+              id: data.category?.categoryId || "",
+            },
+            id: "",
+            name: data.name || "",
+            price: String(data.salePrice) || "",
+            shopId: shopId,
+            sku: data.sku || "",
+            unitType: data.unit?.name || "",
+            vatRate: data.vatRate || 0,
+            govId: data.govId || "",
+          };
+          await addProductRequest(body);
+          closeModal();
+          getInfo();
         }}
+      />
+      <AddProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        categories={categoryOptions}
+        units={unitsItem}
+        brands={brands}
+        isEdit={true}
+        initialData={editProduct}
+        onAdd={submitEditProduct}
+      />
+      <NoShowCategoryModal
+        isCategoryOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onCategoryDelete={submitDeleteProduct}
+        message={`آیا مایل به حذف ${deleteProduct?.name} هستید؟`}
       />
       <div className="flex items-center mb-4">
         <img src={productLabel} alt="" />
@@ -405,14 +464,21 @@ const Products: React.FC = () => {
               if (!allFinalData) return;
 
               let filtered = allFinalData;
+              console.log(filters, "filters");
+
               if (filters.category) {
                 filtered = filtered.filter(
-                  (item) => item.categoryId === filters.category
+                  (item) => item.categoryId === filters.category.categoryId
+                );
+              }
+              if (filters.brand) {
+                filtered = filtered.filter(
+                  (item) => item.brandName === filters.brand.name
                 );
               }
               if (filters.unitType) {
                 filtered = filtered.filter(
-                  (item) => item.unitType === filters.unitType
+                  (item) => item.unitType === filters.unitType.name
                 );
               }
               if (filters.discount) {
@@ -470,19 +536,18 @@ const Products: React.FC = () => {
               <div className="relative">
                 <Tooltip
                   component={
-                    <CategoryOptiob
+                    <CategoryOption
                       category={item}
                       onDelete={handleDeleteCategory}
-                      onEdit={handleEditCategory}
                     />
                   }
-                  isOpen={openTooltipId === item.categoryId}
+                  isOpen={openCategoryTooltipId === item.categoryId}
                   setIsOpen={(isOpen) => {
                     if (!isOpen) {
-                      setOpenTooltipId(null);
+                      setOpenCategoryTooltipId(null);
                       setSelectedItemId(null);
                     } else {
-                      setOpenTooltipId(item.categoryId);
+                      setOpenCategoryTooltipId(item.categoryId);
                     }
                   }}
                 >
@@ -558,7 +623,27 @@ const Products: React.FC = () => {
                 {getStockStatus(item.onlineStockThreshold)}
               </div>
               <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
-                {item.discount ? formatNumber(item.discount) : "-"}
+                <div>{item.discount ? formatNumber(item.discount) : "-"}</div>
+                <Tooltip
+                  component={
+                    <ProductOption
+                      product={item}
+                      onEdit={() => handleEditProduct(item)}
+                      onDelete={() => handleDeleteProduct(item)}
+                    />
+                  }
+                  isOpen={openProductTooltipId === item.id}
+                  setIsOpen={(isOpen) =>
+                    setOpenProductTooltipId(isOpen ? item.id : null)
+                  }
+                >
+                  <img
+                    className="relative right-[60px] cursor-pointer"
+                    style={{ height: "25px", width: "5px", marginTop: "12px" }}
+                    src={optionIcon}
+                    alt="options"
+                  />
+                </Tooltip>
               </div>
             </div>
           ))}

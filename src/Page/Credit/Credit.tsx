@@ -8,7 +8,7 @@ import Input from "../../Components/Ui/Input/input";
 import filterIcon from "../../assets/filter.svg";
 import CrediteFilter from "../../Components/CrediteFilter/CrediteFilter";
 import Tooltip from "../../Components/Base/SideMenu/Tooltip";
-import CategoryOption from "../../Components/CreditTooltip/CreditTooltip";
+import CreditTooltip from "../../Components/CreditTooltip/CreditTooltip";
 import CreditFactor from "../../Components/CreditFactor/CreditFactor";
 import DebtPaymentModal from "../../Components/Modal/DebtPaymentModal";
 import SendDebtModal from "../../Components/Modal/SendDebtModal";
@@ -402,7 +402,7 @@ const Credit: React.FC = () => {
                         }
                         position="bottom"
                         component={
-                          <CategoryOption
+                          <CreditTooltip
                             credit={item}
                             onInfo={() => handleOpenSendDebt(item.mobile)}
                             onEdit={() => setSelectedItem(item)}

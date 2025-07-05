@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import JalaliDate from "../../../utils/helper";
+import { deleteInvoiceByNumber } from "../../../utils/invoiceService";
 import {
   CalendarIcon,
   NofiIcon,
@@ -22,40 +23,51 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
   const [searchProduct, setSearchProduct] = useState("");
   const [isSavedFactorsOpen, setIsSavedFactorsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [savedFactors] = useState([
-    {
-      id: "234",
-      amount: 4200000,
-      customerName: "معصومه ده بالا",
-      time: "13:59",
-      products: [
-        "پنیر",
-        "تخم مرغ",
-        "نان تست",
-        "بستنی",
-        "شیر",
-        "کره",
-        "ماست",
-        "خامه",
-        "کیک",
-        "کنسرو",
-      ],
-    },
-    {
-      id: "235",
-      amount: 1850000,
-      customerName: "علی محمدی",
-      time: "14:30",
-      products: ["برنج", "روغن", "شکر", "چای", "قهوه"],
-    },
-    {
-      id: "236",
-      amount: 3200000,
-      customerName: "مریم حسینی",
-      time: "15:15",
-      products: ["گوشت", "مرغ", "ماهی", "سبزیجات", "میوه"],
-    },
-  ]);
+  const [savedFactors, setSavedFactors] = useState<any[]>([]);
+
+  // تابع برای بارگذاری فاکتورهای ذخیره شده
+  const loadSavedInvoices = () => {
+    try {
+      const savedInvoices = JSON.parse(
+        localStorage.getItem("savedInvoices") || "[]"
+      );
+
+      // تبدیل فاکتورها به فرمت مورد نیاز SavedFactorsTooltip
+      const formattedFactors = savedInvoices.map((invoice: any) => ({
+        id: invoice.invoiceNumber,
+        amount: invoice.finalAmount,
+        customerName: invoice.customer.name,
+        time: new Date(invoice.date).toLocaleTimeString("fa-IR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        products: invoice.items.map((item: any) => item.name),
+      }));
+
+      setSavedFactors(formattedFactors);
+    } catch (error) {
+      console.error("خطا در بارگذاری فاکتورهای ذخیره شده:", error);
+      // در صورت خطا، داده‌های نمونه نمایش بده
+    }
+  };
+
+  // بارگذاری فاکتورهای ذخیره شده از localStorage
+  useEffect(() => {
+    loadSavedInvoices();
+  }, []);
+
+  // گوش دادن به تغییرات فاکتورهای ذخیره شده
+  useEffect(() => {
+    const handleInvoicesUpdated = () => {
+      loadSavedInvoices();
+    };
+
+    window.addEventListener("invoicesUpdated", handleInvoicesUpdated);
+
+    return () => {
+      window.removeEventListener("invoicesUpdated", handleInvoicesUpdated);
+    };
+  }, []);
 
   // Sample notifications data for badge count
   const notifications = [
@@ -82,7 +94,12 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
   ];
 
   const handleDeleteFactor = (id: string) => {
-    console.log(id);
+    const success = deleteInvoiceByNumber(id);
+    if (success) {
+      console.log(`فاکتور شماره ${id} با موفقیت حذف شد`);
+    } else {
+      console.error("خطا در حذف فاکتور");
+    }
   };
 
   return (

@@ -16,6 +16,8 @@ interface InputProps {
   placeholder?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   error?: string;
   type?: string;
@@ -35,98 +37,108 @@ interface InputProps {
   onUpload?: (file: File) => void;
 }
 
-const Input: React.FC<InputProps> = ({
-  label,
-  placeholder,
-  value,
-  onChange,
-  disabled = false,
-  error,
-  type,
-  placeholderStyle,
-  errorStyle,
-  required,
-  variant = "default",
-  icon,
-  style,
-  suffix,
-  width,
-  height,
-  hasButton,
-  buttonText,
-  onButtonClick,
-  backgroundColor = "#f2f2f2",
-  onUpload,
-}) => {
-  const renderInput = () => {
-    if (variant === "imageUpload") {
+const Input = React.forwardRef<HTMLInputElement, InputProps>(
+  (
+    {
+      label,
+      placeholder,
+      value,
+      onChange,
+      onFocus,
+      onBlur,
+      disabled = false,
+      error,
+      type,
+      placeholderStyle,
+      errorStyle,
+      required,
+      variant = "default",
+      icon,
+      style,
+      suffix,
+      width,
+      height,
+      hasButton,
+      buttonText,
+      onButtonClick,
+      backgroundColor = "#f2f2f2",
+      onUpload,
+    },
+    ref
+  ) => {
+    const renderInput = () => {
+      if (variant === "imageUpload") {
+        return (
+          <div className={styles.imageUploadWrapper}>
+            <input
+              type="file"
+              accept="image/*"
+              className={styles.hiddenInput}
+              onChange={(e) => e.target.files && onUpload?.(e.target.files[0])}
+            />
+            <div className={styles.imageBox}>+</div>
+          </div>
+        );
+      }
+
       return (
-        <div className={styles.imageUploadWrapper}>
+        <div
+          className={`${styles.inputWrapper} ${error ? styles.error : ""} ${
+            disabled ? styles.disabled : ""
+          }`}
+          style={{
+            height: typeof height === "number" ? `${height}px` : height,
+            backgroundColor: backgroundColor,
+          }}
+        >
+          {icon && <span className={styles.icon}>{icon}</span>}
           <input
-            type="file"
-            accept="image/*"
-            className={styles.hiddenInput}
-            onChange={(e) => e.target.files && onUpload?.(e.target.files[0])}
+            ref={ref}
+            type={type}
+            className={`${styles.input} ${icon ? styles.withIcon : ""}`}
+            placeholder={placeholder}
+            value={value}
+            onChange={onChange}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            disabled={disabled}
+            style={{
+              height: typeof height === "number" ? `${height - 30}px` : height,
+              ...placeholderStyle,
+              ...errorStyle,
+            }}
           />
-          <div className={styles.imageBox}>+</div>
+          {suffix && <span className={styles.suffix}>{suffix}</span>}
+          {hasButton && buttonText && (
+            <button className={styles.tagButton} onClick={onButtonClick}>
+              {buttonText}
+            </button>
+          )}
         </div>
       );
-    }
+    };
 
     return (
       <div
-        className={`${styles.inputWrapper} ${error ? styles.error : ""} ${
-          disabled ? styles.disabled : ""
-        }`}
+        className={styles.container}
         style={{
+          width: typeof width === "number" ? `${width}px` : width,
           height: typeof height === "number" ? `${height}px` : height,
-          backgroundColor: backgroundColor,
+          ...placeholderStyle,
+          ...errorStyle,
+          ...style,
         }}
       >
-        {icon && <span className={styles.icon}>{icon}</span>}
-        <input
-          type={type}
-          className={`${styles.input} ${icon ? styles.withIcon : ""}`}
-          placeholder={placeholder}
-          value={value}
-          onChange={onChange}
-          disabled={disabled}
-          style={{
-            height: typeof height === "number" ? `${height - 30}px` : height,
-            ...placeholderStyle,
-            ...errorStyle,
-          }}
-        />
-        {suffix && <span className={styles.suffix}>{suffix}</span>}
-        {hasButton && buttonText && (
-          <button className={styles.tagButton} onClick={onButtonClick}>
-            {buttonText}
-          </button>
+        {label && (
+          <label className={styles.label}>
+            {label} {required && <span className={styles.required}>*</span>}
+          </label>
         )}
+        {renderInput()}
+        {error && <div className={styles.errorText}>{error}</div>}
       </div>
     );
-  };
-
-  return (
-    <div
-      className={styles.container}
-      style={{
-        width: typeof width === "number" ? `${width}px` : width,
-        height: typeof height === "number" ? `${height}px` : height,
-        ...placeholderStyle,
-        ...errorStyle,
-        ...style,
-      }}
-    >
-      {label && (
-        <label className={styles.label}>
-          {label} {required && <span className={styles.required}>*</span>}
-        </label>
-      )}
-      {renderInput()}
-      {error && <div className={styles.errorText}>{error}</div>}
-    </div>
-  );
-};
+  }
+);
 
 export default Input;

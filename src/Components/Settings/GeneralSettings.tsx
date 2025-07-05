@@ -89,7 +89,7 @@ const GeneralSettings: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     dispatch(clearToken());
-    navigate("/login");
+    navigate("/");
   };
 
   return (

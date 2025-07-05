@@ -1,59 +1,194 @@
-import React, { useState, useMemo } from "react";
-// import { useShopItems } from "../../endpoint/product/product";
+import React, { useState, useMemo, useEffect } from "react";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store/store";
+import useRequest from "../../hooks/useRequest";
+import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 import { Button } from "../../Components/Ui/Button/button";
 import filterIcon from "../../assets/filter.svg";
 import Input from "../../Components/Ui/Input/input";
 import productLabel from "../../assets/productLabel.svg";
 import addIcon from "../../assets/add.svg";
 import arrowDownn from "../../assets/arrow-down.svg";
+import optionIcon from "../../assets/option.svg";
+import NoShowCustomerModal from "../../Components/Modal/NoShowCategoryModal";
 import Pagination from "../../Components/Pagination/Pagination";
 import CustomerDefinitionModal from "../../Components/Modal/CustomerDefinitionModal";
+import CustomerFilter from "../../Components/CustomerFilter/CustomerFilter";
+import Tooltip from "../../Components/Base/SideMenu/Tooltip";
+import CustomerOption from "../../Components/CustomerTooltip/CustomerTooltip";
+import axios from "axios";
+import { useModal } from "../../hooks/useModal";
 
 interface Item {
-  id: number;
-  customerName: string;
+  id: string;
+  displayName: string;
   mobile: string;
-  email: string;
   address: string;
-  state: boolean;
-  country: string;
-  postalCode: string;
-  city: string;
-  factorCount: number;
-  totalAmount: number;
-  totalDiscount: number;
-  totalPaid: number;
-  totalDue: number;
+  isArchive: boolean;
+  nationalCode: number;
+  gender: string;
+  // subscriptionCode: number;
+  // debt: number;
+  // maxAllowedDebt: number;
+  // email: string;
+  // economicCode: string;
+  // postalCode: string;
+  // customerType: string;
+  // merchantId: string;
+}
+
+interface CustomerApiResponseShow {
+  id: string;
+  displayName: string;
+  mobile: string;
+  address: string;
+  debt: number;
+  isArchive: boolean;
+  subscriptionCode: number;
+  nationalCode: number;
+  gender: string;
+}
+
+interface CustomerApiResponse {
+  id: string;
+  displayName: string;
+  maxAllowedDebt: number;
+  mobile: string;
+  subscriptionCode: number;
+  address: string;
+  debt: number;
+  isArchive: boolean;
+  nationalCode: number;
+  gender: string;
 }
 
 const pageSize = 20;
 
 const Customers: React.FC = () => {
-  const [allFinalData] = useState<Item[]>(
-    [...Array(150)].map((_, index) => ({
-      id: index + 1,
-      customerName: Math.random().toString(36).substring(2, 15) + " امین خانی",
-      mobile: Math.floor(1000000000 + Math.random() * 9000000000).toString(),
-      email: Math.random().toString(36).substring(2, 15) + "@test.com",
-      address: Math.random().toString(36).substring(2, 15) + " خیابان",
-      state: Math.random() > 0.5,
-      country: Math.random().toString(36).substring(2, 15) + " کشور",
-      postalCode: Math.floor(
-        1000000000 + Math.random() * 9000000000
-      ).toString(),
-      city: Math.random().toString(36).substring(2, 15) + " شهر",
-      factorCount: Math.floor(1 + Math.random() * 100),
-      totalAmount: Math.floor(1000000 + Math.random() * 9000000),
-      totalDiscount: Math.floor(10000 + Math.random() * 90000),
-      totalPaid: Math.floor(1000000 + Math.random() * 9000000),
-      totalDue: Math.floor(1000000 + Math.random() * 9000000),
-    }))
+  const { token } = useSelector((state: RootState) => state.auth);
+  const { isOpen, openModal, closeModal } = useModal();
+
+  const {
+    execute: fetchCustomers,
+    loading: customersLoading,
+    error: customersError,
+  } = useRequest<{ data: CustomerApiResponse[] }>(
+    PRODUCT_ENDPOINTS.customerList,
+
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
   );
-  const [items, setItems] = useState<Item[]>(allFinalData);
+
+  const { loading: addCustomerLoading, execute: addCustomerHandler } =
+    useRequest<{
+      data: CustomerApiResponse[];
+    }>(PRODUCT_ENDPOINTS.addCustomer, "POST", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  const { execute: editCustomerHandler } = useRequest<{
+    data: CustomerApiResponse[];
+  }>(PRODUCT_ENDPOINTS.addCustomer, "PUT", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  const [allFinalData, setAllFinalData] = useState<CustomerApiResponseShow[]>(
+    []
+  );
+  const [items, setItems] = useState<CustomerApiResponseShow[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
-  const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
-    useState(false);
+  const [showFilter, setShowFilter] = useState(false);
+  const [openCustomerTooltipId, setOpenCustomerTooltipId] = useState<
+    string | null
+  >(null);
+  // const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
+  //   useState(false);
+  const [deleteCustomer, setDeleteCustomer] =
+    useState<CustomerApiResponseShow | null>(null);
+  const [editCustomer, setEditCustomer] =
+    useState<CustomerApiResponseShow | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  // const createSearchPayload = (searchValue: string = "") => {
+  //   return {
+  //     conditionType: "OR",
+  //     conditions: [
+  //       {
+  //         fieldName: "mobile",
+  //         operationType: "LIKE",
+  //         values: [searchValue],
+  //       },
+  //       {
+  //         fieldName: "name",
+  //         operationType: "LIKE",
+  //         values: [searchValue],
+  //       },
+  //     ],
+  //   };
+  // };
+
+  const fetchCustomerList = async (searchValue: string = "") => {
+    try {
+      // const searchPayload = createSearchPayload(searchValue);
+      console.log(searchValue, "searchValue");
+
+      const searchPayload = {
+        conditionType: "OR",
+        conditions: [],
+        values: [],
+      };
+      // const params = "?page=0&size=1000&sort=id,desc";
+      const response: any = await fetchCustomers({
+        searchPayload,
+        page: 1,
+        sort: "id,desc",
+        size: 10,
+      });
+
+      const customers: CustomerApiResponse[] = response.data;
+
+      if (customers) {
+        const convertedItems = convertApiDataToItems(customers);
+        const nonArchived = convertedItems.filter((item) => !item.isArchive);
+        setAllFinalData(nonArchived);
+        setItems(nonArchived);
+      }
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
+  };
+
+  const convertApiDataToItems = (
+    apiData: CustomerApiResponse[]
+  ): CustomerApiResponseShow[] => {
+    return apiData.map((customer) => ({
+      id: customer.id,
+      displayName: customer.displayName || "",
+      mobile: customer.mobile || "",
+      address: customer.address || "",
+      debt: customer.debt || 0,
+      isArchive: customer.isArchive,
+      subscriptionCode: customer.subscriptionCode || 0,
+      nationalCode: customer.nationalCode || 0,
+      maxAllowedDebt: customer.maxAllowedDebt || 0,
+      gender: customer.gender || "",
+    }));
+  };
+
+  useEffect(() => {
+    if (token) {
+      fetchCustomerList();
+    }
+  }, [token]);
+  const productSectionMaxHeight = showFilter ? 450 : 600;
 
   const totalPages = Math.ceil(items.length / pageSize);
 
@@ -66,52 +201,83 @@ const Customers: React.FC = () => {
     setCurrentPage(page);
   };
 
-  const handleSeachCustomer = (value: string) => {
+  const handleSeachCustomer = async (value: string) => {
     setSearchTerm(value);
 
-    if (!value.trim()) {
-      setItems(allFinalData);
-    } else {
-      const searchData = allFinalData.filter((item) => {
-        const customerName = item.customerName.toLowerCase();
-        const mobile = item.mobile;
-        const searchValue = value.toLowerCase();
+    let searchData: CustomerApiResponseShow[] = [];
+    allFinalData.forEach((item) => {
+      if (
+        item.displayName.toLowerCase().includes(value.toLowerCase()) ||
+        item.mobile.includes(value)
+      ) {
+        searchData.push(item);
+      }
+    });
 
-        return (
-          customerName.includes(searchValue) || mobile.includes(searchValue)
-        );
-      });
-      setItems(searchData);
-    }
+    setItems(value ? searchData : allFinalData);
     setCurrentPage(1);
   };
 
   const handleAddCustomer = (customerData: any) => {
-    // Handle adding new customer
-    console.log("New customer data:", customerData);
-    // You can add the customer to your system here
-    // For now, we'll add it to the items list
+    console.log(customerData);
+
     const newCustomer: Item = {
-      id: items.length + 1,
-      customerName: customerData.name,
-      mobile: customerData.phone,
-      email: customerData.email || "",
+      displayName: customerData.displayName || "",
+      mobile: customerData.mobile || "",
       address: customerData.address || "",
-      state: false,
-      country: "",
-      postalCode: "",
-      city: "",
-      factorCount: 0,
-      totalAmount: 0,
-      totalDiscount: 0,
-      totalPaid: 0,
-      totalDue: 0,
+      gender: customerData.gender === "زن" ? "0" : "1",
+      id: customerData.id || "",
+      isArchive: customerData.isArchive || false,
+      nationalCode: customerData.nationalCode || 0,
+      // debt: customerData.debt || 0,
+      // subscriptionCode: customerData.subscriptionCode || 0,
+      // maxAllowedDebt: customerData.maxAllowedDebt || 0,
+      // email: customerData.email || "",
+      // economicCode: customerData.economicCode || "",
+      // postalCode: customerData.postalCode || "",
+      // customerType: customerData.customerType || "",
+      // merchantId: customerData.merchantId || "",
     };
-    setItems((prev) => [newCustomer, ...prev]);
+    // setItems((prev) => [newCustomer, ...prev]);
+    if (newCustomer.id === "") {
+      addCustomerHandler(newCustomer);
+    } else {
+      editCustomerHandler(newCustomer);
+    }
+    fetchCustomerList();
+  };
+
+  const handleEditCustomer = (item: CustomerApiResponseShow) => {
+    setEditCustomer(item);
+    setIsEditModalOpen(true);
+  };
+
+  const handleDeleteCustomer = (item: CustomerApiResponseShow) => {
+    setDeleteCustomer(item);
+    setIsDeleteModalOpen(true);
+  };
+
+  const submitDeleteCustomer = async () => {
+    if (!deleteCustomer) return;
+    console.log(deleteCustomer, "deleteCustomer");
+    await axios.delete(PRODUCT_ENDPOINTS.deleteCustomer(deleteCustomer.id), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setIsDeleteModalOpen(false);
+    fetchCustomerList();
   };
 
   return (
     <>
+      <NoShowCustomerModal
+        isCategoryOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onCategoryDelete={submitDeleteCustomer}
+        message={`آیا مایل به حذف ${deleteCustomer?.displayName} هستید؟`}
+      />
+      {/* Header Section */}
       <div className="flex justify-between">
         <div className="flex items-center mb-4">
           <img src={productLabel} alt="" />
@@ -127,12 +293,12 @@ const Customers: React.FC = () => {
         </div>
         <img
           src={arrowDownn}
-          style={{
-            transition: "transform 0.2s",
-          }}
           alt="arrow"
+          style={{ transition: "transform 0.2s" }}
         />
       </div>
+
+      {/* Search and Buttons */}
       <div className="flex justify-between">
         <Input
           type="text"
@@ -164,7 +330,7 @@ const Customers: React.FC = () => {
             marginLeft: "15px",
             position: "relative",
           }}
-          //   onClick={() => setShowFilter((prev) => !prev)}
+          onClick={() => setShowFilter((prev) => !prev)}
         >
           <img
             src={filterIcon}
@@ -177,7 +343,7 @@ const Customers: React.FC = () => {
               bottom: "48px",
               right: "108px",
               transition: "transform 0.2s",
-              //   transform: showFilter ? "rotate(180deg)" : "rotate(0deg)",
+              transform: showFilter ? "rotate(180deg)" : "rotate(0deg)",
             }}
             alt="arrow"
           />
@@ -187,7 +353,7 @@ const Customers: React.FC = () => {
           color="#7485E5"
           radius={15}
           style={{ width: "175px", height: "50px" }}
-          onClick={() => setIsCustomerDefinitionModalOpen(true)}
+          onClick={() => openModal("")}
         >
           <span style={{ position: "relative", left: "-15px" }}>
             افزودن مشتری
@@ -203,6 +369,41 @@ const Customers: React.FC = () => {
           onPageChange={handlePageChange}
         />
       </div>
+      {showFilter && (
+        <CustomerFilter
+          onApply={(filters) => {
+            if (!allFinalData) return;
+
+            let filtered = allFinalData;
+            console.log(filters, "filters");
+
+            if (filters.gender) {
+              filtered = filtered.filter(
+                (item) => item.gender === filters.gender
+              );
+            }
+
+            // if (filters.startDate) {
+            //   filtered = filtered.filter(
+            //     (item) => new Date(item.createdDate) >= filters.startDate
+            //   );
+            // }
+            // if (filters.endDate) {
+            //   filtered = filtered.filter(
+            //     (item) => new Date(item.createdDate) <= filters.endDate
+            //   );
+            // }
+            setItems(filtered);
+            setCurrentPage(1);
+          }}
+          onReset={() => {
+            setItems(allFinalData);
+            setCurrentPage(1);
+          }}
+          showReset={items !== allFinalData}
+        />
+      )}
+      {/* Table */}
       <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto">
         <div className="flex justify-between">
           <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[50px]">
@@ -223,9 +424,17 @@ const Customers: React.FC = () => {
         </div>
         <section
           className="overflow-y-auto relative"
-          style={{ maxHeight: 600 }}
+          style={{ maxHeight: productSectionMaxHeight }}
         >
-          {paginatedItems && paginatedItems.length > 0 ? (
+          {customersLoading ? (
+            <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-full text-gray-500">
+              در حال بارگذاری...
+            </div>
+          ) : customersError ? (
+            <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-full text-red-500">
+              خطا در بارگذاری: {String(customersError)}
+            </div>
+          ) : paginatedItems && paginatedItems.length > 0 ? (
             paginatedItems.map((item, index) => (
               <div key={item.id} style={{ position: "relative" }}>
                 <div
@@ -237,32 +446,68 @@ const Customers: React.FC = () => {
                     {(currentPage - 1) * pageSize + index + 1}
                   </div>
                   <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[400px]">
-                    {item.customerName}
+                    {item.displayName}
                   </div>
                   <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[400px]">
                     {item.mobile}
                   </div>
                   <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[350px]">
-                    {item.factorCount}
+                    {item.subscriptionCode}
                   </div>
                   <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[200px]">
-                    {item.totalDue > 0 ? "بدهکار" : "تسویه"}
+                    <div> {item.debt > 0 ? "بدهکار" : "تسویه"}</div>
+                    <Tooltip
+                      component={
+                        <CustomerOption
+                          product={item}
+                          onEdit={() => handleEditCustomer(item)}
+                          onDelete={() => handleDeleteCustomer(item)}
+                          showDelete={item.debt === 0 || item.debt === null}
+                        />
+                      }
+                      isOpen={openCustomerTooltipId === item.id}
+                      setIsOpen={(isOpen) =>
+                        setOpenCustomerTooltipId(isOpen ? item.id : null)
+                      }
+                    >
+                      <img
+                        className="relative right-[60px] cursor-pointer"
+                        style={{
+                          height: "25px",
+                          width: "5px",
+                          marginTop: "12px",
+                        }}
+                        src={optionIcon}
+                        alt="options"
+                      />
+                    </Tooltip>
                   </div>
                 </div>
               </div>
             ))
           ) : (
             <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-full text-gray-500">
-              {items.length === 0 ? "هیچ مشتری یافت نشد" : "در حال بارگذاری..."}
+              هیچ مشتری یافت نشد
             </div>
           )}
         </section>
       </section>
 
       <CustomerDefinitionModal
-        isOpen={isCustomerDefinitionModalOpen}
-        onClose={() => setIsCustomerDefinitionModalOpen(false)}
+        isOpen={isOpen}
+        onClose={closeModal}
         onAdd={handleAddCustomer}
+        loading={addCustomerLoading}
+        // error={addCustomerError}
+      />
+      <CustomerDefinitionModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        onAdd={handleAddCustomer}
+        loading={addCustomerLoading}
+        isEdit={true}
+        initialData={editCustomer}
+        // error={addCustomerError}
       />
     </>
   );

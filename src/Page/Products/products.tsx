@@ -36,6 +36,7 @@ interface ProductItem {
   discount?: number;
   govId: string;
   vatRate: string;
+  isAvailable: boolean;
 }
 
 // interface Category {
@@ -137,7 +138,7 @@ const Products: React.FC = () => {
             categoryMap.set(cat.id, cat.title);
           });
         }
-        const processedData: ProductItem[] = cacheProductList.map(
+        let processedData: ProductItem[] = cacheProductList.map(
           (item: any) => ({
             id: item.id || item.itemDto?.id || "",
             name: item.name || item.itemDto?.name || "",
@@ -147,6 +148,7 @@ const Products: React.FC = () => {
             brandName: brandMap.get(item.brandId) || item.brandName || "",
             sku: item.sku || "",
             govId: item.govId || "",
+            isAvailable: item.isAvailable || false,
             vatRate: item.vatRate || "",
             categoryName:
               categoryMap.get(item.categoryId) || item.categoryName || "",
@@ -155,12 +157,17 @@ const Products: React.FC = () => {
             discount: item.discount || 0,
           })
         );
-
-        setFinalData(processedData);
-        setAllFinalData(processedData);
-        localStorage.setItem("finalDataStorage", JSON.stringify(processedData));
+        const availableProducts = processedData.filter(
+          (item) => item.isAvailable
+        );
+        setFinalData(availableProducts);
+        setAllFinalData(availableProducts);
+        localStorage.setItem(
+          "finalDataStorage",
+          JSON.stringify(availableProducts)
+        );
         const availableCategoriesArray: CategoryOption[] = [];
-        processedData.forEach((item) => {
+        availableProducts.forEach((item) => {
           if (item.categoryId && categoryMap.has(item.categoryId)) {
             const existing = availableCategoriesArray.find(
               (cat) => cat.categoryId === item.categoryId

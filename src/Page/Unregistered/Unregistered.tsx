@@ -15,15 +15,63 @@ interface Item {
 const pageSize = 20;
 
 const Unregistered: React.FC = () => {
-  const [items] = useState<Item[]>(
-    [...Array(150)].map((_, index) => ({
-      id: index + 1,
-      name: Math.random().toString(36).substring(2, 15),
-      barcode: Math.random().toString(36).substring(2, 15),
-      unit: Math.random().toString(36).substring(2, 15),
-      price: Math.floor(1000000 + Math.random() * 9000000),
-    }))
-  );
+  const [items, setItems] = useState<Item[]>([]);
+
+  // بارگذاری کالاهای ثبت نشده از localStorage
+  React.useEffect(() => {
+    try {
+      const unregisteredProducts = JSON.parse(
+        localStorage.getItem("unregisteredProducts") || "[]"
+      );
+
+      if (unregisteredProducts.length === 0) {
+        // اگر هیچ محصولی در localStorage نیست، داده‌های نمونه ایجاد کن
+        const sampleItems = [...Array(2)].map((_, index) => ({
+          id: index + 1,
+          name: Math.random().toString(36).substring(2, 15),
+          barcode: Math.random().toString(36).substring(2, 15),
+          unit: Math.random().toString(36).substring(2, 15),
+          price: Math.floor(1000000 + Math.random() * 9000000),
+        }));
+        setItems(sampleItems);
+        localStorage.setItem(
+          "unregisteredProducts",
+          JSON.stringify(sampleItems)
+        );
+      } else {
+        setItems(unregisteredProducts);
+      }
+    } catch (error) {
+      console.error("خطا در بارگذاری کالاهای ثبت نشده:", error);
+      // در صورت خطا، داده‌های نمونه نمایش بده
+      const sampleItems = [...Array(150)].map((_, index) => ({
+        id: index + 1,
+        name: Math.random().toString(36).substring(2, 15),
+        barcode: Math.random().toString(36).substring(2, 15),
+        unit: Math.random().toString(36).substring(2, 15),
+        price: Math.floor(1000000 + Math.random() * 9000000),
+      }));
+      setItems(sampleItems);
+    }
+  }, []);
+
+  // گوش دادن به تغییرات localStorage
+  React.useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const unregisteredProducts = JSON.parse(
+          localStorage.getItem("unregisteredProducts") || "[]"
+        );
+        setItems(unregisteredProducts);
+      } catch (error) {
+        console.error("خطا در به‌روزرسانی کالاها:", error);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
 
@@ -51,6 +99,17 @@ const Unregistered: React.FC = () => {
     console.log("Adding product:", formData);
     // You can add the product to your system here
   };
+
+  // const refreshProducts = () => {
+  //   try {
+  //     const unregisteredProducts = JSON.parse(
+  //       localStorage.getItem("unregisteredProducts") || "[]"
+  //     );
+  //     setItems(unregisteredProducts);
+  //   } catch (error) {
+  //     console.error("خطا در به‌روزرسانی کالاها:", error);
+  //   }
+  // };
 
   return (
     <>

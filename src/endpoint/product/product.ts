@@ -7,7 +7,8 @@ export const PRODUCT_ENDPOINTS = {
   addProduct: `${BASE_URL}/api/shop_biz/shop_items`,
   deleteProduct: (id: string | number) => `${BASE_URL}/api/shop_biz/shop_items/${id}`,
   customerList: `${BASE_URL}/api/shop_biz/customers/list`,
+  addCustomer: `${BASE_URL}/api/shop_biz/customers`,
+  deleteCustomer: (id: string | number) => `${BASE_URL}/api/shop_biz/customers/${id}`,
   customerSalesList: `${BASE_URL}/api/shop_biz/report/customer_sales`,
   customerInfo: `${BASE_URL}/api/shop_biz/report/customer_sales`,
-  deleteCustomer: `${BASE_URL}/api/shop_biz/customers`,
 };

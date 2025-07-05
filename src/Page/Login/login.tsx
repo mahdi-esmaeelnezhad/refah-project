@@ -24,10 +24,12 @@ import "./login.css";
 import ForgetPassword from "../../Components/ForgetPassword/forgetPassword";
 import SendSms from "../../Components/SendSms/sendSms";
 import ChangePassword from "../../Components/ChangePassword/changePassword";
+import { useNavigate } from "react-router-dom";
 
 type Step = "login" | "forgetPassword" | "sendSms" | "changePassword";
 
 const Login = () => {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [showInitial, setShowInitial] = useState(true);
   const [fadeOut, setFadeOut] = useState(false);
@@ -99,7 +101,7 @@ const Login = () => {
         dispatch(setToken(response.data.id_token));
 
         localStorage.setItem("token", response.data.id_token);
-        window.location.href = "/dashboard";
+        navigate("/dashboard");
       }
     } catch (error) {
       setError("نام کاربری یا رمز عبور اشتباه است");

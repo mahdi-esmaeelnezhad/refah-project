@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
 import closeIcon from "../../assets/close.svg";
@@ -11,15 +11,21 @@ interface CustomerDefinitionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onAdd: (data: any) => void;
+  loading?: boolean;
+  isEdit?: boolean;
+  initialData?: any;
+  // error?: string | null;
 }
 
 const initialState = {
-  name: "",
-  phone: "",
+  id: "",
+  displayName: "",
+  mobile: "",
   nationalCode: "",
   gender: "زن",
   birthDate: null as Date | null,
   address: "",
+  isArchive: false,
 };
 
 const labelStyle = {
@@ -38,8 +44,12 @@ const errorStyle = {
 
 const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
   isOpen,
+  isEdit,
   onClose,
   onAdd,
+  loading = false,
+  initialData,
+  // error = null,
 }) => {
   const [form, setForm] = useState(initialState);
   const [errors, setErrors] = useState<any>({});
@@ -54,8 +64,10 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
 
   const validate = () => {
     const newErrors: any = {};
-    if (!form.name) newErrors.name = "نام مشتری را به درستی وارد نشده است.";
-    if (!form.phone) newErrors.phone = "تلفن همراه را به درستی وارد نشده است.";
+    if (!form.displayName)
+      newErrors.displayName = "نام مشتری را به درستی وارد نشده است.";
+    if (!form.mobile)
+      newErrors.mobile = "تلفن همراه را به درستی وارد نشده است.";
     if (!form.nationalCode)
       newErrors.nationalCode = "کد ملی را به درستی وارد نشده است.";
     return newErrors;
@@ -83,12 +95,24 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
   };
 
   // Reset form when modal opens
-  React.useEffect(() => {
-    if (isOpen) {
+  useEffect(() => {
+    if (isEdit && initialData) {
+      console.log(initialData, "initialData");
+
+      setForm({
+        displayName: initialData.displayName || "",
+        mobile: initialData.mobile || "",
+        nationalCode: initialData.nationalCode || "",
+        gender: initialData.gender || "زن",
+        birthDate: initialData.birthDate || null,
+        address: initialData.address || "",
+        isArchive: initialData.isArchive || false,
+        id: initialData.id || "",
+      });
+    } else if (!isOpen) {
       setForm(initialState);
-      setErrors({});
     }
-  }, [isOpen]);
+  }, [isEdit, initialData, isOpen]);
 
   if (!isOpen) return null;
 
@@ -124,7 +148,9 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
         >
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <img src={customerIcon} />
-            <span style={{ fontSize: 22, fontWeight: 600 }}>تعریف مشتری</span>
+            <span style={{ fontSize: 22, fontWeight: 600 }}>
+              {isEdit ? "ویرایش مشتری" : "تعریف مشتری"}
+            </span>
           </div>
           <img
             src={closeIcon}
@@ -148,9 +174,9 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
               </span>
               <Input
                 required
-                value={form.name}
-                onChange={(e) => handleChange("name", e.target.value)}
-                error={errors.name}
+                value={form.displayName}
+                onChange={(e) => handleChange("displayName", e.target.value)}
+                error={errors.displayName}
                 width={299}
                 height={48}
                 placeholder="نام مشتری"
@@ -161,7 +187,9 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
               />
-              {errors.name && <div style={errorStyle}>{errors.name}</div>}
+              {errors.displayName && (
+                <div style={errorStyle}>{errors.displayName}</div>
+              )}
             </div>
             <div style={{ flex: 1 }}>
               <span style={labelStyle}>تلفن همراه :</span>
@@ -172,9 +200,9 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
               </span>
               <Input
                 required
-                value={form.phone}
-                onChange={(e) => handleChange("phone", e.target.value)}
-                error={errors.phone}
+                value={form.mobile}
+                onChange={(e) => handleChange("mobile", e.target.value)}
+                error={errors.mobile}
                 width={299}
                 height={48}
                 placeholder="تلفن همراه"
@@ -185,7 +213,7 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
                 }}
                 style={{ borderRadius: 55, background: "#E7E7E7" }}
               />
-              {errors.phone && <div style={errorStyle}>{errors.phone}</div>}
+              {errors.mobile && <div style={errorStyle}>{errors.mobile}</div>}
             </div>
           </div>
 
@@ -361,19 +389,35 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
           </div>
         </div>
 
+        {loading && (
+          <div
+            style={{
+              color: "#7486E5",
+              fontSize: 16,
+              marginTop: 8,
+              textAlign: "center",
+            }}
+          >
+            لطفاً صبر کنید...
+          </div>
+        )}
+
         <div
           style={{ display: "flex", justifyContent: "center", marginTop: 32 }}
         >
           <Button
-            label="افزودن مشتری"
+            label={loading ? "در حال افزودن..." : "افزودن مشتری"}
             color="#7486E5"
             onClick={handleSubmit}
+            disabled={loading}
             style={{
               width: 242,
               height: 48,
               borderRadius: 55,
               fontSize: 18,
               fontWeight: 500,
+              opacity: loading ? 0.6 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
             }}
           />
         </div>

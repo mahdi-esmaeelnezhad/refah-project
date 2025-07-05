@@ -9,8 +9,12 @@ interface ModalState {
   isCartPaymentPassword: boolean;
   isSuccessPaymentOpen: boolean;
   isFailedPaymentOpen: boolean;
+  isProductNotFoundOpen: boolean;
+  notFoundBarcode: string;
   openModal: (barcode: string) => void;
   closeModal: () => void;
+  openProductNotFoundModal: (barcode: string) => void;
+  closeProductNotFoundModal: () => void;
   openCartPayment: () => void;
   closeCartPayment: () => void;
   openCartPaymentLoading: () => void;
@@ -32,8 +36,12 @@ export const useModal = create<ModalState>((set) => ({
   isCartPaymentPassword: false,
   isSuccessPaymentOpen: false,
   isFailedPaymentOpen: false,
+  isProductNotFoundOpen: false,
+  notFoundBarcode: '',
   openModal: (barcode: string) => set({ isOpen: true, barcode }),
   closeModal: () => set({ isOpen: false, barcode: '' }),
+  openProductNotFoundModal: (barcode: string) => set({ isProductNotFoundOpen: true, notFoundBarcode: barcode }),
+  closeProductNotFoundModal: () => set({ isProductNotFoundOpen: false, notFoundBarcode: '' }),
   openCartPayment: () => set({ isCartPaymentOpen: true }),
   closeCartPayment: () => set({ isCartPaymentOpen: false }),
   openCartPaymentLoading: () => set({ isCartPaymentLoading: true }),

@@ -11,12 +11,11 @@ const SavedFactorsTooltip: React.FC<SavedFactorsTooltipProps> = ({
   onDelete,
 }) => {
   return (
-    <div className="w-[161px] h-[130px] bg-white rounded-lg shadow-lg py-4 pr-2 relative z-[9999]">
+    <div className="w-[161px] h-[86px] flex items-center justify-center bg-white rounded-lg relative z-[9999]">
       <Button
         label="عدم نمایش"
         color="#DE4949"
         radius={29}
-        className="mt-4"
         style={{
           width: "140px",
           height: "42px",

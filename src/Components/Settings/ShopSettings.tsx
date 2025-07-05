@@ -2,12 +2,27 @@ import React, { useState } from "react";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
 import mapIcon from "../../assets/mapIcon.svg";
+import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
 import map from "../../assets/map.svg";
+import useRequest from "../../hooks/useRequest";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../store/store";
 
 const ShopSettings: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const { token } = useSelector((state: RootState) => state.auth);
+
+  const { execute: changePasswordRequest } = useRequest<any>(
+    AUTH_ENDPOINTS.changePassword,
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -345,10 +360,10 @@ const ShopSettings: React.FC = () => {
               fontWeight: 500,
             }}
             onClick={() => {
-              console.log("تغیر رمز عبور");
-              console.log("Current Password:", currentPassword);
-              console.log("New Password:", newPassword);
-              console.log("Confirm Password:", confirmPassword);
+              changePasswordRequest({
+                currentPassword: currentPassword,
+                newPassword: newPassword,
+              });
             }}
           />
         </div>

@@ -8,6 +8,9 @@ import filterIcon from "../../assets/filter.svg";
 import arrowDownn from "../../assets/arrow-down.svg";
 import { Button } from "../../Components/Ui/Button/button";
 import FactorFilter from "../../Components/FactorFilter/FactorFilter";
+// import optionIcon from "../../assets/option.svg";
+// import Tooltip from "../../Components/Base/SideMenu/Tooltip";
+// import factorTooltip from "../../Components/FactorTooltip/FactorTooltip"
 
 interface Factor {
   id: number;
@@ -272,7 +275,27 @@ const Factors: React.FC = () => {
                   {item.debtStatus}
                 </div>
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[170px]">
-                  {item.paymentType}
+                  <div>{item.paymentType}</div>
+                  {/* <Tooltip
+                  component={
+                    <ProductOption
+                      product={item}
+                      onEdit={() => handleEditProduct(item)}
+                      onDelete={() => handleDeleteProduct(item)}
+                    />
+                  }
+                  isOpen={openProductTooltipId === item.id}
+                  setIsOpen={(isOpen) =>
+                    setOpenProductTooltipId(isOpen ? item.id : null)
+                  }
+                >
+                  <img
+                    className="relative right-[60px] cursor-pointer"
+                    style={{ height: "25px", width: "5px", marginTop: "12px" }}
+                    src={optionIcon}
+                    alt="options"
+                  />
+                </Tooltip> */}
                 </div>
               </div>
             ))

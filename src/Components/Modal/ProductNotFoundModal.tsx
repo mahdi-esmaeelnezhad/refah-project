@@ -81,7 +81,7 @@ const ProductNotFoundModal: React.FC<ProductNotFoundModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white w-[407px] rounded-lg p-6 max-w-md mx-4">
+      <div className="bg-white w-[447px] rounded-lg p-6 max-w-md mx-4">
         <div style={{ position: "relative", top: 0, right: 330 }}>
           <img
             src={closeIcon}

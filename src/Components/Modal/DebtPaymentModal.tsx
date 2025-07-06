@@ -57,8 +57,13 @@ const DebtPaymentModal: React.FC<DebtPaymentModalProps> = ({
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[499px] bg-white rounded-[15px] shadow-lg z-50">
         <div className="flex flex-col p-6 relative">
           <div className="flex justify-between mb-5">
-            <div onClick={onClose} style={{ cursor: "pointer" }}>
-              <img src={closeIcon} alt="close" className="w-10 h-10" />
+            <div style={{ cursor: "pointer" }}>
+              <img
+                onClick={onClose}
+                src={closeIcon}
+                alt="close"
+                className="w-10 h-10"
+              />
             </div>
             <div style={{ cursor: "pointer" }}>
               <img src={infoFull} alt="info" className="w-10 h-10" />
@@ -182,7 +187,7 @@ const DebtPaymentModal: React.FC<DebtPaymentModalProps> = ({
                 color="#479E55"
                 onClick={handleCardPayment}
                 style={{
-                  width: "100%",
+                  width: "420px",
                   height: "48px",
                   color: "white",
                   borderRadius: "15px",
@@ -193,7 +198,7 @@ const DebtPaymentModal: React.FC<DebtPaymentModalProps> = ({
                 color="#479E55"
                 onClick={handleCashPayment}
                 style={{
-                  width: "100%",
+                  width: "420px",
                   height: "48px",
                   color: "white",
                   borderRadius: "15px",

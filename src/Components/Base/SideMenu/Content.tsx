@@ -3,6 +3,8 @@ import { Button } from "../../Ui/Button/button";
 import Input from "../../Ui/Input/input";
 import { Switch } from "../../Ui/switch/switch";
 import { BinIcon, CloseSmIcon } from "../../icons";
+import CloseIcon from "../../../assets/close.svg";
+
 import {
   commaSeparator,
   numberToPersianToman,
@@ -25,6 +27,9 @@ import ProductNotFoundModal from "../../Modal/ProductNotFoundModal";
 import { useBarcodeScanner } from "../../../hooks/useBarcodeScanner";
 import { findProductByBarcode } from "../../../utils/productService";
 import { saveInvoice } from "../../../utils/invoiceService";
+import barcodeImage from "../../../assets/img/barcode.png";
+import SendSmsModal from "../../Modal/SendSmsModal";
+import SendPaykModal from "../../Modal/SendPaykModal";
 
 interface Item {
   id: number;
@@ -41,6 +46,8 @@ interface Customer {
   name: string;
   phone: string;
   debt: number;
+  address: string;
+  nationalCode: string;
 }
 
 const Content: React.FC = () => {
@@ -53,6 +60,14 @@ const Content: React.FC = () => {
     notFoundBarcode,
     openProductNotFoundModal,
     closeProductNotFoundModal,
+    openSuccessPayment,
+    closeSuccessPayment,
+    openSendSmsModal,
+    closeSendSmsModal,
+    isSendSmsModalOpen,
+    openSendPaykModal,
+    closeSendPaykModal,
+    isSendPaykModalOpen,
   } = useModal();
   const [deliveryMedivod, setDeliveryMedivod] = useState("حضوری");
   const [paymentMedivod, setPaymentMedivod] = useState("کارتی");
@@ -72,19 +87,15 @@ const Content: React.FC = () => {
     "tara" | "digipay" | null
   >(null);
   const [, setIsCreditSuccessModalOpen] = useState(false);
-  const [creditPaymentAmount, setCreditPaymentAmount] = useState(0);
+  const [, setCreditPaymentAmount] = useState(0);
   const [, setCreditRemainingAmount] = useState(0);
-  const [items, setItems] = useState<Item[]>(
-    [...Array(0)].map((_, index) => ({
-      id: index + 1,
-      name: "بستنی کالا",
-      quantity: "1",
-      unit: "عدد",
-      price: 120000,
-      discount: 10000,
-      total: 120000,
-    }))
-  );
+  const [creditAmount, setCreditAmount] = useState(0);
+  const [showCreditInfo, setShowCreditInfo] = useState(false);
+  const [items, setItems] = useState<Item[]>([]);
+  const [payAtLocation, setPayAtLocation] = useState(false);
+  const [pendingPaymentMethod, setPendingPaymentMethod] = useState<
+    string | null
+  >(null);
   const [tempQuantity, setTempQuantity] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("256");
@@ -134,7 +145,8 @@ const Content: React.FC = () => {
     return sum;
   }, 0);
 
-  const finalAmount = totalAmount - totalDiscount;
+  const finalAmount =
+    totalAmount - totalDiscount - (showCreditInfo ? creditAmount : 0);
 
   useEffect(() => {
     // Show modal when component mounts
@@ -212,6 +224,9 @@ const Content: React.FC = () => {
 
   const handleDeleteConfirm = () => {
     setItems([]);
+    setSelectedCustomer(null);
+    setShowCreditInfo(false);
+    setCreditAmount(0);
     setSuccessMessage("فاکتور با موفقیت حذف شد");
     setTimeout(() => setSuccessMessage(""), 3000);
     setIsDeleteModalOpen(false);
@@ -234,9 +249,11 @@ const Content: React.FC = () => {
         invoiceNumber: invoiceNumber,
         date: new Date().toISOString(),
         customer: selectedCustomer || {
-          name: "مشتری پیش‌فرض",
+          name: "",
           phone: "",
           debt: 0,
+          address: "",
+          nationalCode: "",
         },
         items: items,
         totalAmount,
@@ -252,6 +269,8 @@ const Content: React.FC = () => {
       if (success) {
         setItems([]);
         setSelectedCustomer(null);
+        setShowCreditInfo(false);
+        setCreditAmount(0);
         generateNewInvoiceNumber(); // تولید شماره فاکتور جدید
         setSuccessMessage("فاکتور با موفقیت ذخیره شد");
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -268,15 +287,46 @@ const Content: React.FC = () => {
   };
 
   const handlePayment = () => {
+    if (payAtLocation) {
+      openSendPaykModal();
+      return;
+    }
+
+    // اگر پرداخت در محل تیک نیست و تحویل پیک است، ابتدا SendPaykModal باز کن
+    if (deliveryMedivod === "پیک" && !payAtLocation) {
+      setPendingPaymentMethod(paymentMedivod);
+      openSendPaykModal();
+      return;
+    }
+
+    // اگر تحویل حضوری است، مستقیماً پرداخت کن
     if (paymentMedivod === "اعتباری") {
       setIsCreditPaymentModalOpen(true);
+    } else if (paymentMedivod === "نسیه") {
+      if (!selectedCustomer) {
+        alert("برای پرداخت نسیه حتماً باید مشتری انتخاب کنید");
+        return;
+      }
+      openCartPayment();
     } else if (paymentMedivod === "کارتی" || paymentMedivod === "نقدی") {
       openCartPayment();
     }
   };
 
   const handleCartPaymentConfirm = (amount: number) => {
+    console.log("CartPaymentModal confirmed with amount:", amount);
     setPaymentAmount(amount);
+
+    const currentPaymentMethod = pendingPaymentMethod || paymentMedivod;
+
+    if (currentPaymentMethod === "نسیه") {
+      console.log("Setting credit amount and opening SendSmsModal");
+      setCreditAmount(amount);
+      // Open SendSmsModal directly after CartPaymentModal closes
+      setTimeout(() => {
+        openSendSmsModal();
+      }, 100);
+    }
   };
 
   const handleCreditMethodSelect = (method: "tara" | "digipay") => {
@@ -294,6 +344,139 @@ const Content: React.FC = () => {
     setCreditPaymentAmount(creditAmount);
     setCreditRemainingAmount(remainingAmount);
     setIsCreditSuccessModalOpen(true);
+  };
+
+  const handleSmsVerificationSuccess = () => {
+    console.log("SMS verification success, opening success modal");
+    closeSendSmsModal();
+    setShowCreditInfo(true);
+    // Show success modal for credit payment
+    openSuccessPayment();
+  };
+
+  const handleSuccessPaymentClose = () => {
+    console.log("handleSuccessPaymentClose called!");
+    closeSuccessPayment();
+
+    // Save payk invoice if delivery is by courier
+    if (deliveryMedivod === "پیک") {
+      const paykInvoice = {
+        id: Date.now(),
+        invoiceNumber,
+        date: new Date().toISOString(),
+        customer: selectedCustomer || {
+          name: "مشتری ناشناس",
+          phone: "",
+          address: "",
+        },
+        items,
+        totalAmount,
+        totalDiscount,
+        finalAmount,
+        paymentMethod: payAtLocation
+          ? "پرداخت در محل"
+          : pendingPaymentMethod || paymentMedivod,
+        deliveryMethod: "پیک",
+        courier: { type: "shop", name: "پیک فروشگاه" }, // Default courier
+        status: "pending",
+        createdAt: new Date().toISOString(),
+      };
+
+      try {
+        const existingPaykInvoices = JSON.parse(
+          localStorage.getItem("paykInvoices") || "[]"
+        );
+        existingPaykInvoices.push(paykInvoice);
+        localStorage.setItem(
+          "paykInvoices",
+          JSON.stringify(existingPaykInvoices)
+        );
+        console.log("Payk invoice saved from success modal:", paykInvoice);
+      } catch (error) {
+        console.error("Error saving payk invoice:", error);
+      }
+    }
+
+    // Save credit invoice to localStorage for credit.tsx
+    const currentPaymentMethod = pendingPaymentMethod || paymentMedivod;
+    if (
+      currentPaymentMethod === "نسیه" &&
+      selectedCustomer &&
+      creditAmount > 0
+    ) {
+      const creditInvoice = {
+        id: Date.now(),
+        invoiceNumber: invoiceNumber,
+        date: new Date().toISOString(),
+        customer: selectedCustomer,
+        items: items,
+        totalAmount,
+        totalDiscount,
+        finalAmount: finalAmount + creditAmount, // Original amount before credit deduction
+        creditAmount: creditAmount,
+        remainingAmount: finalAmount,
+        paymentMethod: "نسیه",
+        deliveryMethod: deliveryMedivod,
+        status: "credit",
+      };
+
+      // Read existing credit customers from localStorage
+      const existingCreditCustomers = JSON.parse(
+        localStorage.getItem("creditCustomers") || "[]"
+      );
+
+      console.log("Existing credit customers:", existingCreditCustomers);
+
+      // Find if customer already exists
+      const existingCustomerIndex = existingCreditCustomers.findIndex(
+        (customer: any) => customer.mobile === selectedCustomer.phone
+      );
+
+      if (existingCustomerIndex !== -1) {
+        // Customer exists, add this invoice to their invoices array
+        existingCreditCustomers[existingCustomerIndex].invoices.push(
+          creditInvoice
+        );
+        existingCreditCustomers[existingCustomerIndex].totalFactor =
+          existingCreditCustomers[existingCustomerIndex].invoices.length;
+        existingCreditCustomers[existingCustomerIndex].totalDebt +=
+          creditAmount;
+        existingCreditCustomers[existingCustomerIndex].totalPrice +=
+          finalAmount + creditAmount;
+      } else {
+        // New customer, create new customer record
+        const newCreditCustomer = {
+          id: Date.now(),
+          name: selectedCustomer.name,
+          mobile: selectedCustomer.phone,
+          nationalCode: selectedCustomer.nationalCode || "",
+          address: selectedCustomer.address || "",
+          invoices: [creditInvoice],
+          totalFactor: 1,
+          totalDebt: creditAmount,
+          totalPrice: finalAmount + creditAmount,
+          createdAt: new Date().toISOString(),
+        };
+        existingCreditCustomers.push(newCreditCustomer);
+      }
+
+      // Save updated credit customers to localStorage
+      localStorage.setItem(
+        "creditCustomers",
+        JSON.stringify(existingCreditCustomers)
+      );
+
+      // Also save individual invoice for backward compatibility
+      const existingInvoices = JSON.parse(
+        localStorage.getItem("creditInvoices") || "[]"
+      );
+      existingInvoices.push(creditInvoice);
+      localStorage.setItem("creditInvoices", JSON.stringify(existingInvoices));
+
+      console.log("Credit invoice saved successfully!");
+      console.log("Updated credit customers:", existingCreditCustomers);
+      console.log("Updated credit invoices:", existingInvoices);
+    }
   };
 
   // const handleCreditSuccessModalClose = () => {
@@ -398,6 +581,74 @@ const Content: React.FC = () => {
     console.log("Barcode input blurred - scanner disabled");
   };
 
+  const handleSendPaykConfirm = (customerData: any, courierData: any) => {
+    closeSendPaykModal();
+
+    // Save payk invoice data
+    savePaykInvoice(customerData, courierData);
+
+    // اگر پرداخت در محل تیک بود
+    if (payAtLocation) {
+      setPaymentAmount(finalAmount);
+      openSuccessPayment();
+      console.log("پرداخت در محل confirmed");
+      return;
+    }
+
+    // اگر پرداخت در محل تیک نبود، بر اساس نوع پرداخت مدال‌های مربوطه را باز کن
+    if (pendingPaymentMethod === "اعتباری") {
+      setIsCreditPaymentModalOpen(true);
+    } else if (pendingPaymentMethod === "نسیه") {
+      if (!selectedCustomer) {
+        alert("برای پرداخت نسیه حتماً باید مشتری انتخاب کنید");
+        return;
+      }
+      openCartPayment();
+    } else if (
+      pendingPaymentMethod === "کارتی" ||
+      pendingPaymentMethod === "نقدی"
+    ) {
+      openCartPayment();
+    }
+
+    // Reset pending payment method
+    setPendingPaymentMethod(null);
+  };
+
+  const savePaykInvoice = (customerData: any, courierData: any) => {
+    const paykInvoice = {
+      id: Date.now(),
+      invoiceNumber,
+      date: new Date().toISOString(),
+      customer: customerData,
+      items,
+      totalAmount,
+      totalDiscount,
+      finalAmount,
+      paymentMethod: payAtLocation
+        ? "پرداخت در محل"
+        : pendingPaymentMethod || paymentMedivod,
+      deliveryMethod: "پیک",
+      courier: courierData,
+      status: "pending", // pending, delivered, cancelled
+      createdAt: new Date().toISOString(),
+    };
+
+    try {
+      const existingPaykInvoices = JSON.parse(
+        localStorage.getItem("paykInvoices") || "[]"
+      );
+      existingPaykInvoices.push(paykInvoice);
+      localStorage.setItem(
+        "paykInvoices",
+        JSON.stringify(existingPaykInvoices)
+      );
+      console.log("Payk invoice saved:", paykInvoice);
+    } catch (error) {
+      console.error("Error saving payk invoice:", error);
+    }
+  };
+
   return (
     <>
       <style>
@@ -442,19 +693,54 @@ const Content: React.FC = () => {
         <CartPaymentModal
           totalAmount={finalAmount}
           onConfirm={handleCartPaymentConfirm}
-          paymentType={paymentMedivod === "نقدی" ? "cash" : "card"}
+          paymentType={
+            pendingPaymentMethod === "نقدی"
+              ? "cash"
+              : pendingPaymentMethod === "نسیه"
+              ? "credit"
+              : paymentMedivod === "نقدی"
+              ? "cash"
+              : paymentMedivod === "نسیه"
+              ? "credit"
+              : "card"
+          }
         />
         <CartPaymentLoading amount={paymentAmount} />
         <CartPaymentPassword amount={paymentAmount} />
         <SuccessPaymentModal
           amount={paymentAmount}
-          transactionType={paymentMedivod === "نقدی" ? "نقدی" : "خرید"}
+          transactionType={
+            payAtLocation
+              ? "پرداخت در محل"
+              : pendingPaymentMethod === "نقدی"
+              ? "نقدی"
+              : pendingPaymentMethod === "نسیه"
+              ? "نسیه"
+              : paymentMedivod === "نقدی"
+              ? "نقدی"
+              : paymentMedivod === "نسیه"
+              ? "نسیه"
+              : "خرید"
+          }
           date={new Date().toLocaleDateString("fa-IR")}
           time={new Date().toLocaleTimeString("fa-IR")}
           trackingNumber={Math.random().toString(36).substring(7)}
           referenceNumber={Math.random().toString(36).substring(7)}
           totalAmount={finalAmount}
-          paymentType={paymentMedivod === "نقدی" ? "cash" : "card"}
+          paymentType={
+            payAtLocation
+              ? "cash"
+              : pendingPaymentMethod === "نقدی"
+              ? "cash"
+              : pendingPaymentMethod === "نسیه"
+              ? "credit"
+              : paymentMedivod === "نقدی"
+              ? "cash"
+              : paymentMedivod === "نسیه"
+              ? "credit"
+              : "card"
+          }
+          onClose={handleSuccessPaymentClose}
         />
         <FailedPaymentModal
           amount={paymentAmount}
@@ -501,30 +787,18 @@ const Content: React.FC = () => {
             }
           }}
         />
-        <SuccessPaymentModal
-          amount={creditPaymentAmount}
-          transactionType="اعتباری"
-          date={new Date().toLocaleDateString("fa-IR")}
-          time={new Date().toLocaleTimeString("fa-IR")}
-          trackingNumber={Math.random().toString(36).substring(7)}
-          referenceNumber={Math.random().toString(36).substring(7)}
-          totalAmount={finalAmount}
-          paymentType={
-            paymentMedivod === "نقدی"
-              ? "cash"
-              : paymentMedivod === "اعتباری"
-              ? "credit"
-              : "card"
-          }
-          // remainingAmount={creditRemainingAmount}
-          // isOpen={isCreditSuccessModalOpen}
-          // onClose={handleCreditSuccessModalClose}
+        <SendSmsModal
+          isOpen={isSendSmsModalOpen}
+          onClose={closeSendSmsModal}
+          customerPhone={selectedCustomer?.phone || ""}
+          onSuccess={handleSmsVerificationSuccess}
+          onCancel={closeSendSmsModal}
         />
         <div
           style={{
             position: "absolute",
             width: "1030px",
-            height: "846px",
+            height: "920px",
             right: 0,
             top: 0,
             background: "#FFFFFF",
@@ -575,6 +849,7 @@ const Content: React.FC = () => {
                 label="مشتری"
                 color="#DAA51A"
                 onClick={() => setIsCustomerTooltipOpen(!isCustomerTooltipOpen)}
+                disabled={items.length === 0}
               />
               <CustomerTooltip
                 isOpen={isCustomerTooltipOpen}
@@ -587,11 +862,13 @@ const Content: React.FC = () => {
               label="ذخیره"
               color="#4973DE"
               onClick={handleSaveInvoice}
+              disabled={items.length === 0}
             ></Button>
             <Button
               label="حذف"
               color="#DE4949"
               onClick={handleDeleteClick}
+              disabled={items.length === 0}
             ></Button>
           </div>
 
@@ -599,122 +876,154 @@ const Content: React.FC = () => {
             <span className="bg-[#D1D1D1] font-21 text-black px-4 py-2 rounded-md">
               فاکتور فروش {invoiceNumber}
             </span>
-            <Input
+            {/* just show when selectedCustomer */}
+            {selectedCustomer ? (
+              <div className="pr-10 pl-4 flex justify-between rounded-[43px] items-center gap-2 w-[523px] h-[43px] bg-[#FFD976]">
+                <span className="f-[20px] text-medium">
+                  {selectedCustomer ? selectedCustomer.name : ""}
+                </span>
+                <div className="flex gap-4 items-center">
+                  <span className="f-20 text-medium">
+                    {selectedCustomer ? selectedCustomer.phone : ""}
+                  </span>
+                  <img
+                    src={CloseIcon}
+                    onClick={() => setSelectedCustomer(null)}
+                  />
+                </div>
+              </div>
+            ) : null}
+            {/* <Input
               placeholder="انتخاب مشتری"
               value={selectedCustomer ? selectedCustomer.name : ""}
               onChange={() => {}}
               style={{
                 minWidth: "441px",
               }}
-            />
+              disabled={items.length === 0}
+            /> */}
             <span className="bg-[#D1D1D1] font-21 text-black px-4 py-2 rounded-md">
               تعداد اقلام {totalItems}
             </span>
           </div>
 
-          <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto h-[640px]">
-            <div className="flex justify-between">
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center">
-                #
-              </div>
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[216px]">
-                نام کالا
-              </div>
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
-                مقدار
-              </div>
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[86px]">
-                واحد
-              </div>
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[120px]">
-                قیمت(ریال)
-              </div>
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
-                تخفیف
-              </div>
-              <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[158px]">
-                جمع کل (ریال)
-              </div>
+          {items.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-[640px] mt-8">
+              <img
+                src={barcodeImage}
+                alt="بارکد"
+                className="w-[397px] h-[400px] object-contain mb-4 opacity-60"
+              />
+              <p className="text-[#B0BBF5] font-23 text-center">
+                بارکد کالا را اسکن کنید
+              </p>
             </div>
-            <section className="overflow-y-auto relative">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className={`flex justify-between py-1 font-21 ${
-                    item.id % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
-                  }`}
-                >
-                  <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center">
-                    {item.id}
-                  </div>
-                  <div className="h-10 w-10 p-4 rounded-md flex items-center text-[16px] justify-center min-w-[216px] font-semibold">
-                    {item.name}
-                  </div>
-                  <div className="flex items-center justify-center min-w-[108px]">
-                    <Tooltip
-                      component={
-                        <DialPad
-                          value={
-                            selectedItemId === item.id
-                              ? tempQuantity
-                              : item.quantity
-                          }
-                          onChange={handleQuantityChange}
-                          onConfirm={handleQuantityConfirm}
-                          onClose={handleDialPadClose}
-                        />
-                      }
-                      isOpen={openTooltipId === item.id}
-                      setIsOpen={(isOpen) => {
-                        if (!isOpen) {
-                          setOpenTooltipId(null);
-                          setSelectedItemId(null);
-                          setTempQuantity("");
-                        } else {
-                          setOpenTooltipId(item.id);
-                        }
-                      }}
-                    >
-                      <span
-                        className="bg-our-choice h-10 min-w-10 px-2 overflow-hidden flex justify-center items-center rounded-md font-semibold cursor-pointer"
-                        onClick={() =>
-                          handleQuantityClick(item.id, item.quantity)
-                        }
-                      >
-                        {selectedItemId === item.id
-                          ? tempQuantity
-                          : item.quantity}
-                      </span>
-                    </Tooltip>
-                  </div>
-                  <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[86px]">
-                    {item.unit}
-                  </div>
-                  <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[120px]">
-                    {item.price.toLocaleString("fa-IR")}
-                  </div>
-                  <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
-                    {item.discount.toLocaleString("fa-IR")}
-                  </div>
-                  <div className="h-10 w-10 rounded-md flex items-center justify-center min-w-[158px] font-23 gap-3">
-                    {item.total.toLocaleString("fa-IR")}
-                    <CloseSmIcon
-                      onClick={() => {
-                        /* handle delete */
-                      }}
-                    />
-                  </div>
+          ) : (
+            // نمایش جدول وقتی کالا وجود دارد
+            <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto h-[640px]">
+              <div className="flex justify-between">
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center">
+                  #
                 </div>
-              ))}
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[216px]">
+                  نام کالا
+                </div>
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
+                  مقدار
+                </div>
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[86px]">
+                  واحد
+                </div>
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[120px]">
+                  قیمت(ریال)
+                </div>
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
+                  تخفیف
+                </div>
+                <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[158px]">
+                  جمع کل (ریال)
+                </div>
+              </div>
+              <section className="overflow-y-auto relative h-[610px]">
+                {items.map((item) => (
+                  <div
+                    key={item.id}
+                    className={`flex justify-between py-1 font-21 ${
+                      item.id % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
+                    }`}
+                  >
+                    <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center">
+                      {item.id}
+                    </div>
+                    <div className="h-10 w-10 p-4 rounded-md flex items-center text-[16px] justify-center min-w-[216px] font-semibold">
+                      {item.name}
+                    </div>
+                    <div className="flex items-center justify-center min-w-[108px]">
+                      <Tooltip
+                        component={
+                          <DialPad
+                            value={
+                              selectedItemId === item.id
+                                ? tempQuantity
+                                : item.quantity
+                            }
+                            onChange={handleQuantityChange}
+                            onConfirm={handleQuantityConfirm}
+                            onClose={handleDialPadClose}
+                          />
+                        }
+                        isOpen={openTooltipId === item.id}
+                        setIsOpen={(isOpen) => {
+                          if (!isOpen) {
+                            setOpenTooltipId(null);
+                            setSelectedItemId(null);
+                            setTempQuantity("");
+                          } else {
+                            setOpenTooltipId(item.id);
+                          }
+                        }}
+                      >
+                        <span
+                          className="bg-our-choice h-10 min-w-10 px-2 overflow-hidden flex justify-center items-center rounded-md font-semibold cursor-pointer"
+                          onClick={() =>
+                            handleQuantityClick(item.id, item.quantity)
+                          }
+                        >
+                          {selectedItemId === item.id
+                            ? tempQuantity
+                            : item.quantity}
+                        </span>
+                      </Tooltip>
+                    </div>
+                    <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[86px]">
+                      {item.unit}
+                    </div>
+                    <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[120px]">
+                      {item.price.toLocaleString("fa-IR")}
+                    </div>
+                    <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[108px]">
+                      {item.discount.toLocaleString("fa-IR")}
+                    </div>
+                    <div className="h-10 w-10 rounded-md flex items-center justify-center min-w-[158px] font-23 gap-3">
+                      {item.total.toLocaleString("fa-IR")}
+                      <CloseSmIcon
+                        onClick={() => {
+                          /* handle delete */
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </section>
             </section>
-          </section>
+          )}
         </div>
 
         <div
           style={{
             position: "absolute",
             width: "568px",
-            height: "846px",
+            height: "920px",
             left: 0,
             top: 0,
             background: "#FFFFFF",
@@ -819,11 +1128,14 @@ const Content: React.FC = () => {
                       value={medivod}
                       checked={paymentMedivod === medivod}
                       onChange={() => setPaymentMedivod(medivod)}
+                      disabled={payAtLocation}
                       className="w-4 h-4 accent-primary"
                     />
                     <label
                       htmlFor={`payment-${medivod}`}
-                      className="font-21 cursor-pointer"
+                      className={`font-21 cursor-pointer ${
+                        payAtLocation ? "opacity-50" : ""
+                      }`}
                     >
                       {medivod}
                     </label>
@@ -832,16 +1144,53 @@ const Content: React.FC = () => {
               </div>
             </div>
 
+            {deliveryMedivod === "پیک" && (
+              <div className="flex items-center justify-center gap-3 mt-4">
+                <input
+                  type="checkbox"
+                  id="payAtLocation"
+                  checked={payAtLocation}
+                  onChange={(e) => setPayAtLocation(e.target.checked)}
+                  style={{
+                    width: "31px",
+                    height: "31px",
+                    borderRadius: "15px",
+                  }}
+                  className="accent-primary"
+                />
+                <label
+                  htmlFor="payAtLocation"
+                  className="font-23 text-center cursor-pointer font-semibold"
+                >
+                  پرداخت در محل
+                </label>
+              </div>
+            )}
+
+            {showCreditInfo && (
+              <div className="w-full h-[48px] bg-[#E99C43] rounded-lg flex items-center justify-center text-white font-medium mb-4">
+                مبلغ {creditAmount.toLocaleString("fa-IR")} ریال نسیه تعلق گرفته
+                است
+              </div>
+            )}
             <Button
               className="w-full text-white py-2 rounded-lg text-lg font-semibold min-h-[70px]"
               label={""}
               onClick={handlePayment}
+              disabled={items.length === 0}
             >
               پرداخت
             </Button>
           </div>
         </div>
       </section>
+
+      {/* SendPaykModal */}
+      <SendPaykModal
+        isOpen={isSendPaykModalOpen}
+        onClose={closeSendPaykModal}
+        onConfirm={handleSendPaykConfirm}
+      />
     </>
   );
 };

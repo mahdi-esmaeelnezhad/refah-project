@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "../Ui/Button/button";
+import CustomerDefinitionModal from "../Modal/CustomerDefinitionModal";
 
 interface factorInfo {
   id: number;
@@ -16,7 +17,7 @@ interface CreditFactorProps {
   mobile: string;
   totalFactor: number;
   totalDebt: number;
-  nationalitiCode: number;
+  nationalitiCode: string;
   address: string;
   totalPrice: number;
   factorInfo: factorInfo[];
@@ -37,6 +38,7 @@ const CreditFactor: React.FC<CreditFactorProps> = ({
   onPayDebt,
   onSendDebt,
 }) => {
+  const [isCustomerEditModalOpen, setIsCustomerEditModalOpen] = useState(false);
   return (
     <div>
       <div className="flex justify-end">
@@ -142,6 +144,7 @@ const CreditFactor: React.FC<CreditFactorProps> = ({
                 fontFamily: "23px",
                 fontWeight: 600,
               }}
+              onClick={() => setIsCustomerEditModalOpen(true)}
             />
           </div>
         </div>
@@ -344,6 +347,22 @@ const CreditFactor: React.FC<CreditFactorProps> = ({
           onClick={onSendDebt}
         />
       </div>
+
+      <CustomerDefinitionModal
+        isOpen={isCustomerEditModalOpen}
+        onClose={() => setIsCustomerEditModalOpen(false)}
+        onAdd={(customerData) => {
+          console.log("Customer updated:", customerData);
+          setIsCustomerEditModalOpen(false);
+        }}
+        isEdit={true}
+        initialData={{
+          displayName: name,
+          mobile: mobile,
+          nationalCode: nationalitiCode,
+          address: address,
+        }}
+      />
     </div>
   );
 };

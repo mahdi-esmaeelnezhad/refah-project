@@ -16,6 +16,7 @@ interface SuccessPaymentModalProps {
   referenceNumber: string;
   totalAmount?: number;
   paymentType?: "cash" | "card" | "credit";
+  onClose?: () => void;
 }
 
 const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
@@ -26,6 +27,7 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   referenceNumber,
   totalAmount,
   paymentType = "card",
+  onClose,
 }) => {
   const { isSuccessPaymentOpen, closeSuccessPayment, openCartPayment } =
     useModal();
@@ -63,7 +65,13 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
       <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[499px] bg-white rounded-[15px] shadow-lg z-50">
         <div className="flex flex-col p-6 relative">
           <div className="flex justify-between">
-            <div onClick={closeSuccessPayment} style={{ cursor: "pointer" }}>
+            <div
+              onClick={() => {
+                closeSuccessPayment();
+                onClose?.();
+              }}
+              style={{ cursor: "pointer" }}
+            >
               <img src={closeIcon} alt="close" className="w-10 h-10" />
             </div>
           </div>

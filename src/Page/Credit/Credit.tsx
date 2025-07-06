@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import productLabel from "../../assets/productLabel.svg";
 import Pagination from "../../Components/Pagination/Pagination";
 import arrowDown from "../../assets/arrow-down.svg";
@@ -35,65 +35,65 @@ interface Item {
   mobile: string;
   totalFactor: number;
   totalDebt: number;
-  nationalitiCode: number;
+  nationalitiCode: string;
   address: string;
   totalPrice: number;
   factorInfo: FactorInfo[];
 }
 const pageSize = 20;
-const paymentTypes = ["کارتی", "نقدی", "نسیه", "اعتباری"];
-const generateMobileNumber = (): string =>
-  "09" +
-  Math.floor(Math.random() * 1_000_000_000)
-    .toString()
-    .padStart(9, "0");
+// const paymentTypes = ["کارتی", "نقدی", "نسیه", "اعتباری"];
+// const generateMobileNumber = (): string =>
+//   "09" +
+//   Math.floor(Math.random() * 1_000_000_000)
+//     .toString()
+//     .padStart(9, "0");
 
-const generatePersianAddress = (): string => {
-  const cities = [
-    "تهران",
-    "مشهد",
-    "اصفهان",
-    "تبریز",
-    "شیراز",
-    "اهواز",
-    "کرج",
-    "قم",
-    "ارومیه",
-    "رشت",
-  ];
-  const streets = [
-    "ولی‌عصر",
-    "انقلاب",
-    "آزادی",
-    "مطهری",
-    "شریعتی",
-    "سعدی",
-    "فاطمی",
-    "کارگر",
-    "نارمک",
-    "پاسداران",
-  ];
-  const alleys = [
-    "یکم",
-    "دوم",
-    "سوم",
-    "چهارم",
-    "پنجم",
-    "ششم",
-    "هفتم",
-    "هشتم",
-    "نهم",
-    "دهم",
-  ];
+// const generatePersianAddress = (): string => {
+//   const cities = [
+//     "تهران",
+//     "مشهد",
+//     "اصفهان",
+//     "تبریز",
+//     "شیراز",
+//     "اهواز",
+//     "کرج",
+//     "قم",
+//     "ارومیه",
+//     "رشت",
+//   ];
+//   const streets = [
+//     "ولی‌عصر",
+//     "انقلاب",
+//     "آزادی",
+//     "مطهری",
+//     "شریعتی",
+//     "سعدی",
+//     "فاطمی",
+//     "کارگر",
+//     "نارمک",
+//     "پاسداران",
+//   ];
+//   const alleys = [
+//     "یکم",
+//     "دوم",
+//     "سوم",
+//     "چهارم",
+//     "پنجم",
+//     "ششم",
+//     "هفتم",
+//     "هشتم",
+//     "نهم",
+//     "دهم",
+//   ];
 
-  const city = cities[Math.floor(Math.random() * cities.length)];
-  const street = streets[Math.floor(Math.random() * streets.length)];
-  const alley = alleys[Math.floor(Math.random() * alleys.length)];
-  const plaque = Math.floor(1 + Math.random() * 200);
-  const postalCode = Math.floor(1000000000 + Math.random() * 8999999999);
+//   const city = cities[Math.floor(Math.random() * cities.length)];
+//   const street = streets[Math.floor(Math.random() * streets.length)];
+//   const alley = alleys[Math.floor(Math.random() * alleys.length)];
+//   const plaque = Math.floor(1 + Math.random() * 200);
+//   const postalCode = Math.floor(1000000000 + Math.random() * 8999999999);
 
-  return `ایران، ${city}، خیابان ${street}، کوچه ${alley}، پلاک ${plaque}، کد پستی ${postalCode}`;
-};
+//   return `ایران، ${city}، خیابان ${street}، کوچه ${alley}، پلاک ${plaque}، کد پستی ${postalCode}`;
+// };
 
 const Credit: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -121,34 +121,89 @@ const Credit: React.FC = () => {
     (state) => state.setEditableAmount
   );
 
-  const [finalData] = useState<Item[]>(() =>
-    Array.from({ length: 150 }, (_, index) => {
-      const factorInfo: FactorInfo[] = Array.from({ length: 3 }, (_, i) => ({
-        id: i + 1,
-        factorNumber: Math.floor(Math.random() * 100) + 1,
-        productCount: Math.floor(Math.random() * 20) + 1,
-        date: new Date(Date.now() - Math.floor(Math.random() * 1000000000)),
-        price: Math.floor(1_000_000 + Math.random() * 10_000_000),
-        debt: Math.floor(1_000_000 + Math.random() * 9_000_000),
-        paymentType:
-          paymentTypes[Math.floor(Math.random() * paymentTypes.length)],
-      }));
+  const [finalData, setFinalData] = useState<Item[]>([]);
 
-      return {
-        id: index + 1,
-        name: Math.random().toString(36).substring(2, 15),
-        mobile: generateMobileNumber(),
-        nationalitiCode: Math.floor(Math.random() * 1000000) + 1,
-        address: generatePersianAddress(),
-        factorInfo,
-        totalFactor: factorInfo.length,
-        totalDebt: factorInfo.reduce((sum, f) => sum + f.debt, 0),
-        totalPrice: factorInfo.reduce((sum, f) => sum + f.price, 0),
-      };
-    })
-  );
+  // Function to load and process credit data
+  const loadCreditData = () => {
+    // Read credit invoices from localStorage
+    const creditInvoices = JSON.parse(
+      localStorage.getItem("creditInvoices") || "[]"
+    );
+    console.log(creditInvoices, "creditInvoices");
+
+    // Group invoices by customer
+    const customerMap = new Map<string, Item>();
+
+    creditInvoices.forEach((invoice: any, index: number) => {
+      const customerKey = invoice.customer.phone;
+
+      if (customerMap.has(customerKey)) {
+        // Customer already exists, add this invoice to their factorInfo
+        const existingCustomer = customerMap.get(customerKey)!;
+        existingCustomer.factorInfo.push({
+          id: existingCustomer.factorInfo.length + 1,
+          factorNumber: parseInt(invoice.invoiceNumber),
+          productCount: invoice.items.length,
+          date: new Date(invoice.date),
+          price: invoice.finalAmount,
+          debt: invoice.creditAmount,
+          paymentType: "نسیه",
+        });
+        existingCustomer.totalFactor = existingCustomer.factorInfo.length;
+        existingCustomer.totalDebt += invoice.creditAmount;
+        existingCustomer.totalPrice += invoice.finalAmount;
+      } else {
+        // New customer
+        const newCustomer: Item = {
+          id: index + 1,
+          name: invoice.customer.name,
+          mobile: invoice.customer.phone,
+          nationalitiCode: invoice.customer.nationalCode || "",
+          address: invoice.customer?.address || "",
+          factorInfo: [
+            {
+              id: 1,
+              factorNumber: parseInt(invoice.invoiceNumber),
+              productCount: invoice.items.length,
+              date: new Date(invoice.date),
+              price: invoice.finalAmount,
+              debt: invoice.creditAmount,
+              paymentType: "نسیه",
+            },
+          ],
+          totalFactor: 1,
+          totalDebt: invoice.creditAmount,
+          totalPrice: invoice.finalAmount,
+        };
+        customerMap.set(customerKey, newCustomer);
+      }
+    });
+
+    const result = Array.from(customerMap.values());
+    setFinalData(result);
+  };
+
+  // Load data on component mount
+  useEffect(() => {
+    loadCreditData();
+  }, []);
+
+  // Listen for localStorage changes
+  useEffect(() => {
+    const handleStorageChange = () => {
+      loadCreditData();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const [items, setItems] = useState<Item[]>(finalData);
+
+  // Update items when finalData changes
+  useEffect(() => {
+    setItems(finalData);
+  }, [finalData]);
 
   const totalPages = Math.ceil(items.length / pageSize);
   const paginatedItems = useMemo(() => {
@@ -328,6 +383,13 @@ const Credit: React.FC = () => {
                   }`}
                 />
               </Button>
+              <Button
+                label="تازه‌سازی"
+                color="#479E55"
+                radius={15}
+                style={{ width: "175px", height: "48px", marginLeft: "15px" }}
+                onClick={loadCreditData}
+              />
             </div>
             <Pagination
               currentPage={currentPage}
@@ -369,7 +431,7 @@ const Credit: React.FC = () => {
             </div>
             <div
               className="overflow-y-auto relative"
-              style={{ maxHeight: showFilter ? 350 : 500 }}
+              style={{ height: showFilter ? 350 : 500 }}
             >
               {paginatedItems.length > 0 ? (
                 paginatedItems.map((item, index) => (
@@ -435,6 +497,7 @@ const Credit: React.FC = () => {
         <DebtPaymentModal
           totalDebt={debtPaymentItem.totalDebt}
           onConfirm={handlePaymentConfirm}
+          onClose={() => setIsDebtPaymentOpen(false)}
         />
       )}
 

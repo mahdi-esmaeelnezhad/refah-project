@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useSelector } from "react-redux";
 import useRequest from "../../hooks/useRequest";
 import { BASE_ENDPOINTS } from "../../endpoint/base/base";
+import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 import type { RootState } from "../../store/store";
 import axios from "axios";
 
@@ -37,6 +38,15 @@ const ShopInfoInitializer: React.FC = () => {
   );
   const { execute: getCacheProductList } = useRequest<any>(
     BASE_ENDPOINTS.cacheProductList,
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const { execute: getCustomers } = useRequest<any>(
+    PRODUCT_ENDPOINTS.customerList,
     "POST",
     {
       headers: {
@@ -92,6 +102,22 @@ const ShopInfoInitializer: React.FC = () => {
             localStorage.setItem(
               "cacheProductList",
               JSON.stringify(cacheProductListRes?.data)
+            );
+
+            const searchPayload = {
+              conditionType: "OR",
+              conditions: [],
+              values: [],
+            };
+            const customersRes = await getCustomers({
+              searchPayload,
+              page: 1,
+              sort: "id,desc",
+              size: 100, // تعداد بیشتری مشتری دریافت کن
+            });
+            localStorage.setItem(
+              "customers",
+              JSON.stringify(customersRes?.data)
             );
           }
         }

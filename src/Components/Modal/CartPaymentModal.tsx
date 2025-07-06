@@ -12,11 +12,12 @@ import { usePaymentStore } from "../../hooks/usePaymentStore";
 interface CartPaymentModalProps {
   totalAmount: number;
   onConfirm: (amount: number) => void;
-  paymentType?: "cash" | "card";
+  paymentType?: "cash" | "card" | "credit";
 }
 
 const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
   totalAmount,
+  onConfirm,
   paymentType = "card",
 }) => {
   const {
@@ -26,6 +27,8 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     closeCartPaymentLoading,
     openCartPaymentPassword,
     openSuccessPayment,
+    // openSendSmsModal,
+    // closeSendSmsModal,
   } = useModal();
   const [editableAmount, setEditableAmount] = useState(totalAmount);
   const setPaymentAmount = usePaymentStore((state) => state.setEditableAmount);
@@ -38,11 +41,23 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
       return;
     }
 
+    // Call onConfirm with the editable amount
+    onConfirm(editableAmount);
+
     if (paymentType === "cash") {
       // For cash payment, directly show success modal
       setPaymentAmount(editableAmount);
       closeCartPayment();
       openSuccessPayment();
+    } else if (paymentType === "credit") {
+      console.log("credit");
+      // For credit payment, just set amount and close modal
+      // The parent component will handle opening SendSmsModal
+      setPaymentAmount(editableAmount);
+      closeCartPayment();
+      // openSendSmsModal();
+      // closeSendSmsModal();
+      // Don't open SendSmsModal here, let parent handle it
     } else {
       // For card payment, use existing logic
       try {
@@ -98,6 +113,8 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
             >
               {paymentType === "cash"
                 ? "آیا وجه نقد دریافت گردید؟"
+                : paymentType === "credit"
+                ? "مبلغ پرداختی نسیه را وارد کنید"
                 : "لطفا کارت را بکشید"}
             </div>
 
@@ -215,6 +232,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 }}
               />
             )}
+            {/* No image for credit payment */}
 
             <div
               style={{

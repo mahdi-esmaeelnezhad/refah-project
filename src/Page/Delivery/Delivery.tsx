@@ -1,8 +1,39 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import deliveryIcon from "../../assets/delivery.svg";
 import arrowDownn from "../../assets/arrow-down.svg";
 import Input from "../../Components/Ui/Input/input";
 import mapIcon from "../../assets/map.svg";
+
+interface PaykInvoice {
+  id: number;
+  invoiceNumber: string;
+  date: string;
+  customer: {
+    name: string;
+    phone: string;
+    address: string;
+  };
+  items: Array<{
+    id: number;
+    name: string;
+    quantity: string;
+    unit: string;
+    price: number;
+    discount: number | string;
+    total: number;
+  }>;
+  totalAmount: number;
+  totalDiscount: number;
+  finalAmount: number;
+  paymentMethod: string;
+  deliveryMethod: string;
+  courier: {
+    type: string;
+    name: string;
+  };
+  status: "pending" | "delivered" | "cancelled";
+  createdAt: string;
+}
 
 interface DeliveryItem {
   id: number;
@@ -19,63 +50,59 @@ interface DeliveryItem {
 const pageSize = 20;
 
 const Delivery: React.FC = () => {
-  const [deliveries] = useState<DeliveryItem[]>([
-    {
-      id: 1,
-      deliveryType: "فروشگاه",
-      phoneNumber: "09123456789",
-      trackingNumber: "",
-      time: "14:30",
-      customerName: "علی محمدی",
-      customerPhone: "09187654321",
-      address: "تهران، خیابان ولیعصر، پلاک 123، طبقه 2",
-      status: "آماده ارسال",
-    },
-    {
-      id: 2,
-      deliveryType: "تیپاکس",
-      phoneNumber: "",
-      trackingNumber: "TP123456789",
-      time: "15:45",
-      customerName: "مریم حسینی",
-      customerPhone: "09351234567",
-      address: "اصفهان، خیابان چهارباغ، پلاک 456، واحد 5",
-      status: "ارسال شده",
-    },
-    {
-      id: 3,
-      deliveryType: "فروشگاه",
-      phoneNumber: "09987654321",
-      trackingNumber: "",
-      time: "16:20",
-      customerName: "احمد رضایی",
-      customerPhone: "09123456789",
-      address: "مشهد، خیابان امام رضا، پلاک 789، طبقه 1",
-      status: "تحویل داده شده",
-    },
-    {
-      id: 4,
-      deliveryType: "تیپاکس",
-      phoneNumber: "",
-      trackingNumber: "TP987654321",
-      time: "17:10",
-      customerName: "فاطمه کریمی",
-      customerPhone: "09387654321",
-      address: "شیراز، خیابان زند، پلاک 321، واحد 3",
-      status: "آماده ارسال",
-    },
-    {
-      id: 5,
-      deliveryType: "فروشگاه",
-      phoneNumber: "09111111111",
-      trackingNumber: "",
-      time: "18:00",
-      customerName: "محمد احمدی",
-      customerPhone: "09222222222",
-      address: "تبریز، خیابان امام، پلاک 654، طبقه 4",
-      status: "ارسال شده",
-    },
-  ]);
+  const [paykInvoices, setPaykInvoices] = useState<PaykInvoice[]>([]);
+  const [deliveries, setDeliveries] = useState<DeliveryItem[]>([]);
+
+  // Load payk invoices from localStorage
+  useEffect(() => {
+    const loadPaykInvoices = () => {
+      try {
+        const savedInvoices = JSON.parse(
+          localStorage.getItem("paykInvoices") || "[]"
+        );
+        setPaykInvoices(savedInvoices);
+
+        // Convert payk invoices to delivery items format
+        const convertedDeliveries: DeliveryItem[] = savedInvoices.map(
+          (invoice: PaykInvoice) => ({
+            id: invoice.id,
+            deliveryType: invoice.courier.type === "tpx" ? "تیپاکس" : "فروشگاه",
+            phoneNumber:
+              invoice.courier.type === "tpx" ? "" : invoice.courier.name,
+            trackingNumber:
+              invoice.courier.type === "tpx" ? `TP${invoice.id}` : "",
+            time: new Date(invoice.date).toLocaleTimeString("fa-IR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+            customerName: invoice.customer.name,
+            customerPhone: invoice.customer.phone,
+            address: invoice.customer.address,
+            status:
+              invoice.status === "pending"
+                ? "آماده ارسال"
+                : invoice.status === "delivered"
+                ? "تحویل داده شده"
+                : "ارسال شده",
+          })
+        );
+
+        setDeliveries(convertedDeliveries);
+      } catch (error) {
+        console.error("Error loading payk invoices:", error);
+      }
+    };
+
+    loadPaykInvoices();
+
+    // Listen for changes in localStorage
+    const handleStorageChange = () => {
+      loadPaykInvoices();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [searchTerm, setSearchTerm] = useState("");
@@ -106,6 +133,34 @@ const Delivery: React.FC = () => {
     setCurrentPage(1);
   };
 
+  const handleStatusChange = (
+    deliveryId: number,
+    newStatus: "آماده ارسال" | "ارسال شده" | "تحویل داده شده"
+  ) => {
+    // Update local state
+    const updatedDeliveries = deliveries.map((delivery) =>
+      delivery.id === deliveryId ? { ...delivery, status: newStatus } : delivery
+    );
+    setDeliveries(updatedDeliveries);
+
+    // Update localStorage
+    const updatedPaykInvoices = paykInvoices.map((invoice) => {
+      if (invoice.id === deliveryId) {
+        const newPaykStatus: "pending" | "delivered" | "cancelled" =
+          newStatus === "آماده ارسال"
+            ? "pending"
+            : newStatus === "تحویل داده شده"
+            ? "delivered"
+            : "cancelled";
+        return { ...invoice, status: newPaykStatus };
+      }
+      return invoice;
+    });
+
+    setPaykInvoices(updatedPaykInvoices);
+    localStorage.setItem("paykInvoices", JSON.stringify(updatedPaykInvoices));
+  };
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "آماده ارسال":
@@ -113,6 +168,12 @@ const Delivery: React.FC = () => {
       case "ارسال شده":
         return "#38A6FF";
       case "تحویل داده شده":
+        return "#3BBB2A";
+      case "pending":
+        return "#FF7E20";
+      case "cancelled":
+        return "#38A6FF";
+      case "delivered":
         return "#3BBB2A";
       default:
         return "#FF7E20";
@@ -251,7 +312,7 @@ const Delivery: React.FC = () => {
 
               <div className="flex items-center gap-3">
                 <span style={{ fontSize: "23px", fontWeight: 500 }}>
-                  به مشتری:
+                  شماره تلفن:
                 </span>
 
                 <div
@@ -268,7 +329,7 @@ const Delivery: React.FC = () => {
                     color: "black",
                   }}
                 >
-                  {delivery.customerPhone}
+                  {delivery.customerPhone || " ثبت نشده است"}
                 </div>
               </div>
             </div>
@@ -290,6 +351,7 @@ const Delivery: React.FC = () => {
                 <div
                   style={{
                     width: "700px",
+                    height: "52px",
                     backgroundColor: "white",
                     borderRadius: "55px",
                     padding: "12px",
@@ -305,7 +367,7 @@ const Delivery: React.FC = () => {
                       color: "black",
                     }}
                   >
-                    {delivery.address}
+                    {delivery.address || "آدرسی ثبت نشده است"}
                   </span>
                 </div>
                 <img
@@ -319,7 +381,11 @@ const Delivery: React.FC = () => {
                 <span style={{ fontSize: "23px", fontWeight: 500 }}>
                   وضعیت:
                 </span>
-                <div
+                <select
+                  value={delivery.status}
+                  onChange={(e) =>
+                    handleStatusChange(delivery.id, e.target.value as any)
+                  }
                   style={{
                     width: "217px",
                     height: "42px",
@@ -331,10 +397,16 @@ const Delivery: React.FC = () => {
                     color: "white",
                     fontSize: "23px",
                     fontWeight: 500,
+                    border: "none",
+                    outline: "none",
+                    cursor: "pointer",
+                    padding: "0 15px",
                   }}
                 >
-                  {delivery.status}
-                </div>
+                  <option value="آماده ارسال">آماده ارسال</option>
+                  <option value="ارسال شده">ارسال شده</option>
+                  <option value="تحویل داده شده">تحویل داده شده</option>
+                </select>
               </div>
             </div>
           </div>

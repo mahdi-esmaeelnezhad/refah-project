@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useSelector } from "react-redux";
 import type { RootState } from "../../../store/store";
-import useRequest from "../../../hooks/useRequest";
-import { PRODUCT_ENDPOINTS } from "../../../endpoint/product/product";
 import { Button } from "../../Ui/Button/button";
 import Input from "../../Ui/Input/input";
 import customerIcon from "../../../assets/customer.svg";
@@ -13,6 +11,8 @@ interface Customer {
   name: string;
   phone: string;
   debt: number;
+  address: string;
+  nationalCode: string;
 }
 
 interface CustomerApiResponse {
@@ -24,7 +24,7 @@ interface CustomerApiResponse {
   address: string;
   debt: number;
   isArchive: boolean;
-  nationalCode: number;
+  nationalCode: string;
   gender: string;
 }
 
@@ -45,20 +45,6 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
   const [searchTerm, setSearchTerm] = useState("");
   const tooltipRef = useRef<HTMLDivElement>(null);
 
-  const {
-    execute: fetchCustomers,
-    loading: customersLoading,
-    // error: customersError,
-  } = useRequest<{ data: CustomerApiResponse[] }>(
-    PRODUCT_ENDPOINTS.customerList,
-    "POST",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
   // دریافت مشتریان از localStorage یا API
   const [customers, setCustomers] = useState<Customer[]>([]);
 
@@ -76,84 +62,28 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
         return;
       }
 
-      const searchPayload = {
-        conditionType: "OR",
-        conditions: [],
-        values: [],
-      };
+      const response: any = localStorage.getItem("customers");
 
-      const response: any = await fetchCustomers({
-        searchPayload,
-        page: 1,
-        sort: "id,desc",
-        size: 100, // تعداد بیشتری مشتری دریافت کن
-      });
-
-      const apiCustomers: CustomerApiResponse[] = response.data;
+      const apiCustomers: CustomerApiResponse[] = JSON.parse(response);
+      console.log(apiCustomers, "apiCustomers");
 
       if (apiCustomers && apiCustomers.length > 0) {
-        // تبدیل داده‌های API به فرمت مورد نیاز
         const convertedCustomers: Customer[] = apiCustomers
-          .filter((customer) => !customer.isArchive) // فقط مشتریان غیر آرشیو شده
+          .filter((customer) => !customer.isArchive)
           .map((customer) => ({
             id: parseInt(customer.id),
             name: customer.displayName || "نامشخص",
             phone: customer.mobile || "",
             debt: customer.debt || 0,
+            address: customer.address || "",
+            nationalCode: customer.nationalCode || "",
           }));
 
         setCustomers(convertedCustomers);
         localStorage.setItem("customers", JSON.stringify(convertedCustomers));
-      } else {
-        // اگر API داده‌ای برنگرداند، از داده‌های نمونه استفاده کن
-        const sampleCustomers: Customer[] = [
-          {
-            id: 1,
-            name: "علی محمدی",
-            phone: "09123456789",
-            debt: 120000,
-          },
-          {
-            id: 2,
-            name: "مریم حسینی",
-            phone: "09187654321",
-            debt: 85000,
-          },
-          {
-            id: 3,
-            name: "احمد رضایی",
-            phone: "09351234567",
-            debt: 250000,
-          },
-        ];
-        setCustomers(sampleCustomers);
-        localStorage.setItem("customers", JSON.stringify(sampleCustomers));
       }
     } catch (error) {
       console.error("خطا در دریافت مشتریان از API:", error);
-      // در صورت خطا، از داده‌های نمونه استفاده کن
-      const sampleCustomers: Customer[] = [
-        {
-          id: 1,
-          name: "علی محمدی",
-          phone: "09123456789",
-          debt: 120000,
-        },
-        {
-          id: 2,
-          name: "مریم حسینی",
-          phone: "09187654321",
-          debt: 85000,
-        },
-        {
-          id: 3,
-          name: "احمد رضایی",
-          phone: "09351234567",
-          debt: 250000,
-        },
-      ];
-      setCustomers(sampleCustomers);
-      localStorage.setItem("customers", JSON.stringify(sampleCustomers));
     }
   };
 
@@ -276,115 +206,101 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
             paddingRight: "4px",
           }}
         >
-          {customersLoading ? (
+          {filteredCustomers.map((customer) => (
             <div
-              style={{ textAlign: "center", padding: "20px", color: "#7E7E7E" }}
+              key={customer.id}
+              style={{
+                width: "386px",
+                backgroundColor: "#F8F9FA",
+                borderRadius: "13px",
+                padding: "12px 16px",
+                marginBottom: "8px",
+                cursor: "pointer",
+                border: "1px solid #E9ECEF",
+                transition: "all 0.2s ease",
+              }}
+              onClick={() => handleCustomerSelect(customer)}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = "#E9ECEF";
+                e.currentTarget.style.transform = "translateY(-1px)";
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = "#F8F9FA";
+                e.currentTarget.style.transform = "translateY(0)";
+              }}
             >
-              در حال بارگذاری مشتریان...
-            </div>
-          ) : filteredCustomers.length === 0 ? (
-            <div
-              style={{ textAlign: "center", padding: "20px", color: "#7E7E7E" }}
-            >
-              هیچ مشتری یافت نشد
-            </div>
-          ) : (
-            filteredCustomers.map((customer) => (
+              {/* Customer Name Row */}
               <div
-                key={customer.id}
                 style={{
-                  width: "386px",
-                  backgroundColor: "#F8F9FA",
-                  borderRadius: "13px",
-                  padding: "12px 16px",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginBottom: "8px",
-                  cursor: "pointer",
-                  border: "1px solid #E9ECEF",
-                  transition: "all 0.2s ease",
-                }}
-                onClick={() => handleCustomerSelect(customer)}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.backgroundColor = "#E9ECEF";
-                  e.currentTarget.style.transform = "translateY(-1px)";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = "#F8F9FA";
-                  e.currentTarget.style.transform = "translateY(0)";
                 }}
               >
-                {/* Customer Name Row */}
-                <div
+                <span
                   style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    marginBottom: "8px",
+                    fontSize: "20px",
+                    fontWeight: 500,
+                    color: "black",
                   }}
                 >
-                  <span
-                    style={{
-                      fontSize: "20px",
-                      fontWeight: 500,
-                      color: "black",
-                    }}
-                  >
-                    {customer.name}
-                  </span>
-                  <Button
-                    label=""
-                    color="#7486E5"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleCustomerSelect(customer);
-                    }}
-                    style={{
-                      width: "147px",
-                      height: "40px",
-                      borderRadius: "55px",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "6px",
-                      fontSize: "14px",
-                    }}
-                  >
-                    <img
-                      src={emptyAddIcon}
-                      alt="add"
-                      style={{ width: "16px", height: "16px" }}
-                    />
-                    افزودن
-                  </Button>
-                </div>
-
-                {/* Phone and Debt Row */}
-                <div
+                  {customer.name}
+                </span>
+                <Button
+                  label=""
+                  color="#7486E5"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCustomerSelect(customer);
+                  }}
                   style={{
+                    width: "147px",
+                    height: "40px",
+                    borderRadius: "55px",
                     display: "flex",
-                    justifyContent: "space-between",
                     alignItems: "center",
+                    justifyContent: "center",
+                    gap: "6px",
+                    fontSize: "14px",
                   }}
                 >
-                  <span
-                    style={{
-                      color: "#696969",
-                      fontSize: "16px",
-                    }}
-                  >
-                    {customer.phone}
-                  </span>
-                  <span
-                    style={{
-                      color: "#696969",
-                      fontSize: "16px",
-                    }}
-                  >
-                    بدهی: {formatNumber(customer.debt)} ریال
-                  </span>
-                </div>
+                  <img
+                    src={emptyAddIcon}
+                    alt="add"
+                    style={{ width: "16px", height: "16px" }}
+                  />
+                  افزودن
+                </Button>
               </div>
-            ))
-          )}
+
+              {/* Phone and Debt Row */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <span
+                  style={{
+                    color: "#696969",
+                    fontSize: "16px",
+                  }}
+                >
+                  {customer.phone}
+                </span>
+                <span
+                  style={{
+                    color: "#696969",
+                    fontSize: "16px",
+                  }}
+                >
+                  بدهی: {formatNumber(customer.debt)} ریال
+                </span>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

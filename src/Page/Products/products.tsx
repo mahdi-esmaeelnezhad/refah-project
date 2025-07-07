@@ -104,7 +104,9 @@ const Products: React.FC = () => {
   };
 
   const getInfo = async () => {
-    const shopId = localStorage.getItem("shoppId");
+    console.log("getInfo");
+    const shopId = localStorage.getItem("shopId");
+    console.log(shopId, "shopId");
     if (!shopId) return;
 
     try {
@@ -160,6 +162,7 @@ const Products: React.FC = () => {
         const availableProducts = processedData.filter(
           (item) => item.isAvailable
         );
+        console.log(availableProducts, "availableProducts");
         setFinalData(availableProducts);
         setAllFinalData(availableProducts);
         localStorage.setItem(

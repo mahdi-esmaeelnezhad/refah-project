@@ -77,7 +77,7 @@ const AddDiscount: React.FC<AddDiscountProps> = ({ onBack }) => {
   }, []);
 
   const fetchProducts = async () => {
-    const shopId = localStorage.getItem("shoppId");
+    const shopId = localStorage.getItem("shopId");
     if (!shopId) return;
 
     try {
@@ -103,7 +103,7 @@ const AddDiscount: React.FC<AddDiscountProps> = ({ onBack }) => {
   };
 
   const fetchCategories = async () => {
-    const shopId = localStorage.getItem("shoppId");
+    const shopId = localStorage.getItem("shopId");
     if (!shopId) return;
 
     try {

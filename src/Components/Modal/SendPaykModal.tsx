@@ -42,17 +42,20 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
   const apiCustomers: Customer[] = JSON.parse(response);
   console.log(apiCustomers, "apiCustomers");
 
-  const customers = apiCustomers
-    .filter((customer) => !customer.isArchive)
-    .map((customer) => ({
-      id: customer.id,
-      displayName: customer.displayName || "نامشخص",
-      mobile: customer.mobile || "",
-      nationalCode: customer.nationalCode || "",
-      address: customer.address || "",
-      debt: customer.debt || 0,
-      isArchive: customer.isArchive,
-    }));
+  let customers: Customer[] = [];
+  if (apiCustomers) {
+    customers = apiCustomers
+      .filter((customer) => !customer.isArchive)
+      .map((customer) => ({
+        id: customer.id,
+        displayName: customer.displayName || "نامشخص",
+        mobile: customer.mobile || "",
+        nationalCode: customer.nationalCode || "",
+        address: customer.address || "",
+        debt: customer.debt || 0,
+        isArchive: customer.isArchive,
+      }));
+  }
 
   const courierOptions = [
     { value: "shop", label: "پیک فروشگاه" },

@@ -338,7 +338,15 @@ const Content: React.FC = () => {
     if (currentPaymentMethod !== "نسیه") {
       setPartialPayments((prev) => [
         ...prev,
-        { amount, type: currentPaymentMethod },
+        {
+          amount,
+          type:
+            currentPaymentMethod === "نقدی"
+              ? "1"
+              : currentPaymentMethod === "نسیه"
+              ? "credit"
+              : "card",
+        },
       ]);
     }
 

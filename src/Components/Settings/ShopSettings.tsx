@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Input from "../Ui/Input/input";
 import { Button } from "../Ui/Button/button";
 import mapIcon from "../../assets/mapIcon.svg";
@@ -13,6 +13,7 @@ const ShopSettings: React.FC = () => {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const { token } = useSelector((state: RootState) => state.auth);
+  const [shopInfo, setShopInfo] = useState<any>(null);
 
   const { execute: changePasswordRequest } = useRequest<any>(
     AUTH_ENDPOINTS.changePassword,
@@ -23,6 +24,13 @@ const ShopSettings: React.FC = () => {
       },
     }
   );
+  useEffect(() => {
+    const shopInfo = localStorage.getItem("shopInfo");
+    if (shopInfo) {
+      setShopInfo(JSON.parse(shopInfo));
+      console.log(JSON.parse(shopInfo));
+    }
+  }, []);
 
   return (
     <div className="flex flex-col gap-6">
@@ -77,7 +85,7 @@ const ShopSettings: React.FC = () => {
                 color: "#363636",
               }}
             >
-              سوپرمارکت آبی
+              {shopInfo?.extraData?.shopName}
             </div>
           </div>
 
@@ -105,7 +113,7 @@ const ShopSettings: React.FC = () => {
                 color: "#363636",
               }}
             >
-              SHOP123456
+              {shopInfo?.extraData?.shopCode}
             </div>
           </div>
 
@@ -133,7 +141,7 @@ const ShopSettings: React.FC = () => {
                 color: "#363636",
               }}
             >
-              09123456789
+              {shopInfo?.mobile}
             </div>
           </div>
         </div>
@@ -153,7 +161,7 @@ const ShopSettings: React.FC = () => {
                 color: "#363636",
               }}
             >
-              شماره تلفن:
+              شماره تلفن
             </span>
             <div
               style={{
@@ -169,7 +177,7 @@ const ShopSettings: React.FC = () => {
                 color: "#363636",
               }}
             >
-              02112345678
+              {shopInfo?.extraData?.shopPhone}
             </div>
           </div>
 
@@ -206,7 +214,7 @@ const ShopSettings: React.FC = () => {
                 alt="map"
                 style={{ width: "20px", height: "20px" }}
               />
-              تهران، خیابان ولیعصر، پلاک 123، طبقه 2
+              {shopInfo?.extraData?.shopAddress}
             </div>
             <img
               src={mapIcon}

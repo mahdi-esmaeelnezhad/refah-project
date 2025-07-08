@@ -160,6 +160,8 @@ const Customers: React.FC = () => {
         const nonArchived = convertedItems.filter((item) => !item.isArchive);
         setAllFinalData(nonArchived);
         setItems(nonArchived);
+        // Save to localStorage
+        localStorage.setItem("customers", JSON.stringify(nonArchived));
       }
     } catch (error) {
       console.error("Error fetching customers:", error);
@@ -183,8 +185,20 @@ const Customers: React.FC = () => {
     }));
   };
 
+  // Load customers from localStorage on mount
   useEffect(() => {
-    if (token) {
+    const localCustomers = localStorage.getItem("customers");
+    if (localCustomers) {
+      try {
+        const parsed: CustomerApiResponseShow[] = JSON.parse(localCustomers);
+        const nonArchived = parsed.filter((item) => !item.isArchive);
+        setAllFinalData(nonArchived);
+        setItems(nonArchived);
+      } catch (e) {
+        // fallback to API if parse fails
+        if (token) fetchCustomerList();
+      }
+    } else if (token) {
       fetchCustomerList();
     }
   }, [token]);
@@ -219,8 +233,6 @@ const Customers: React.FC = () => {
   };
 
   const handleAddCustomer = (customerData: any) => {
-    console.log(customerData);
-
     const newCustomer: Item = {
       displayName: customerData.displayName || "",
       mobile: customerData.mobile || "",
@@ -240,11 +252,14 @@ const Customers: React.FC = () => {
     };
     // setItems((prev) => [newCustomer, ...prev]);
     if (newCustomer.id === "") {
-      addCustomerHandler(newCustomer);
+      addCustomerHandler(newCustomer).then(() => {
+        fetchCustomerList();
+      });
     } else {
-      editCustomerHandler(newCustomer);
+      editCustomerHandler(newCustomer).then(() => {
+        fetchCustomerList();
+      });
     }
-    fetchCustomerList();
   };
 
   const handleEditCustomer = (item: CustomerApiResponseShow) => {
@@ -375,7 +390,6 @@ const Customers: React.FC = () => {
             if (!allFinalData) return;
 
             let filtered = allFinalData;
-            console.log(filters, "filters");
 
             if (filters.gender) {
               filtered = filtered.filter(

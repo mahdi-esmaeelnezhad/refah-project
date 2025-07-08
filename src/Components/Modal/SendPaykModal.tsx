@@ -22,6 +22,16 @@ interface SendPaykModalProps {
   onConfirm: (customerData: any, courierData: any) => void;
 }
 
+// Add Courier interface for type safety
+interface Courier {
+  id: string;
+  name: string;
+  nationalCode: string;
+  phone: string;
+  plate?: string;
+  address?: string;
+}
+
 const SendPaykModal: React.FC<SendPaykModalProps> = ({
   isOpen,
   onClose,
@@ -33,12 +43,19 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
   const [customerName, setCustomerName] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
-  const [selectedCourier, setSelectedCourier] = useState<string>("");
-  const [courierName, setCourierName] = useState("");
+  // Couriers from localStorage
+  const couriers: Courier[] = (() => {
+    try {
+      const data = localStorage.getItem("couriers");
+      return data ? JSON.parse(data) : [];
+    } catch {
+      return [];
+    }
+  })();
+  const [selectedCourier, setSelectedCourier] = useState<Courier | null>(null);
 
   //get customers from localStorage and convert to array
   const response: any = localStorage.getItem("customers");
-  console.log(response, "response");
   const apiCustomers: Customer[] = JSON.parse(response);
 
   let customers: Customer[] = [];
@@ -56,12 +73,6 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
       }));
   }
 
-  const courierOptions = [
-    { value: "shop", label: "پیک فروشگاه" },
-    { value: "bring", label: "میاره" },
-    { value: "tpx", label: "TPX (تیپاکس)" },
-  ];
-
   useEffect(() => {
     if (selectedCustomer) {
       setCustomerName(selectedCustomer.displayName);
@@ -74,10 +85,8 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
     setSelectedCustomer(customer);
   };
 
-  const handleCourierSelect = (value: string) => {
-    setSelectedCourier(value);
-    const courier = courierOptions.find((c) => c.value === value);
-    setCourierName(courier?.label || "");
+  const handleCourierSelect = (courier: Courier) => {
+    setSelectedCourier(courier);
   };
 
   const handleConfirm = () => {
@@ -92,12 +101,8 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
       address: customerAddress,
     };
 
-    const courierData = {
-      type: selectedCourier,
-      name: courierName,
-    };
-
-    onConfirm(customerData, courierData);
+    // Pass the full courier object
+    onConfirm(customerData, selectedCourier);
   };
 
   if (!isOpen) return null;
@@ -184,40 +189,15 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
               <img src={mapIcon} alt="map" className="w-[32px] h-[32px]" />
             </div>
 
-            {/* Courier Selection */}
-            <div className="space-y-2 border w-[633px] border-black rounded-xl p-6 relative mb-10">
-              <div className="font-semibold bg-white absolute -top-5 px-2 font-25">
-                انتخاب پیک:
-              </div>
-              <div className="flex gap-2 items-center justify-between font-25">
-                {courierOptions.map((courier) => (
-                  <div key={courier.value} className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      id={`courier-${courier.value}`}
-                      name="courierMethod"
-                      value={courier.value}
-                      checked={selectedCourier === courier.value}
-                      onChange={() => handleCourierSelect(courier.value)}
-                      className="w-4 h-4 accent-primary"
-                    />
-                    <label
-                      htmlFor={`courier-${courier.value}`}
-                      className="font-21 cursor-pointer"
-                    >
-                      {courier.label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Courier Name Input */}
+            {/* Courier Selection (Dropdown) */}
             <div className="flex justify-center mb-10">
-              <Input
+              <DropDownCustom
+                options={couriers}
+                value={selectedCourier}
+                onChange={handleCourierSelect}
+                getLabel={(courier) => `${courier.name} - ${courier.phone}`}
                 placeholder="انتخاب پیک"
-                value={courierName}
-                onChange={(e) => setCourierName(e.target.value)}
+                inputPlaceholder="جستجو بر اساس نام یا شماره موبایل"
                 style={{
                   width: "332px",
                   height: "48px",

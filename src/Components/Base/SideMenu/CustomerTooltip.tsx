@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../store/store";
 import { Button } from "../../Ui/Button/button";
 import Input from "../../Ui/Input/input";
 import customerIcon from "../../../assets/customer.svg";
@@ -41,7 +39,6 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
   onSelectCustomer,
   onOpenCustomerDefinition,
 }) => {
-  const { token } = useSelector((state: RootState) => state.auth);
   const [searchTerm, setSearchTerm] = useState("");
   const tooltipRef = useRef<HTMLDivElement>(null);
 
@@ -53,18 +50,14 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
       // وقتی tooltip باز می‌شود، مشتریان را از API دریافت کن
       fetchCustomersFromAPI();
     }
-  }, [isOpen, token]);
+  }, [isOpen]);
 
   const fetchCustomersFromAPI = async () => {
     try {
-      if (!token) {
-        console.warn("توکن موجود نیست");
-        return;
-      }
-
       const response: any = localStorage.getItem("customers");
 
       const apiCustomers: CustomerApiResponse[] = JSON.parse(response);
+      console.log(apiCustomers, " apiCustomers");
 
       if (apiCustomers && apiCustomers.length > 0) {
         const convertedCustomers: Customer[] = apiCustomers

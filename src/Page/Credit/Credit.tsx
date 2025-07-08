@@ -41,59 +41,6 @@ interface Item {
   factorInfo: FactorInfo[];
 }
 const pageSize = 20;
-// const paymentTypes = ["کارتی", "نقدی", "نسیه", "اعتباری"];
-// const generateMobileNumber = (): string =>
-//   "09" +
-//   Math.floor(Math.random() * 1_000_000_000)
-//     .toString()
-//     .padStart(9, "0");
-
-// const generatePersianAddress = (): string => {
-//   const cities = [
-//     "تهران",
-//     "مشهد",
-//     "اصفهان",
-//     "تبریز",
-//     "شیراز",
-//     "اهواز",
-//     "کرج",
-//     "قم",
-//     "ارومیه",
-//     "رشت",
-//   ];
-//   const streets = [
-//     "ولی‌عصر",
-//     "انقلاب",
-//     "آزادی",
-//     "مطهری",
-//     "شریعتی",
-//     "سعدی",
-//     "فاطمی",
-//     "کارگر",
-//     "نارمک",
-//     "پاسداران",
-//   ];
-//   const alleys = [
-//     "یکم",
-//     "دوم",
-//     "سوم",
-//     "چهارم",
-//     "پنجم",
-//     "ششم",
-//     "هفتم",
-//     "هشتم",
-//     "نهم",
-//     "دهم",
-//   ];
-
-//   const city = cities[Math.floor(Math.random() * cities.length)];
-//   const street = streets[Math.floor(Math.random() * streets.length)];
-//   const alley = alleys[Math.floor(Math.random() * alleys.length)];
-//   const plaque = Math.floor(1 + Math.random() * 200);
-//   const postalCode = Math.floor(1000000000 + Math.random() * 8999999999);
-
-//   return `ایران، ${city}، خیابان ${street}، کوچه ${alley}، پلاک ${plaque}، کد پستی ${postalCode}`;
-// };
 
 const Credit: React.FC = () => {
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -101,13 +48,10 @@ const Credit: React.FC = () => {
   const [search, setSearch] = useState("");
   const [showFilter, setShowFilter] = useState(false);
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
-  //   const [, setSelectedItemId] = useState<number | null>(null);
   const [isDebtPaymentOpen, setIsDebtPaymentOpen] = useState(false);
   const [isSendDebtOpen, setIsSendDebtOpen] = useState(false);
   const [debtPaymentItem, setDebtPaymentItem] = useState<Item | null>(null);
   const [sendDebtMobile, setSendDebtMobile] = useState<string | null>(null);
-
-  // State برای فرآیند پرداخت
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [paymentType, setPaymentType] = useState<"card" | "cash">("card");
   const [transactionData, setTransactionData] = useState({
@@ -123,22 +67,17 @@ const Credit: React.FC = () => {
 
   const [finalData, setFinalData] = useState<Item[]>([]);
 
-  // Function to load and process credit data
   const loadCreditData = () => {
-    // Read credit invoices from localStorage
     const creditInvoices = JSON.parse(
       localStorage.getItem("creditInvoices") || "[]"
     );
-    console.log(creditInvoices, "creditInvoices");
 
-    // Group invoices by customer
     const customerMap = new Map<string, Item>();
 
     creditInvoices.forEach((invoice: any, index: number) => {
       const customerKey = invoice.customer.phone;
 
       if (customerMap.has(customerKey)) {
-        // Customer already exists, add this invoice to their factorInfo
         const existingCustomer = customerMap.get(customerKey)!;
         existingCustomer.factorInfo.push({
           id: existingCustomer.factorInfo.length + 1,
@@ -153,7 +92,6 @@ const Credit: React.FC = () => {
         existingCustomer.totalDebt += invoice.creditAmount;
         existingCustomer.totalPrice += invoice.finalAmount;
       } else {
-        // New customer
         const newCustomer: Item = {
           id: index + 1,
           name: invoice.customer.name,
@@ -183,12 +121,10 @@ const Credit: React.FC = () => {
     setFinalData(result);
   };
 
-  // Load data on component mount
   useEffect(() => {
     loadCreditData();
   }, []);
 
-  // Listen for localStorage changes
   useEffect(() => {
     const handleStorageChange = () => {
       loadCreditData();
@@ -200,7 +136,6 @@ const Credit: React.FC = () => {
 
   const [items, setItems] = useState<Item[]>(finalData);
 
-  // Update items when finalData changes
   useEffect(() => {
     setItems(finalData);
   }, [finalData]);
@@ -254,21 +189,6 @@ const Credit: React.FC = () => {
     setCurrentPage(1);
     setShowFilter(false);
   };
-
-  //   const handleEditCategory = (id: string) => {
-  //     console.log("Edit:", id);
-  //   };
-
-  //   const handleDeleteCategory = (id: string) => {
-  //     console.log("Delete:", id);
-  //     setOpenTooltipId(null);
-  //   };
-
-  //   const handleOpenDebtPayment = (item: Item) => {
-  //     setDebtPaymentItem(item);
-  //     setIsDebtPaymentOpen(true);
-  //   };
-
   const handleOpenSendDebt = (mobile: string) => {
     setSendDebtMobile(mobile);
     setIsSendDebtOpen(true);
@@ -294,12 +214,10 @@ const Credit: React.FC = () => {
     setIsDebtPaymentOpen(false);
 
     if (type === "card") {
-      // فرآیند پرداخت کارتی
       try {
         setPaymentAmountStore(amount);
         openCartPaymentLoading();
 
-        // شبیه‌سازی فرآیند پرداخت
         setTimeout(() => {
           openCartPaymentPassword();
         }, 2000);
@@ -308,7 +226,6 @@ const Credit: React.FC = () => {
         openFailedPayment();
       }
     } else {
-      // فرآیند پرداخت نقدی - مستقیماً به موفقیت
       setTransactionData({
         trackingNumber: Math.random().toString(36).substring(7),
         referenceNumber: Math.random().toString(36).substring(7),
@@ -512,7 +429,6 @@ const Credit: React.FC = () => {
         />
       )}
 
-      {/* مدال‌های فرآیند پرداخت */}
       {isCartPaymentLoading && <CartPaymentLoading amount={paymentAmount} />}
       {isCartPaymentPassword && <CartPaymentPassword amount={paymentAmount} />}
       {isSuccessPaymentOpen && (

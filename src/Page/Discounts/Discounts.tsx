@@ -4,17 +4,6 @@ import CustomerDiscount from "../../Components/Discounts/CustomerDiscount";
 import ProductDiscount from "../../Components/Discounts/ProductDiscount";
 import AddDiscount from "../../Components/Discounts/AddDiscount";
 
-// interface Product {
-//   id: number;
-//   name: string;
-//   barcode: string;
-//   expiryDate: string;
-//   brand: string;
-//   originalPrice: number;
-//   discountedPrice: number;
-//   discount: number;
-// }
-
 const Discounts: React.FC = () => {
   const [activeTab, setActiveTab] = useState<"customer" | "product">(
     "customer"
@@ -26,72 +15,6 @@ const Discounts: React.FC = () => {
     mobile: string;
     name: string;
   } | null>(null);
-  //   const [currentPage] = useState(1);
-  //   const [, setIsLoading] = useState(false);
-
-  //   const pageSize = 20;
-  //   const [products] = useState<Product[]>(() =>
-  //     Array.from({ length: 150 }, (_, index) => ({
-  //       id: index + 1,
-  //       name: `کالای ${index + 1}`,
-  //       barcode: Math.random().toString(36).substring(2, 15),
-  //       expiryDate: new Date(
-  //         Date.now() + Math.random() * 365 * 24 * 60 * 60 * 1000
-  //       ).toLocaleDateString("fa-IR"),
-  //       brand: `برند ${Math.floor(Math.random() * 10) + 1}`,
-  //       originalPrice: Math.floor(100000 + Math.random() * 900000),
-  //       discountedPrice: Math.floor(80000 + Math.random() * 700000),
-  //       discount: Math.floor(5000 + Math.random() * 50000),
-  //     }))
-  //   );
-
-  //   const paginatedProducts = useMemo(() => {
-  //     const startIndex = (currentPage - 1) * pageSize;
-  //     return products.slice(startIndex, startIndex + pageSize);
-  //   }, [products, currentPage]);
-
-  //   const totalPages = Math.ceil(products.length / pageSize);
-  //   const totals = useMemo(() => {
-  //     const totalOriginal = products.reduce(
-  //       (sum, product) => sum + product.originalPrice,
-  //       0
-  //     );
-  //     const totalDiscounted = products.reduce(
-  //       (sum, product) => sum + product.discountedPrice,
-  //       0
-  //     );
-  //     const totalDiscount = products.reduce(
-  //       (sum, product) => sum + product.discount,
-  //       0
-  //     );
-
-  //     return {
-  //       totalOriginal,
-  //       totalDiscounted,
-  //       totalDiscount,
-  //     };
-  //   }, [products]);
-
-  //   const handleApplyDiscount = async () => {
-  //     if (!mobileNumber.trim() && !couponCode.trim()) return;
-
-  //     setIsLoading(true);
-  //     setTimeout(() => {
-  //       if (mobileNumber.trim()) {
-  //         setCustomerData({
-  //           mobile: mobileNumber,
-  //           name: `مشتری ${Math.floor(Math.random() * 1000)}`,
-  //         });
-  //       } else if (couponCode.trim()) {
-  //         console.log("Searching for coupon:", couponCode);
-  //         setCustomerData({
-  //           mobile: "کد تخفیف",
-  //           name: `تخفیف ${couponCode}`,
-  //         });
-  //       }
-  //       setIsLoading(false);
-  //     }, 1000);
-  //   };
 
   const handleTabChange = (tab: "customer" | "product") => {
     setActiveTab(tab);

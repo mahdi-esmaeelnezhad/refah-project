@@ -103,13 +103,11 @@ const Content: React.FC = () => {
   const [tempQuantity, setTempQuantity] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("256");
-  // const [paidCashAmount, setPaidCashAmount] = useState(0);
   const [, setShowCashInfo] = useState(false);
   const [partialPayments, setPartialPayments] = useState<
     { amount: number; type: string }[]
   >([]);
 
-  // تولید شماره فاکتور جدید
   const generateNewInvoiceNumber = () => {
     try {
       const savedInvoices = JSON.parse(
@@ -130,7 +128,6 @@ const Content: React.FC = () => {
   // Barcode scanner hook
   const { isListening } = useBarcodeScanner({
     onBarcodeScanned: React.useCallback((barcode: string) => {
-      console.log("Barcode scanned:", barcode);
       handleBarcodeScanned(barcode);
     }, []),
     enabled: true,
@@ -165,20 +162,12 @@ const Content: React.FC = () => {
     totalPartialPaid;
 
   useEffect(() => {
-    // Show modal when component mounts
-    // openModal("6828989423921");
-
-    // Focus on barcode input when component mounts
     if (barcodeInputRef.current) {
       barcodeInputRef.current.focus();
       setIsBarcodeInputFocused(true);
     }
-
-    // تولید شماره فاکتور جدید
     generateNewInvoiceNumber();
   }, []);
-
-  // Focus on barcode input when modal closes
   useEffect(() => {
     if (!isProductNotFoundOpen && barcodeInputRef.current) {
       const timer = setTimeout(() => {
@@ -194,10 +183,6 @@ const Content: React.FC = () => {
     closeModal();
     console.log(data);
   };
-
-  // const handleCloseModal = () => {
-  //   setIsModalOpen(false);
-  // };
 
   const handleQuantityClick = (itemId: number, currentQuantity: string) => {
     setSelectedItemId(itemId);
@@ -228,7 +213,6 @@ const Content: React.FC = () => {
   const handleQuantityConfirm = () => {};
 
   const handleDialPadClose = () => {
-    // close dial pad
     setOpenTooltipId(null);
     setSelectedItemId(null);
     setTempQuantity("");
@@ -287,7 +271,7 @@ const Content: React.FC = () => {
         setSelectedCustomer(null);
         setShowCreditInfo(false);
         setCreditAmount(0);
-        generateNewInvoiceNumber(); // تولید شماره فاکتور جدید
+        generateNewInvoiceNumber();
         setSuccessMessage("فاکتور با موفقیت ذخیره شد");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -315,7 +299,6 @@ const Content: React.FC = () => {
       return;
     }
 
-    // اگر تحویل حضوری است، مستقیماً پرداخت کن
     if (paymentMedivod === "اعتباری") {
       setIsCreditPaymentModalOpen(true);
     } else if (paymentMedivod === "نسیه") {
@@ -333,8 +316,6 @@ const Content: React.FC = () => {
     setPaymentAmount(amount);
 
     const currentPaymentMethod = pendingPaymentMethod || paymentMedivod;
-
-    // Add partial payment for all types except nesiye (credit)
     if (currentPaymentMethod !== "نسیه") {
       setPartialPayments((prev) => [
         ...prev,
@@ -379,18 +360,14 @@ const Content: React.FC = () => {
   };
 
   const handleSmsVerificationSuccess = () => {
-    console.log("SMS verification success, opening success modal");
     closeSendSmsModal();
     setShowCreditInfo(true);
-    // Show success modal for credit payment
     openSuccessPayment();
   };
 
   const handleSuccessPaymentClose = () => {
-    console.log("handleSuccessPaymentClose called!");
     closeSuccessPayment();
 
-    // Save payk invoice if delivery is by courier
     if (deliveryMedivod === "پیک") {
       const paykInvoice = {
         id: Date.now(),
@@ -409,7 +386,7 @@ const Content: React.FC = () => {
           ? "پرداخت در محل"
           : pendingPaymentMethod || paymentMedivod,
         deliveryMethod: "پیک",
-        courier: { type: "shop", name: "پیک فروشگاه" }, // Default courier
+        courier: { type: "shop", name: "پیک فروشگاه" },
         status: "pending",
         createdAt: new Date().toISOString(),
       };
@@ -423,13 +400,9 @@ const Content: React.FC = () => {
           "paykInvoices",
           JSON.stringify(existingPaykInvoices)
         );
-        console.log("Payk invoice saved from success modal:", paykInvoice);
-      } catch (error) {
-        console.error("Error saving payk invoice:", error);
-      }
+      } catch (error) {}
     }
 
-    // Save credit invoice to localStorage for credit.tsx
     const currentPaymentMethod = pendingPaymentMethod || paymentMedivod;
     if (
       currentPaymentMethod === "نسیه" &&
@@ -444,7 +417,7 @@ const Content: React.FC = () => {
         items: items,
         totalAmount,
         totalDiscount,
-        finalAmount: finalAmount + creditAmount, // Original amount before credit deduction
+        finalAmount: finalAmount + creditAmount,
         creditAmount: creditAmount,
         remainingAmount: finalAmount,
         paymentMethod: "نسیه",
@@ -452,20 +425,15 @@ const Content: React.FC = () => {
         status: "credit",
       };
 
-      // Read existing credit customers from localStorage
       const existingCreditCustomers = JSON.parse(
         localStorage.getItem("creditCustomers") || "[]"
       );
 
-      console.log("Existing credit customers:", existingCreditCustomers);
-
-      // Find if customer already exists
       const existingCustomerIndex = existingCreditCustomers.findIndex(
         (customer: any) => customer.mobile === selectedCustomer.phone
       );
 
       if (existingCustomerIndex !== -1) {
-        // Customer exists, add this invoice to their invoices array
         existingCreditCustomers[existingCustomerIndex].invoices.push(
           creditInvoice
         );
@@ -476,7 +444,6 @@ const Content: React.FC = () => {
         existingCreditCustomers[existingCustomerIndex].totalPrice +=
           finalAmount + creditAmount;
       } else {
-        // New customer, create new customer record
         const newCreditCustomer = {
           id: Date.now(),
           name: selectedCustomer.name,
@@ -492,22 +459,16 @@ const Content: React.FC = () => {
         existingCreditCustomers.push(newCreditCustomer);
       }
 
-      // Save updated credit customers to localStorage
       localStorage.setItem(
         "creditCustomers",
         JSON.stringify(existingCreditCustomers)
       );
 
-      // Also save individual invoice for backward compatibility
       const existingInvoices = JSON.parse(
         localStorage.getItem("creditInvoices") || "[]"
       );
       existingInvoices.push(creditInvoice);
       localStorage.setItem("creditInvoices", JSON.stringify(existingInvoices));
-
-      console.log("Credit invoice saved successfully!");
-      console.log("Updated credit customers:", existingCreditCustomers);
-      console.log("Updated credit invoices:", existingInvoices);
     }
   };
 
@@ -526,24 +487,17 @@ const Content: React.FC = () => {
   };
 
   const handleAddCustomer = (customerData: any) => {
-    // Handle adding new customer
     console.log("New customer data:", customerData);
-    // You can add the customer to your system here
   };
 
   const handleBarcodeScanned = React.useCallback(
     (barcode: string) => {
-      console.log("Processing barcode:", barcode);
-
-      // محصول را بر اساس بارکد پیدا کن
       const product = findProductByBarcode(barcode);
 
       if (product) {
-        // بررسی کن که آیا این محصول قبلاً در لیست اضافه شده یا نه
         const existingItem = items.find((item) => item.name === product.name);
 
         if (existingItem) {
-          // اگر محصول قبلاً وجود دارد، تعداد آن را افزایش بده
           setItems(
             items.map((item) =>
               item.id === existingItem.id
@@ -556,7 +510,6 @@ const Content: React.FC = () => {
             )
           );
         } else {
-          // اگر محصول جدید است، آن را به لیست اضافه کن
           const newItem: Item = {
             id: items.length + 1,
             name: product.name,
@@ -569,19 +522,13 @@ const Content: React.FC = () => {
 
           setItems([...items, newItem]);
         }
-
-        // نمایش پیام موفقیت
-        console.log(`محصول ${product.name} با موفقیت اضافه شد`);
         setSuccessMessage(`محصول ${product.name} با موفقیت اضافه شد`);
-        setTimeout(() => setSuccessMessage(""), 3000); // پاک کردن پیام بعد از 3 ثانیه
-
-        // بعد از اضافه شدن محصول، دوباره روی input focus کن
+        setTimeout(() => setSuccessMessage(""), 3000);
         if (barcodeInputRef.current) {
           barcodeInputRef.current.focus();
           setIsBarcodeInputFocused(true);
         }
       } else {
-        // اگر محصول پیدا نشد، مودال مربوطه را نمایش بده
         console.warn(`محصولی با بارکد ${barcode} پیدا نشد`);
         openProductNotFoundModal(barcode);
       }
@@ -602,8 +549,6 @@ const Content: React.FC = () => {
     );
 
     if (englishBarcode.trim()) {
-      console.log("barcodeInput", englishBarcode);
-
       handleBarcodeScanned(englishBarcode.trim());
       setBarcodeInput("");
     }
@@ -611,12 +556,10 @@ const Content: React.FC = () => {
 
   const handleBarcodeInputFocus = () => {
     setIsBarcodeInputFocused(true);
-    console.log("Barcode input focused - scanner ready");
   };
 
   const handleBarcodeInputBlur = () => {
     setIsBarcodeInputFocused(false);
-    console.log("Barcode input blurred - scanner disabled");
   };
 
   const handleSendPaykConfirm = (customerData: any, courierData: any) => {
@@ -624,16 +567,12 @@ const Content: React.FC = () => {
 
     // Save payk invoice data
     savePaykInvoice(customerData, courierData);
-
-    // اگر پرداخت در محل تیک بود
     if (payAtLocation) {
       setPaymentAmount(finalAmount);
       openSuccessPayment();
-      console.log("پرداخت در محل confirmed");
       return;
     }
 
-    // اگر پرداخت در محل تیک نبود، بر اساس نوع پرداخت مدال‌های مربوطه را باز کن
     if (pendingPaymentMethod === "اعتباری") {
       setIsCreditPaymentModalOpen(true);
     } else if (pendingPaymentMethod === "نسیه") {
@@ -649,7 +588,6 @@ const Content: React.FC = () => {
       openCartPayment();
     }
 
-    // Reset pending payment method
     setPendingPaymentMethod(null);
   };
 
@@ -668,7 +606,7 @@ const Content: React.FC = () => {
         : pendingPaymentMethod || paymentMedivod,
       deliveryMethod: "پیک",
       courier: courierData,
-      status: "pending", // pending, delivered, cancelled
+      status: "pending",
       createdAt: new Date().toISOString(),
     };
 
@@ -681,23 +619,12 @@ const Content: React.FC = () => {
         "paykInvoices",
         JSON.stringify(existingPaykInvoices)
       );
-      console.log("Payk invoice saved:", paykInvoice);
-    } catch (error) {
-      console.error("Error saving payk invoice:", error);
-    }
+    } catch (error) {}
   };
 
-  // const handleNewInvoice = () => {
-  //   // ... other resets ...
-  //   setPartialPayments([]);
-  // };
   const { token } = useSelector((state: RootState) => state.auth);
 
-  const {
-    execute: printFactor,
-    // loading: printLoading,
-    // error: printError,
-  } = useRequest(FACTOR_ENDPOINTS.factor, "POST", {
+  const { execute: printFactor } = useRequest(FACTOR_ENDPOINTS.factor, "POST", {
     headers: {
       Authorization: `Bearer ${token}`,
     },
@@ -705,7 +632,6 @@ const Content: React.FC = () => {
 
   const handlePrintFactor = async () => {
     function generateUUID() {
-      // Simple UUID v4 generator
       return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
         /[xy]/g,
         function (c) {
@@ -871,7 +797,6 @@ const Content: React.FC = () => {
           onClose={closeProductNotFoundModal}
           barcode={notFoundBarcode}
           onProductAdded={() => {
-            console.log("محصول جدید به Unregistered اضافه شد");
             // نمایش پیام و پیشنهاد رفتن به صفحه Unregistered
             if (
               confirm(

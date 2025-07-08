@@ -104,9 +104,7 @@ const Products: React.FC = () => {
   };
 
   const getInfo = async () => {
-    console.log("getInfo");
     const shopId = localStorage.getItem("shopId");
-    console.log(shopId, "shopId");
     if (!shopId) return;
 
     try {
@@ -162,7 +160,6 @@ const Products: React.FC = () => {
         const availableProducts = processedData.filter(
           (item) => item.isAvailable
         );
-        console.log(availableProducts, "availableProducts");
         setFinalData(availableProducts);
         setAllFinalData(availableProducts);
         localStorage.setItem(
@@ -301,7 +298,6 @@ const Products: React.FC = () => {
   };
   const submitDeleteProduct = async () => {
     if (!deleteProduct) return;
-    console.log(deleteProduct, "deleteProduct");
     await axios.delete(PRODUCT_ENDPOINTS.deleteProduct(deleteProduct.id), {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -474,7 +470,6 @@ const Products: React.FC = () => {
               if (!allFinalData) return;
 
               let filtered = allFinalData;
-              console.log(filters, "filters");
 
               if (filters.category) {
                 filtered = filtered.filter(

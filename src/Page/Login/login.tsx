@@ -94,10 +94,6 @@ const Login = () => {
       });
 
       if (response?.data?.id_token) {
-        console.log(1);
-
-        console.log(2);
-
         dispatch(setToken(response.data.id_token));
 
         localStorage.setItem("token", response.data.id_token);

@@ -20,3 +20,16 @@ export function commaSeparator(number: string | number) {
 
     return num.toLocaleString('fa-IR');
 }
+
+export function toPersianDigits(str: string) {
+  const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+  return str.replace(/\d/g, (d) => persianDigits[+d]);
+}
+
+export function addCommas(num: string) {
+  return num.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+export function formatPersianNumber(num: string) {
+  return toPersianDigits(addCommas(num.replace(/,/g, "")));
+}

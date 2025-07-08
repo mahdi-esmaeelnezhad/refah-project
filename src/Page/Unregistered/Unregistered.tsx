@@ -95,21 +95,8 @@ const Unregistered: React.FC = () => {
   };
 
   const handleAddProduct = (formData: any) => {
-    // Handle add product logic here
     console.log("Adding product:", formData);
-    // You can add the product to your system here
   };
-
-  // const refreshProducts = () => {
-  //   try {
-  //     const unregisteredProducts = JSON.parse(
-  //       localStorage.getItem("unregisteredProducts") || "[]"
-  //     );
-  //     setItems(unregisteredProducts);
-  //   } catch (error) {
-  //     console.error("خطا در به‌روزرسانی کالاها:", error);
-  //   }
-  // };
 
   return (
     <>

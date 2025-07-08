@@ -5,14 +5,16 @@ import {
   CalendarIcon,
   NofiIcon,
   SavedFactorsIcon,
-  WifiIcon,
   ProductsIcon,
   SearchIcon,
 } from "../../icons";
+import WifiIcon from "../../../assets/wifi.svg";
 import Input from "../../Ui/Input/input";
 import Tooltip from "./Tooltip";
 import SavedFactorsTooltip from "./SavedFactorsTooltip";
 import NotificationsTooltip from "./NotificationsTooltip";
+import { useNetworkStatus } from "../../../hooks/useNetworkStatus";
+import InternetDisconnectedModal from "../../Modal/InternetDisconnectedModal";
 
 interface NavBarProps {
   children?: React.ReactNode;
@@ -24,6 +26,8 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
   const [isSavedFactorsOpen, setIsSavedFactorsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [savedFactors, setSavedFactors] = useState<any[]>([]);
+  const isOnline = useNetworkStatus();
+  const [showModal, setShowModal] = useState(false);
 
   // تابع برای بارگذاری فاکتورهای ذخیره شده
   const loadSavedInvoices = () => {
@@ -96,11 +100,20 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
   const handleDeleteFactor = (id: string) => {
     const success = deleteInvoiceByNumber(id);
     if (success) {
-      console.log(`فاکتور شماره ${id} با موفقیت حذف شد`);
     } else {
       console.error("خطا در حذف فاکتور");
     }
   };
+
+  useEffect(() => {
+    console.log(isOnline, "isOnline");
+
+    if (!isOnline) {
+      setShowModal(true);
+    } else {
+      setShowModal(false);
+    }
+  }, [isOnline]);
 
   return (
     <>
@@ -145,7 +158,7 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
 
         <span
           className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[186px] font-23"
-          onClick={() => console.log("Clicked")}
+          // onClick={() => console.log("Clicked")}
           style={{ visibility: showFullNav ? "visible" : "hidden" }}
         >
           <ProductsIcon />
@@ -180,19 +193,31 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
 
         <span
           className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 font-23 px-4  min-w-[302px]"
-          onClick={() => console.log("Clicked")}
+          // onClick={() => console.log("Clicked")}
         >
           <JalaliDate />
           <CalendarIcon />
         </span>
 
         <span
-          className="bg-primary rounded-2xl h-10 w-10 p-2 flex justify-center items-center"
-          onClick={() => console.log("Clicked")}
+          className={`rounded-full p-2 transition-colors duration-300 ${
+            isOnline ? "bg-primary" : "bg-red-500"
+          }`}
         >
-          <WifiIcon />
+          <img
+            src={WifiIcon}
+            alt="wifi"
+            style={{
+              width: 24,
+              height: 24,
+            }}
+          />
         </span>
       </section>
+      <InternetDisconnectedModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+      />
     </>
   );
 }

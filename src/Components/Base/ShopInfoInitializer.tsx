@@ -103,7 +103,6 @@ const ShopInfoInitializer: React.FC = () => {
               "cacheProductList",
               JSON.stringify(cacheProductListRes?.data)
             );
-            console.log(cacheProductListRes?.data, "cacheProductListRes");
 
             const searchPayload = {
               conditionType: "OR",

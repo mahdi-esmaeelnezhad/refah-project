@@ -30,6 +30,10 @@ import { saveInvoice } from "../../../utils/invoiceService";
 import barcodeImage from "../../../assets/img/barcode.png";
 import SendSmsModal from "../../Modal/SendSmsModal";
 import SendPaykModal from "../../Modal/SendPaykModal";
+import useRequest from "../../../hooks/useRequest";
+import { FACTOR_ENDPOINTS } from "../../../endpoint/Factor/factor";
+import { useSelector } from "react-redux";
+import type { RootState } from "../../../store/store";
 
 interface Item {
   id: number;
@@ -99,6 +103,11 @@ const Content: React.FC = () => {
   const [tempQuantity, setTempQuantity] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [invoiceNumber, setInvoiceNumber] = useState("256");
+  // const [paidCashAmount, setPaidCashAmount] = useState(0);
+  const [, setShowCashInfo] = useState(false);
+  const [partialPayments, setPartialPayments] = useState<
+    { amount: number; type: string }[]
+  >([]);
 
   // تولید شماره فاکتور جدید
   const generateNewInvoiceNumber = () => {
@@ -145,8 +154,15 @@ const Content: React.FC = () => {
     return sum;
   }, 0);
 
+  const totalPartialPaid = partialPayments.reduce(
+    (sum, p) => sum + p.amount,
+    0
+  );
   const finalAmount =
-    totalAmount - totalDiscount - (showCreditInfo ? creditAmount : 0);
+    totalAmount -
+    totalDiscount -
+    (showCreditInfo ? creditAmount : 0) -
+    totalPartialPaid;
 
   useEffect(() => {
     // Show modal when component mounts
@@ -314,19 +330,27 @@ const Content: React.FC = () => {
   };
 
   const handleCartPaymentConfirm = (amount: number) => {
-    console.log("CartPaymentModal confirmed with amount:", amount);
     setPaymentAmount(amount);
 
     const currentPaymentMethod = pendingPaymentMethod || paymentMedivod;
 
+    // Add partial payment for all types except nesiye (credit)
+    if (currentPaymentMethod !== "نسیه") {
+      setPartialPayments((prev) => [
+        ...prev,
+        { amount, type: currentPaymentMethod },
+      ]);
+    }
+
     if (currentPaymentMethod === "نسیه") {
-      console.log("Setting credit amount and opening SendSmsModal");
       setCreditAmount(amount);
-      // Open SendSmsModal directly after CartPaymentModal closes
       setTimeout(() => {
         openSendSmsModal();
       }, 100);
+      return;
     }
+
+    openSuccessPayment();
   };
 
   const handleCreditMethodSelect = (method: "tara" | "digipay") => {
@@ -479,11 +503,10 @@ const Content: React.FC = () => {
     }
   };
 
-  // const handleCreditSuccessModalClose = () => {
-  //   setIsCreditSuccessModalOpen(false);
-  //   setCreditPaymentAmount(0);
-  //   setCreditRemainingAmount(0);
-  // };
+  const handleRemainingPayment = () => {
+    setShowCashInfo(true);
+    closeSuccessPayment();
+  };
 
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
@@ -563,10 +586,17 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeSubmit = () => {
-    if (barcodeInput.trim()) {
-      console.log("barcodeInput", barcodeInput);
+    const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    const englishDigits = "0123456789";
+    const englishBarcode = barcodeInput.replace(
+      /[۰-۹]/g,
+      (d) => englishDigits[persianDigits.indexOf(d)]
+    );
 
-      handleBarcodeScanned(barcodeInput.trim());
+    if (englishBarcode.trim()) {
+      console.log("barcodeInput", englishBarcode);
+
+      handleBarcodeScanned(englishBarcode.trim());
       setBarcodeInput("");
     }
   };
@@ -646,6 +676,62 @@ const Content: React.FC = () => {
       console.log("Payk invoice saved:", paykInvoice);
     } catch (error) {
       console.error("Error saving payk invoice:", error);
+    }
+  };
+
+  // const handleNewInvoice = () => {
+  //   // ... other resets ...
+  //   setPartialPayments([]);
+  // };
+  const { token } = useSelector((state: RootState) => state.auth);
+
+  const {
+    execute: printFactor,
+    // loading: printLoading,
+    // error: printError,
+  } = useRequest(FACTOR_ENDPOINTS.factor, "POST", {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const handlePrintFactor = async () => {
+    function generateUUID() {
+      // Simple UUID v4 generator
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+        /[xy]/g,
+        function (c) {
+          var r = (Math.random() * 16) | 0,
+            v = c === "x" ? r : (r & 0x3) | 0x8;
+          return v.toString(16);
+        }
+      );
+    }
+    try {
+      const payload = {
+        customerId: selectedCustomer?.id || "",
+        mobile: selectedCustomer?.phone || "",
+        amount: paymentAmount,
+        customerNote: "",
+        customerType: "",
+        deliveryStatus: deliveryMedivod === "حضوری" ? "3" : "2",
+        dynamicCode: 0,
+        isBNPL: partialPayments.filter((p) => p.type !== "0").length > 0,
+        isPrinted: true,
+        receiptCode: "2",
+        saleStatus: "1010",
+        shopBizItemDtoList: items,
+        shopBizPaymentDtoList: partialPayments.filter((p) => p.type !== "0"),
+        shopBizUuid: generateUUID(),
+        tableNumber: "",
+        taxInvoicePattern: 1,
+        taxInvoiceType: 2,
+        tax: 0,
+        userDiscount: 0,
+      };
+      await printFactor(payload);
+    } catch (e) {
+      console.error(e);
     }
   };
 
@@ -741,6 +827,8 @@ const Content: React.FC = () => {
               : "card"
           }
           onClose={handleSuccessPaymentClose}
+          onRemainingPayment={handleRemainingPayment}
+          onPrint={handlePrintFactor}
         />
         <FailedPaymentModal
           amount={paymentAmount}
@@ -1171,6 +1259,19 @@ const Content: React.FC = () => {
               <div className="w-full h-[48px] bg-[#E99C43] rounded-lg flex items-center justify-center text-white font-medium mb-4">
                 مبلغ {creditAmount.toLocaleString("fa-IR")} ریال نسیه تعلق گرفته
                 است
+              </div>
+            )}
+            {partialPayments.length > 0 && (
+              <div className="flex flex-col gap-2 mb-4">
+                {partialPayments.map((p, idx) => (
+                  <div
+                    key={idx}
+                    className="w-full h-[48px] bg-[#E99C43] rounded-lg flex items-center justify-center text-white font-medium"
+                  >
+                    مبلغ {p.amount.toLocaleString("fa-IR")} ریال به صورت{" "}
+                    {p.type} پرداخت شد
+                  </div>
+                ))}
               </div>
             )}
             <Button

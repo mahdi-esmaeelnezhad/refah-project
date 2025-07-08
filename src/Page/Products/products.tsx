@@ -18,9 +18,9 @@ import ProductsFilter from "../../Components/ProductsFilter/ProductsFilter";
 import AddProductModal from "../../Components/Modal/AddProductModal";
 import useRequest from "../../hooks/useRequest";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
-import { useSelector } from "react-redux";
 import axios from "axios";
-import type { RootState } from "../../store/store";
+// import { useSelector } from "react-redux";
+// import type { RootState } from "../../store/store";
 
 interface ProductItem {
   id: string;
@@ -79,7 +79,7 @@ const Products: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteProduct, setDeleteProduct] = useState<ProductItem | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = localStorage.getItem("token");
   const shopId = localStorage.getItem("shopId");
   const { execute: addProductRequest } = useRequest(
     PRODUCT_ENDPOINTS.addProduct,

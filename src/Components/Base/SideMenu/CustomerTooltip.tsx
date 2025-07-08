@@ -65,7 +65,6 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
       const response: any = localStorage.getItem("customers");
 
       const apiCustomers: CustomerApiResponse[] = JSON.parse(response);
-      console.log(apiCustomers, "apiCustomers");
 
       if (apiCustomers && apiCustomers.length > 0) {
         const convertedCustomers: Customer[] = apiCustomers

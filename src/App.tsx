@@ -1,9 +1,9 @@
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import Login from "./Page/Login/login";
 import Home from "./Page/Home/home";
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { setToken } from "./store/authSlice";
+// import { useEffect } from "react";
+// import { useDispatch } from "react-redux";
+// import { setToken } from "./store/authSlice";
 import Products from "./Page/Products/products";
 import Delivery from "./Page/Delivery/Delivery";
 import Factors from "./Page/Factors/Factors";
@@ -20,14 +20,14 @@ import "./styles/fonts.css";
 import "./styles/App.css";
 
 const App = () => {
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
 
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-    if (token) {
-      dispatch(setToken(token));
-    }
-  }, []);
+  // useEffect(() => {
+  //   const token = localStorage.getItem("token");
+  //   if (token) {
+  //     dispatch(setToken(token));
+  //   }
+  // }, []);
 
   return (
     <Router>

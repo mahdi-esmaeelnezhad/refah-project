@@ -8,6 +8,11 @@ import filterIcon from "../../assets/filter.svg";
 import arrowDownn from "../../assets/arrow-down.svg";
 import { Button } from "../../Components/Ui/Button/button";
 import FactorFilter from "../../Components/FactorFilter/FactorFilter";
+import useRequest from "../../hooks/useRequest";
+import { FACTOR_ENDPOINTS } from "../../endpoint/Factor/factor";
+// import { useSelector } from "react-redux";
+// import type { RootState } from "../../store/store";
+
 // import optionIcon from "../../assets/option.svg";
 // import Tooltip from "../../Components/Base/SideMenu/Tooltip";
 // import factorTooltip from "../../Components/FactorTooltip/FactorTooltip"
@@ -40,7 +45,7 @@ const tabFilters: Record<TabKey, (f: Factor) => boolean> = {
 const pageSize = 20;
 
 const Factors: React.FC = () => {
-  const [fakeFactors] = useState<Factor[]>(
+  const [realFactors, setRealFactors] = useState<Factor[]>(
     [...Array(150)].map((_, index) => ({
       id: index + 1,
       receiptCode: Math.random().toString(36).substring(2, 15),
@@ -89,9 +94,31 @@ const Factors: React.FC = () => {
   }, [filteredFactors, currentPage]);
 
   const totalPages = Math.ceil(filteredFactors.length / pageSize);
+  const token = localStorage.getItem("token");
 
+  const { execute: getFactorList } = useRequest<any>(
+    FACTOR_ENDPOINTS.factorList,
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const getFactors = async () => {
+    const filter = {};
+    const factorsRes = await getFactorList({
+      filter,
+      page: 4,
+      sort: "id,desc",
+      size: 10, // تعداد بیشتری مشتری دریافت کن
+    });
+    setRealFactors(factorsRes?.data);
+    localStorage.setItem("factors", JSON.stringify(factorsRes?.data));
+  };
   useEffect(() => {
-    setFactors([...fakeFactors]);
+    getFactors();
+    setFactors([...realFactors]);
   }, []);
 
   const handleTabChange = (key: string) => {
@@ -140,7 +167,7 @@ const Factors: React.FC = () => {
   };
 
   const handleFilterReset = () => {
-    setFactors([...fakeFactors]);
+    setFactors([...realFactors]);
     setCurrentPage(1);
   };
 
@@ -205,7 +232,7 @@ const Factors: React.FC = () => {
         <FactorFilter
           onApply={handleFilterApply}
           onReset={handleFilterReset}
-          showReset={factors.length !== fakeFactors.length}
+          showReset={factors.length !== realFactors.length}
         />
       )}
       <FactorTabs activeTab={activeTab} onChange={handleTabChange} />

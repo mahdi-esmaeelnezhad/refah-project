@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import closeIcon from "../../assets/close.svg";
 import infoIcon from "../../assets/info.svg";
-import { numberToPersianToman } from "../../utils/numberToPersianWord";
+import {
+  // numberToPersianToman,
+  commaSeparator,
+} from "../../utils/numberToPersianWord";
 import cartPayment from "../../assets/img/cartPayment.png";
 import rial from "../../assets/img/rial.png";
 import editIcon from "../../assets/edit.svg";
@@ -30,6 +33,9 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     // openSendSmsModal,
     // closeSendSmsModal,
   } = useModal();
+  const [editableAmountStr, setEditableAmountStr] = useState(
+    totalAmount.toString()
+  );
   const [editableAmount, setEditableAmount] = useState(totalAmount);
   const setPaymentAmount = usePaymentStore((state) => state.setEditableAmount);
 
@@ -40,8 +46,6 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
       alert("مبلغ وارد شده نمی‌تواند بیشتر از مبلغ کل باشد");
       return;
     }
-
-    // Call onConfirm with the editable amount
     onConfirm(editableAmount);
 
     if (paymentType === "cash") {
@@ -82,11 +86,11 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
   };
 
   const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/[^0-9]/g, "");
-    const numValue = parseInt(value);
-    if (!isNaN(numValue)) {
-      setEditableAmount(numValue);
-    }
+    let value = e.target.value.replace(/[^0-9]/g, "");
+    // Remove leading zeros
+    value = value.replace(/^0+/, "");
+    setEditableAmountStr(value);
+    setEditableAmount(value ? parseInt(value, 10) : 0);
   };
 
   return (
@@ -182,7 +186,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
               >
                 <input
                   type="text"
-                  value={editableAmount}
+                  value={editableAmountStr}
                   onChange={handleAmountChange}
                   style={{
                     width: "207px",
@@ -211,14 +215,10 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
               </div>
             </div>
 
-            <div
-              style={{
-                fontSize: "17px",
-                fontWeight: 400,
-                marginBottom: "20px",
-              }}
-            >
-              {numberToPersianToman(editableAmount)}
+            <div style={{ fontSize: "16px", color: "#666", marginTop: "4px" }}>
+              {editableAmountStr
+                ? commaSeparator(editableAmountStr) + " ریال"
+                : ""}
             </div>
 
             {paymentType === "card" && (

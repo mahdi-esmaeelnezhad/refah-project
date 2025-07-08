@@ -1,13 +1,13 @@
 import { useEffect } from "react";
-import { useSelector } from "react-redux";
+// import { useSelector } from "react-redux";
 import useRequest from "../../hooks/useRequest";
 import { BASE_ENDPOINTS } from "../../endpoint/base/base";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
-import type { RootState } from "../../store/store";
+// import type { RootState } from "../../store/store";
 import axios from "axios";
 
 const ShopInfoInitializer: React.FC = () => {
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = localStorage.getItem("token");
 
   const { execute: getShopInfo } = useRequest<any>(
     BASE_ENDPOINTS.shoppInfo,

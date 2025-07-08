@@ -4,9 +4,9 @@ import { Checkbox } from "../Ui/Checkbox/checkbox";
 import DropDownCustom from "../Ui/DropDownCustom/DropDownCustom";
 import DatePicker from "../Ui/DatePicker/DatePicker";
 import useRequest from "../../hooks/useRequest";
-import { useSelector } from "react-redux";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
-import type { RootState } from "../../store/store";
+// import { useSelector } from "react-redux";
+// import type { RootState } from "../../store/store";
 
 interface Product {
   id: string;
@@ -46,7 +46,7 @@ const AddDiscount: React.FC<AddDiscountProps> = ({ onBack }) => {
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isLoadingCategories, setIsLoadingCategories] = useState(false);
 
-  const token = useSelector((state: RootState) => state.auth.token);
+  const token = localStorage.getItem("token");
 
   const { execute: itemRequest } = useRequest<any>(
     PRODUCT_ENDPOINTS.shoppInfo,

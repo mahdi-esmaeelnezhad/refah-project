@@ -14,9 +14,11 @@ interface SuccessPaymentModalProps {
   time: string;
   trackingNumber: string;
   referenceNumber: string;
-  totalAmount?: number;
+  totalAmount?: number | undefined;
   paymentType?: "cash" | "card" | "credit";
   onClose?: () => void;
+  onRemainingPayment?: () => void;
+  onPrint?: () => void;
 }
 
 const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
@@ -27,10 +29,11 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   referenceNumber,
   totalAmount,
   paymentType = "card",
+  onRemainingPayment,
+  onPrint,
   onClose,
 }) => {
-  const { isSuccessPaymentOpen, closeSuccessPayment, openCartPayment } =
-    useModal();
+  const { isSuccessPaymentOpen, closeSuccessPayment } = useModal(); //openCartPayment
   const editableAmount = usePaymentStore((state) => state.editableAmount);
 
   if (!isSuccessPaymentOpen) return null;
@@ -40,6 +43,9 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   };
 
   const handlePrint = () => {
+    if (typeof onPrint === "function") {
+      onPrint();
+    }
     // اینجا باید منطق چاپ فاکتور پیاده‌سازی شود
   };
 
@@ -47,14 +53,20 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
     // اینجا باید منطق ارسال فاکتور دیجیتال پیاده‌سازی شود
   };
 
-  const handleRemainingPayment = () => {
-    closeSuccessPayment();
-    openCartPayment();
-  };
+  // const handleRemainingPayment = () => {
+  //   closeSuccessPayment();
+  //   openCartPayment();
+  // };
+  console.log(totalAmount, "totalAmount");
+  console.log(editableAmount, "editableAmount");
 
-  const remainingAmount = totalAmount ? totalAmount - editableAmount : 0;
+  // const remainingAmount = totalAmount ? totalAmount - editableAmount : 0;
+
   const showRemainingAmount =
-    paymentType === "cash" && totalAmount && remainingAmount > 0;
+    paymentType === "cash" &&
+    typeof totalAmount === "number" &&
+    totalAmount !== 0;
+  console.log(showRemainingAmount, "showRemainingAmount");
 
   return (
     <>
@@ -109,7 +121,7 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
                 }}
               >
                 <span>مبلغ باقی‌مانده:</span>
-                <span>{formatNumber(remainingAmount)} ریال</span>
+                <span>{formatNumber(totalAmount)} ریال</span>
               </div>
             )}
 
@@ -230,7 +242,8 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
                   <Button
                     label="پرداخت مبلغ باقی‌مانده"
                     color="#479E55"
-                    onClick={handleRemainingPayment}
+                    // onClick={handleRemainingPayment}
+                    onClick={onRemainingPayment}
                     style={{
                       width: "366px",
                       height: "46px",

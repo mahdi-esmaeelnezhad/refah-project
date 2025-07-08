@@ -40,7 +40,6 @@ const SendPaykModal: React.FC<SendPaykModalProps> = ({
   const response: any = localStorage.getItem("customers");
   console.log(response, "response");
   const apiCustomers: Customer[] = JSON.parse(response);
-  console.log(apiCustomers, "apiCustomers");
 
   let customers: Customer[] = [];
   if (apiCustomers) {

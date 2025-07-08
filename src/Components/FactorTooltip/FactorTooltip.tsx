@@ -2,20 +2,20 @@ import React from "react";
 import { Button } from "../Ui/Button/button";
 
 interface FactorOptionProps {
-  product: any;
-  onEdit: (id: string) => void;
+  factor: any;
+  onShow: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
 const FactorOption: React.FC<FactorOptionProps> = ({
-  product,
-  onEdit,
+  factor,
+  onShow,
   onDelete,
 }) => {
   return (
     <div className="w-[161px] h-[130px] bg-white rounded-lg shadow-lg py-4 pr-2 relative z-[9999]">
       <Button
-        label="ویرایش"
+        label="نمایش"
         color="#4973DE"
         radius={29}
         style={{
@@ -25,7 +25,7 @@ const FactorOption: React.FC<FactorOptionProps> = ({
           fontWeight: 500,
           padding: 0,
         }}
-        onClick={() => onEdit(product.id)}
+        onClick={() => onShow(factor.id)}
       ></Button>
       <Button
         label="حذف"
@@ -39,7 +39,7 @@ const FactorOption: React.FC<FactorOptionProps> = ({
           fontWeight: 500,
           padding: 0,
         }}
-        onClick={() => onDelete(product.id)}
+        onClick={() => onDelete(factor.id)}
       ></Button>
     </div>
   );

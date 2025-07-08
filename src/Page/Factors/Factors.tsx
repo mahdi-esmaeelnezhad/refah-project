@@ -10,15 +10,45 @@ import { Button } from "../../Components/Ui/Button/button";
 import FactorFilter from "../../Components/FactorFilter/FactorFilter";
 import useRequest from "../../hooks/useRequest";
 import { FACTOR_ENDPOINTS } from "../../endpoint/Factor/factor";
-// import { useSelector } from "react-redux";
-// import type { RootState } from "../../store/store";
+import NoShowFactorModal from "../../Components/Modal/NoShowCategoryModal";
+import optionIcon from "../../assets/option.svg";
+import Tooltip from "../../Components/Base/SideMenu/Tooltip";
+import FactorOption from "../../Components/FactorTooltip/FactorTooltip";
+import { useModal } from "../../hooks/useModal"; // Import the useModal hook
 
-// import optionIcon from "../../assets/option.svg";
-// import Tooltip from "../../Components/Base/SideMenu/Tooltip";
-// import factorTooltip from "../../Components/FactorTooltip/FactorTooltip"
+interface ShopBizItemDto {
+  itemId: string;
+  sku: string;
+  name: string;
+  unitType: string;
+  categoryId: string;
+  price: number;
+  discount: number;
+  discountPerItem: number;
+  description: string;
+  brandId: string | null;
+  statusType: string;
+  saleCount: number;
+  totalAmount: number;
+}
+
+interface Customer {
+  id: string;
+  displayName: string;
+  mobile: string;
+}
+
+interface ShopBizPaymentDto {
+  id: string;
+  saleTxId: string;
+  status: number;
+  method: number;
+  receiveAmount: number;
+  totalAmount: number;
+}
 
 interface Factor {
-  id: number;
+  id: string;
   receiptCode: string;
   createdDate: string;
   totalAmount: number;
@@ -28,10 +58,30 @@ interface Factor {
   isCourier: boolean;
   isCanceled: boolean;
   isWaste: boolean;
+  shopBizPaymentDtoList: ShopBizPaymentDto[];
+  shopBizItemDtoList: ShopBizItemDto[];
+  customerDto: Customer;
+  shopBizSalePaymentMethod: number;
+  shopId: string;
+  shopFarsiName: string;
+  shopAddress: string;
+  shopTelephoneNumber: string;
+  saleStatus: string;
+  deliveryStatus: string;
+  offlineCode: number;
+  tip: number;
+  amount: number;
+  tax: number;
+  version: number;
+  hasOpinion: boolean;
+  deviceDate: string;
+  userDiscount: number;
+  shopBizPaymentAmount: number;
+  shippingCost: number;
+  isBNPL: boolean;
+  taxInvoiceType: string;
 }
-
 type TabKey = "today" | "credit" | "debt" | "courier" | "canceled" | "waste";
-
 const tabFilters: Record<TabKey, (f: Factor) => boolean> = {
   today: (f) =>
     new Date(f.createdDate).toDateString() === new Date().toDateString(),
@@ -41,41 +91,26 @@ const tabFilters: Record<TabKey, (f: Factor) => boolean> = {
   canceled: (f) => f.isCanceled,
   waste: (f) => f.isWaste,
 };
-
 const pageSize = 20;
-
 const Factors: React.FC = () => {
-  const [realFactors, setRealFactors] = useState<Factor[]>(
-    [...Array(150)].map((_, index) => ({
-      id: index + 1,
-      receiptCode: Math.random().toString(36).substring(2, 15),
-      createdDate: new Date().toISOString(),
-      totalAmount: Math.floor(1000000 + Math.random() * 9000000),
-      saleCount: Math.floor(1 + Math.random() * 10),
-      debtStatus: Math.random() < 0.5 ? "بدهکار" : "تسویه",
-      paymentType:
-        Math.random() < 0.2
-          ? "کارت"
-          : Math.random() < 0.4
-          ? "نقدی"
-          : Math.random() < 0.6
-          ? "اعتباری"
-          : Math.random() < 0.8
-          ? "ترکیبی"
-          : "نسیه",
-      isCourier: Math.random() < 0.3,
-      isCanceled: Math.random() < 0.1,
-      isWaste: Math.random() < 0.05,
-    }))
-  );
-  // const token = useSelector((state: any) => state.auth.token);
-
+  const [realFactors, setRealFactors] = useState<Factor[]>([]);
   const [factors, setFactors] = useState<Factor[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const [selectedFactorId, setSelectedFactorId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<TabKey>("today");
   const [search, setSearch] = useState("");
+  const [openProductTooltipId, setOpenProductTooltipId] = useState<
+    string | null
+  >(null);
   const [showFilter, setShowFilter] = useState(false);
+  const [deleteFactor, setDeleteFactor] = useState<Factor | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const {
+    isFactorPrintOpen,
+    selectedFactorForPrint,
+    openFactorPrintModal,
+    closeFactorPrintModal,
+  } = useModal();
 
   const filteredFactors = useMemo(() => {
     let filtered = factors.filter(tabFilters[activeTab]);
@@ -87,15 +122,12 @@ const Factors: React.FC = () => {
     }
     return filtered;
   }, [factors, activeTab, search]);
-
   const pagedFactors = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     return filteredFactors.slice(startIndex, startIndex + pageSize);
   }, [filteredFactors, currentPage]);
-
   const totalPages = Math.ceil(filteredFactors.length / pageSize);
   const token = localStorage.getItem("token");
-
   const { execute: getFactorList } = useRequest<any>(
     FACTOR_ENDPOINTS.factorList,
     "POST",
@@ -111,30 +143,26 @@ const Factors: React.FC = () => {
       filter,
       page: 4,
       sort: "id,desc",
-      size: 10, // تعداد بیشتری مشتری دریافت کن
+      size: 10,
     });
     setRealFactors(factorsRes?.data);
+    setFactors([...factorsRes?.data]);
     localStorage.setItem("factors", JSON.stringify(factorsRes?.data));
   };
   useEffect(() => {
     getFactors();
-    setFactors([...realFactors]);
   }, []);
-
   const handleTabChange = (key: string) => {
     setActiveTab(key as TabKey);
     setCurrentPage(1);
   };
-
   const handleSearch = (value: string) => {
     setSearch(value);
     setCurrentPage(1);
   };
   const productSectionMaxHeight = showFilter ? 450 : 600;
   const handleFilterApply = (filters: any) => {
-    // Apply date range filter
     let filtered = factors.filter(tabFilters[activeTab]);
-
     if (filters.startDate) {
       filtered = filtered.filter(
         (f) => new Date(f.createdDate) >= filters.startDate
@@ -160,19 +188,38 @@ const Factors: React.FC = () => {
         (f) => f.paymentType === filters.paymentType.name
       );
     }
-
-    // Update the filtered factors
     setFactors(filtered);
     setCurrentPage(1);
   };
-
   const handleFilterReset = () => {
     setFactors([...realFactors]);
     setCurrentPage(1);
   };
-
+  const handleShowFactor = (factor: Factor) => {
+    openFactorPrintModal(factor); // Use the new function to open the modal
+  };
+  const handleDeleteFactor = (factor: Factor) => {
+    setDeleteFactor(factor);
+    setIsDeleteModalOpen(true);
+  };
+  const submitDeleteFactor = async () => {
+    if (!deleteFactor) return;
+    // await axios.delete(FACTOR_ENDPOINTS.deleteFactor(deleteFactor.id), {
+    //   headers: {
+    //     Authorization: `Bearer ${token}`,
+    //   },
+    // });
+    setIsDeleteModalOpen(false);
+    getFactorList();
+  };
   return (
     <>
+      <NoShowFactorModal
+        isCategoryOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onCategoryDelete={submitDeleteFactor}
+        message={` آیا مایل به حذف فاکتور ${deleteFactor?.receiptCode} هستید؟`}
+      />
       <div className="flex">
         <Input
           type="text"
@@ -236,7 +283,6 @@ const Factors: React.FC = () => {
         />
       )}
       <FactorTabs activeTab={activeTab} onChange={handleTabChange} />
-
       <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto">
         <div className="flex justify-between">
           <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[50px]">
@@ -263,7 +309,6 @@ const Factors: React.FC = () => {
         </div>
         <section
           className="overflow-y-auto relative"
-          //set max height dynamic when filteredFactors.length is less than 20
           style={{
             maxHeight: productSectionMaxHeight,
           }}
@@ -291,7 +336,10 @@ const Factors: React.FC = () => {
                     .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                 </div>
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[170px]">
-                  {item.saleCount}
+                  {item.shopBizItemDtoList.reduce(
+                    (acc, curr) => acc + curr.saleCount,
+                    0
+                  )}
                 </div>
                 <div
                   className="h-[49px] p-4 rounded-md flex items-center justify-center w-[170px]"
@@ -302,27 +350,40 @@ const Factors: React.FC = () => {
                   {item.debtStatus}
                 </div>
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[170px]">
-                  <div>{item.paymentType}</div>
-                  {/* <Tooltip
-                  component={
-                    <ProductOption
-                      product={item}
-                      onEdit={() => handleEditProduct(item)}
-                      onDelete={() => handleDeleteProduct(item)}
+                  <div>
+                    {" "}
+                    {item.shopBizSalePaymentMethod === 0
+                      ? "نسیه"
+                      : item.shopBizSalePaymentMethod === 4
+                      ? "کارتی"
+                      : item.shopBizSalePaymentMethod === 1
+                      ? "نقدی"
+                      : "ترکیبی"}
+                  </div>
+                  <Tooltip
+                    component={
+                      <FactorOption
+                        factor={item}
+                        onShow={() => handleShowFactor(item)}
+                        onDelete={() => handleDeleteFactor(item)}
+                      />
+                    }
+                    isOpen={openProductTooltipId === item.id}
+                    setIsOpen={(isOpen) =>
+                      setOpenProductTooltipId(isOpen ? item.id : null)
+                    }
+                  >
+                    <img
+                      className="relative left-[-50px] cursor-pointer"
+                      style={{
+                        height: "25px",
+                        width: "5px",
+                        marginTop: "12px",
+                      }}
+                      src={optionIcon}
+                      alt="options"
                     />
-                  }
-                  isOpen={openProductTooltipId === item.id}
-                  setIsOpen={(isOpen) =>
-                    setOpenProductTooltipId(isOpen ? item.id : null)
-                  }
-                >
-                  <img
-                    className="relative right-[60px] cursor-pointer"
-                    style={{ height: "25px", width: "5px", marginTop: "12px" }}
-                    src={optionIcon}
-                    alt="options"
-                  />
-                </Tooltip> */}
+                  </Tooltip>
                 </div>
               </div>
             ))
@@ -335,15 +396,13 @@ const Factors: React.FC = () => {
           )}
         </section>
       </section>
-
-      {selectedFactorId && (
+      {isFactorPrintOpen && selectedFactorForPrint && (
         <FactorPrintWeb
-          factorId={selectedFactorId}
-          onClose={() => setSelectedFactorId(null)}
+          factordetail={selectedFactorForPrint}
+          onClose={closeFactorPrintModal}
         />
       )}
     </>
   );
 };
-
 export default Factors;

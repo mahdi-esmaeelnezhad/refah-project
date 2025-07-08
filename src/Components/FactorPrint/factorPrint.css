@@ -24,7 +24,15 @@
   background: none;
   border: none;
   cursor: pointer;
-  padding: 0 10px;
+  margin-bottom: 24px;
+}
+
+.close-button img {
+  width: 32px;
+  height: 32px;
+  position: absolute;
+  top: 10px !important;
+  left: 10px;
 }
 
 .factor-row {
@@ -40,33 +48,37 @@
   display: grid;
   grid-template-columns: 25% 25% 25% 25%;
   padding: 8px 0;
-  font-size: 14px;
+  font-size: 16px;
+  font-weight: 500;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .factor-table-header {
   background-color: #000;
+  font-size: 16px;
+  font-weight: 700;
   color: #fff;
   font-weight: bold;
-  border-radius: 5px;
+  border-radius: 10px;
 }
 
 .factor-summary {
   display: flex;
   justify-content: space-between;
   padding: 8px 0;
-  font-size: 15px;
+  font-size: 16px;
 }
 
 .factor-total {
   display: flex;
   justify-content: space-between;
-  background-color: #888;
+  background-color: #363636;
   color: #fff;
   padding: 10px;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 500;
   margin-top: 10px;
+  border-radius: 10px;
 }
 
 .factor-debt {
@@ -75,7 +87,8 @@
   background-color: #000;
   color: #fff;
   padding: 10px;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 18px;
+  font-weight: 500;
   margin-top: 5px;
+  border-radius: 10px;
 }

@@ -1,128 +1,172 @@
 // FactorPrintWeb.tsx
-import React, { useEffect, useState } from "react";
+import React from "react";
 import "./factorPrint.css";
+import { Button } from "../Ui/Button/button";
+import closeIcon from "../../assets/close.svg";
 
-interface FactorItem {
+interface ShopBizItemDto {
+  itemId: string;
+  sku: string;
   name: string;
+  unitType: string;
+  categoryId: string;
+  price: number;
+  discount: number;
+  discountPerItem: number;
+  description: string;
+  brandId: string | null;
+  statusType: string;
   saleCount: number;
   totalAmount: number;
 }
-
-interface FactorData {
-  receiptCode: string;
-  createdDate: string;
-  shopFarsiName: string;
-  shopTelephoneNumber: string;
-  shopBizItemDtoList: FactorItem[];
-  amount: number;
-  userDiscount: number;
-  shippingCost: number;
+interface Customer {
+  id: string;
+  displayName: string;
+  mobile: string;
+}
+interface ShopBizPaymentDto {
+  id: string;
+  saleTxId: string;
+  status: number;
+  method: number;
+  receiveAmount: number;
   totalAmount: number;
 }
-
+interface Factor {
+  id: string;
+  shopId: string;
+  shopFarsiName: string;
+  shopAddress: string;
+  shopTelephoneNumber: string;
+  saleStatus: string;
+  deliveryStatus: string;
+  offlineCode: number;
+  tip: number;
+  amount: number;
+  totalAmount: number;
+  tax: number;
+  createdDate: string; // ISO date
+  version: number;
+  shopBizItemDtoList: ShopBizItemDto[];
+  shopBizPaymentDtoList: ShopBizPaymentDto[];
+  customerDto: Customer;
+  hasOpinion: boolean;
+  receiptCode: string;
+  deviceDate: string; // ISO date
+  userDiscount: number;
+  shopBizSalePaymentMethod: number;
+  shopBizPaymentAmount: number;
+  shippingCost: number;
+  isBNPL: boolean;
+  taxInvoiceType: string;
+}
 interface Props {
-  factorId: number | string;
+  factordetail: Factor; // Directly pass the Factor object
   onClose: () => void;
 }
-
-const FactorPrintWeb: React.FC<Props> = ({ factorId, onClose }) => {
-  const [factor, setFactor] = useState<FactorData | null>(null);
-
-  useEffect(() => {
-    // شبیه‌سازی درخواست API
-    const fetchFactor = async () => {
-      const fakeData: FactorData = {
-        receiptCode: "12345",
-        createdDate: "1403/04/01",
-        shopFarsiName: "فروشگاه نمونه",
-        shopTelephoneNumber: "021-12345678",
-        shopBizItemDtoList: [
-          { name: "کالای A", saleCount: 2, totalAmount: 50000 },
-          { name: "کالای B", saleCount: 1, totalAmount: 75000 },
-        ],
-        amount: 125000,
-        userDiscount: 5000,
-        shippingCost: 10000,
-        totalAmount: 130000,
-      };
-      setFactor(fakeData);
-    };
-
-    fetchFactor();
-  }, [factorId]);
-
+const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
+  const factor = factordetail; // Use factordetail directly as it's already a Factor object
   const formatPrice = (price?: number) =>
     price?.toLocaleString("fa-IR") + " ریال";
 
-  if (!factor) return <p>در حال بارگذاری...</p>;
+  const handlePrint = () => {
+    window.print();
+  };
+
+  if (!factor) return null; // Or a loading spinner, but factordetail should always be present now
 
   return (
-    <section className="factor-container">
-      <div className="factor-header">
-        <button onClick={onClose} className="close-button">
-          ×
-        </button>
-      </div>
+    <>
+      <div className="fixed inset-0 bg-[#92929280] backdrop-blur-sm z-40" />
 
-      <div className="factor-row">
-        <span>شماره فاکتور: {factor.receiptCode}</span>
-        <span>{factor.createdDate}</span>
-      </div>
-      <div className="factor-row">
-        <span>نام مشتری: {factor.shopFarsiName}</span>
-        <span>{factor.shopTelephoneNumber}</span>
-      </div>
-
-      <div className="factor-table-header">
-        <span>نام کالا</span>
-        <span>مقدار</span>
-        <span>قیمت (ریال)</span>
-        <span>جمع کل (ریال)</span>
-      </div>
-
-      {factor.shopBizItemDtoList.map((item, index) => (
-        <div className="factor-table-row" key={index}>
-          <span>{item.name}</span>
-          <span>{item.saleCount}</span>
-          <span>{formatPrice(item.totalAmount)}</span>
-          <span>{formatPrice(item.totalAmount)}</span>
+      <section className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[999] factor-container w-[527px] h-[757px]">
+        <div className="factor-header">
+          <button onClick={onClose} className="close-button">
+            <img src={closeIcon} alt="close" />
+          </button>
         </div>
-      ))}
-
-      <hr />
-      <div className="factor-summary">
-        <span>تعداد اقلام: {factor.shopBizItemDtoList.length}</span>
-        <span></span>
-        <span>مبلغ کل:</span>
-        <span>{formatPrice(factor.amount)}</span>
-      </div>
-
-      <div className="factor-summary">
-        <span>تخفیف:</span>
-        <span>{formatPrice(factor.userDiscount)}</span>
-      </div>
-
-      <div className="factor-summary">
-        <span>مالیات بر ارزش افزوده:</span>
-        <span>۰ ریال</span>
-      </div>
-
-      <div className="factor-summary">
-        <span>هزینه ارسال:</span>
-        <span>{formatPrice(factor.shippingCost)}</span>
-      </div>
-
-      <div className="factor-total">
-        <strong>جمع مبلغ پرداختی:</strong>
-        <strong>{formatPrice(factor.totalAmount)}</strong>
-      </div>
-
-      <div className="factor-debt">
-        <strong>بدهی این فاکتور:</strong>
-        <strong>۰ ریال</strong>
-      </div>
-    </section>
+        <div className="factor-row">
+          <span>شماره فاکتور: {factor.receiptCode}</span>
+          <span>
+            {new Date(factor.createdDate).toLocaleDateString("fa-IR")}
+          </span>{" "}
+          {/* Format date */}
+        </div>
+        <div className="factor-row">
+          <span>نام مشتری: {factor.customerDto?.displayName}</span>
+          <span>{factor.customerDto?.mobile}</span>
+        </div>
+        <div className="factor-table-header flex justify-between px-4">
+          <span className="w-[25%] ">نام کالا</span>
+          <span className="w-[25%]">مقدار</span>
+          <span className="w-[25%]">قیمت (ریال)</span>
+          <span className="w-[25%]">جمع کل (ریال)</span>
+        </div>
+        {factor.shopBizItemDtoList.map((item, index) => (
+          <div
+            className="factor-table-row flex justify-between px-4"
+            key={index}
+          >
+            <span className=" w-[25%]">{item.name}</span>
+            <span className="w-[25%] pr-4">{item.saleCount}</span>
+            <span className="w-[25%] pr-2">{formatPrice(item.price)}</span>{" "}
+            {/* Use item.price */}
+            <span className="w-[25%] pr-2">
+              {formatPrice(item.totalAmount)}
+            </span>
+          </div>
+        ))}
+        {/* <hr /> */}
+        <div className="factor-summary px-4">
+          <span>
+            تعداد اقلام:{" "}
+            {factor.shopBizItemDtoList.reduce(
+              (acc, curr) => acc + curr.saleCount,
+              0
+            )}
+          </span>{" "}
+          {/* Calculate total items */}
+          <span></span>
+          <span>مبلغ کل:</span>
+          <span>{formatPrice(factor.amount)}</span>
+        </div>
+        <div className="factor-summary px-4">
+          <span>تخفیف:</span>
+          <span>{formatPrice(factor.userDiscount)}</span>
+        </div>
+        <div className="factor-summary px-4">
+          <span>مالیات بر ارزش افزوده:</span>
+          <span>{formatPrice(factor.tax)}</span> {/* Use actual tax */}
+        </div>
+        <div className="factor-summary px-4">
+          <span>هزینه ارسال:</span>
+          <span>{formatPrice(factor.shippingCost)}</span>
+        </div>
+        <div className="factor-total px-4 mt-10">
+          <strong>جمع مبلغ پرداختی:</strong>
+          <strong>{formatPrice(factor.totalAmount)}</strong>
+        </div>
+        <div className="factor-debt px-4">
+          <strong>بدهی این فاکتور:</strong>
+          <strong>
+            {formatPrice(
+              factor.shopBizPaymentDtoList.find((p) => p.method === 0)
+                ?.totalAmount || 0
+            )}
+          </strong>{" "}
+          {/* Calculate debt */}
+        </div>
+        <div className="print-button-container mt-20 flex justify-center">
+          <Button
+            label="چاپ فاکتور"
+            color="#7485E5"
+            radius={15}
+            style={{ width: "366px", height: "48px", marginTop: "20px" }}
+            onClick={handlePrint}
+          />
+        </div>
+      </section>
+    </>
   );
 };
-
 export default FactorPrintWeb;

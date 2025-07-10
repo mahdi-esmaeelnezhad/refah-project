@@ -7,7 +7,7 @@ body {
   max-height: 972px;
   margin: 0;
   background: #eaeaea;
-  /* zoom: 0.8; */
+  zoom: 0.8;
 }
 
 :root {

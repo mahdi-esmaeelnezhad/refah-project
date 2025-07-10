@@ -13,11 +13,13 @@ interface Factor {
 interface SavedFactorsTooltipProps {
   factors: Factor[];
   onDelete: (id: string) => void;
+  onLoadFactor: (factor: Factor) => void; // اضافه شد
 }
 
 const SavedFactorsTooltip: React.FC<SavedFactorsTooltipProps> = ({
   factors,
   onDelete,
+  onLoadFactor, // اضافه شد
 }) => {
   // CSS برای custom scrollbar
   const scrollbarStyles = `
@@ -68,10 +70,12 @@ const SavedFactorsTooltip: React.FC<SavedFactorsTooltipProps> = ({
           sortedFactors.map((factor) => (
             <div
               key={factor.id}
-              className="w-[441px] bg-[#F2F2F2] rounded-[15px] p-4 mb-4"
-              // style={{
-              //   overflowY: "auto",
-              // }}
+              className="w-[441px] bg-[#F2F2F2] rounded-[15px] p-4 mb-4 cursor-pointer hover:bg-[#E5E5E5] transition-colors"
+              onClick={() => {
+                // بارگذاری فاکتور در Content و حذف از لیست ذخیره شده
+                onLoadFactor(factor);
+                onDelete(factor.id);
+              }}
             >
               {/* First Row */}
               <div className="flex justify-between items-center mb-2">
@@ -84,7 +88,8 @@ const SavedFactorsTooltip: React.FC<SavedFactorsTooltipProps> = ({
                   </span>
                   <img
                     src={trashIcon}
-                    onClick={() => {
+                    onClick={(e) => {
+                      e.stopPropagation(); // جلوگیری از اجرای onClick کارت
                       if (
                         window.confirm(
                           `آیا از حذف فاکتور شماره ${factor.id} اطمینان دارید؟`

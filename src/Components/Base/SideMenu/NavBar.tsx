@@ -19,24 +19,30 @@ import InternetDisconnectedModal from "../../Modal/InternetDisconnectedModal";
 interface NavBarProps {
   children?: React.ReactNode;
   showFullNav?: boolean;
+  onLoadSavedFactor?: (factor: any) => void; // اضافه شد
 }
 
-export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
+export function NavBar({
+  children = "",
+  showFullNav = false,
+  onLoadSavedFactor,
+}: NavBarProps) {
   const [searchProduct, setSearchProduct] = useState("");
   const [isSavedFactorsOpen, setIsSavedFactorsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [savedFactors, setSavedFactors] = useState<any[]>([]);
+  const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
+  const [unregisteredCount, setUnregisteredCount] = useState(0);
+  const [notifications, setNotifications] = useState<any[]>([]);
   const isOnline = useNetworkStatus();
   const [showModal, setShowModal] = useState(false);
 
-  // تابع برای بارگذاری فاکتورهای ذخیره شده
   const loadSavedInvoices = () => {
     try {
       const savedInvoices = JSON.parse(
         localStorage.getItem("savedInvoices") || "[]"
       );
-
-      // تبدیل فاکتورها به فرمت مورد نیاز SavedFactorsTooltip
+      setPendingInvoices(savedInvoices);
       const formattedFactors = savedInvoices.map((invoice: any) => ({
         id: invoice.invoiceNumber,
         amount: invoice.finalAmount,
@@ -47,73 +53,103 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
         }),
         products: invoice.items.map((item: any) => item.name),
       }));
-
       setSavedFactors(formattedFactors);
     } catch (error) {
-      console.error("خطا در بارگذاری فاکتورهای ذخیره شده:", error);
-      // در صورت خطا، داده‌های نمونه نمایش بده
+      setPendingInvoices([]);
+      setSavedFactors([]);
     }
   };
 
-  // بارگذاری فاکتورهای ذخیره شده از localStorage
+  const loadUnregisteredCount = () => {
+    try {
+      const unregisteredProducts = JSON.parse(
+        localStorage.getItem("unregisteredProducts") || "[]"
+      );
+      setUnregisteredCount(unregisteredProducts.length);
+    } catch (error) {
+      setUnregisteredCount(0);
+    }
+  };
+
+  const updateNotifications = () => {
+    const updated = [
+      {
+        id: "unregistered",
+        message: `${unregisteredCount} عدد کالای ثبت نشده وجود دارد`,
+        type: "unregistered",
+        count: unregisteredCount,
+      },
+      ...pendingInvoices.map((invoice: any) => ({
+        id: invoice.invoiceNumber,
+        message: `فاکتور ${invoice.invoiceNumber} در انتظار تایید است`,
+        type: "pending_invoice",
+      })),
+    ];
+    setNotifications(updated);
+  };
+
   useEffect(() => {
     loadSavedInvoices();
+    loadUnregisteredCount();
   }, []);
 
-  // گوش دادن به تغییرات فاکتورهای ذخیره شده
   useEffect(() => {
     const handleInvoicesUpdated = () => {
       loadSavedInvoices();
     };
-
     window.addEventListener("invoicesUpdated", handleInvoicesUpdated);
-
     return () => {
       window.removeEventListener("invoicesUpdated", handleInvoicesUpdated);
     };
   }, []);
 
-  // Sample notifications data for badge count
-  const notifications = [
-    {
-      id: 1,
-      message: "دو عدد کالای ثبت نشده وجود دارد",
-      type: "unregistered",
-    },
-    {
-      id: 2,
-      message: "سه کالا موجودی کمتر از حداقل دارند",
-      type: "low_stock",
-    },
-    {
-      id: 3,
-      message: "یک کالا تاریخ انقضای نزدیک دارد",
-      type: "expired",
-    },
-    {
-      id: 4,
-      message: "پرداخت فاکتور ۲۳۴ در انتظار تایید است",
-      type: "payment",
-    },
-  ];
-
-  const handleDeleteFactor = (id: string) => {
-    const success = deleteInvoiceByNumber(id);
-    if (success) {
-    } else {
-      console.error("خطا در حذف فاکتور");
-    }
-  };
+  useEffect(() => {
+    updateNotifications();
+  }, [unregisteredCount, pendingInvoices]);
 
   useEffect(() => {
-    console.log(isOnline, "isOnline");
+    const handleStorageChange = () => {
+      loadUnregisteredCount();
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
 
+  useEffect(() => {
     if (!isOnline) {
       setShowModal(true);
     } else {
       setShowModal(false);
     }
   }, [isOnline]);
+
+  const handleDeleteFactor = (id: string) => {
+    const success = deleteInvoiceByNumber(id);
+    if (success) {
+      loadSavedInvoices();
+    } else {
+      console.error("خطا در حذف فاکتور");
+    }
+  };
+
+  const handleLoadFactor = (factor: any) => {
+    // بستن tooltip
+    setIsSavedFactorsOpen(false);
+
+    // فراخوانی تابع بارگذاری فاکتور در Content
+    if (onLoadSavedFactor) {
+      onLoadSavedFactor(factor);
+    }
+
+    // حذف فاکتور از لیست ذخیره شده
+    handleDeleteFactor(factor.id);
+  };
+
+  const removeNotification = (id: string) => {
+    setNotifications((prev) =>
+      prev.filter((notification) => notification.id !== id)
+    );
+  };
 
   return (
     <>
@@ -138,6 +174,7 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
               <SavedFactorsTooltip
                 factors={savedFactors}
                 onDelete={handleDeleteFactor}
+                onLoadFactor={handleLoadFactor}
               />
             }
             isOpen={isSavedFactorsOpen}
@@ -157,8 +194,7 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
         </div>
 
         <span
-          className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[186px] font-23"
-          // onClick={() => console.log("Clicked")}
+          className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[286px] font-23 relative"
           style={{ visibility: showFullNav ? "visible" : "hidden" }}
         >
           <ProductsIcon />
@@ -169,7 +205,7 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
           value={searchProduct}
           onChange={(e) => setSearchProduct(e.target.value)}
           placeholder="کالای مورد نظر خود را جستجو کنید"
-          style={{ minWidth: "484px", marginBottom: 0 }}
+          style={{ minWidth: "384px", marginBottom: 0 }}
           icon={<SearchIcon />}
           height={48}
         />
@@ -188,13 +224,12 @@ export function NavBar({ children = "", showFullNav = false }: NavBarProps) {
           <NotificationsTooltip
             isOpen={isNotificationsOpen}
             setIsOpen={setIsNotificationsOpen}
+            notifications={notifications}
+            closeNotification={(id: string) => removeNotification(id)}
           />
         </div>
 
-        <span
-          className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 font-23 px-4  min-w-[302px]"
-          // onClick={() => console.log("Clicked")}
-        >
+        <span className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 font-23 px-4  min-w-[302px]">
           <JalaliDate />
           <CalendarIcon />
         </span>

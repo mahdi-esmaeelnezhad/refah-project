@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import closeIcon from "../../assets/close.svg";
 import infoIcon from "../../assets/info.svg";
 import {
-  // numberToPersianToman,
-  commaSeparator,
+  // commaSeparator,
+  numberToPersianToman,
 } from "../../utils/numberToPersianWord";
 import cartPayment from "../../assets/img/cartPayment.png";
 import rial from "../../assets/img/rial.png";
@@ -55,13 +55,8 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
       openSuccessPayment();
     } else if (paymentType === "credit") {
       console.log("credit");
-      // For credit payment, just set amount and close modal
-      // The parent component will handle opening SendSmsModal
       setPaymentAmount(editableAmount);
       closeCartPayment();
-      // openSendSmsModal();
-      // closeSendSmsModal();
-      // Don't open SendSmsModal here, let parent handle it
     } else {
       // For card payment, use existing logic
       try {
@@ -214,11 +209,8 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 </div>
               </div>
             </div>
-
-            <div style={{ fontSize: "16px", color: "#666", marginTop: "4px" }}>
-              {editableAmountStr
-                ? commaSeparator(editableAmountStr) + " ریال"
-                : ""}
+            <div className="text-center text-sm text-gray-600 font-19">
+              {numberToPersianToman(editableAmountStr)}
             </div>
 
             {paymentType === "card" && (
@@ -240,6 +232,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 justifyContent: "space-between",
                 gap: "84px",
                 marginBottom: "30px",
+                marginTop: "30px",
               }}
             >
               <Button

@@ -3,7 +3,7 @@ import InfoIcon from "../../../assets/infoIcon.svg";
 import CloseIcon from "../../../assets/close.svg";
 
 interface Notification {
-  id: number;
+  id: string;
   message: string;
   type: "unregistered" | "low_stock" | "expired" | "payment";
 }
@@ -11,35 +11,17 @@ interface Notification {
 interface NotificationsTooltipProps {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
+  notifications: Notification[];
+  closeNotification: (id: string) => void;
 }
 
 const NotificationsTooltip: React.FC<NotificationsTooltipProps> = ({
   isOpen,
   setIsOpen,
+  notifications,
+  closeNotification,
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null);
-  const notifications: Notification[] = [
-    {
-      id: 1,
-      message: "دو عدد کالای ثبت نشده وجود دارد",
-      type: "unregistered",
-    },
-    {
-      id: 2,
-      message: "سه کالا موجودی کمتر از حداقل دارند",
-      type: "low_stock",
-    },
-    {
-      id: 3,
-      message: "یک کالا تاریخ انقضای نزدیک دارد",
-      type: "expired",
-    },
-    {
-      id: 4,
-      message: "پرداخت فاکتور ۲۳۴ در انتظار تایید است",
-      type: "payment",
-    },
-  ];
 
   // Handle click outside to close tooltip
   useEffect(() => {
@@ -77,6 +59,8 @@ const NotificationsTooltip: React.FC<NotificationsTooltipProps> = ({
         zIndex: 1000,
         padding: "20px",
         marginTop: "10px",
+        overflowY: "auto",
+        maxHeight: "600px",
       }}
     >
       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -105,7 +89,7 @@ const NotificationsTooltip: React.FC<NotificationsTooltipProps> = ({
               <img
                 src={CloseIcon}
                 alt="close"
-                onClick={() => {}}
+                onClick={() => closeNotification(notification.id)}
                 style={{ filter: "invert(1)" }}
               />
             </div>

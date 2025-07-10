@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import FactorIcon from "../../Icons/FactorIcon";
 import HomeIcon from "../../Icons/HomeIcon";
 import ProductsIcon from "../../Icons/ProductsIcon";
@@ -6,23 +6,35 @@ import SuperMarket from "../../Icons/SuperMarket";
 import MenuItem from "./MenuItem";
 import TypoImage from "../../../assets/images/typo-logo.png"; // ensure this path is correct
 import { useEffect, useState } from "react";
+import UnregisteredIcon from "../../Icons/UnregisterdIcon";
+import WasteIcon from "../../Icons/WasteIcon";
+import DiscountIcon from "../../Icons/DiscountIcon";
+import CustomerIcon from "../../Icons/CustomerIcon";
+import DeliveryIcon from "../../Icons/DeliveryIcon";
+import CreditIcon from "../../Icons/CreditIcon";
+import SettingsIcon from "../../Icons/SettingsIcon";
 
 const menuItems = [
   { label: "صفحه نخست", icon: <HomeIcon />, path: "/dashboard" },
   { label: "فاکتور‌ها", icon: <FactorIcon />, path: "/factors" },
   { label: "محصولات", icon: <ProductsIcon />, path: "/products" },
-  { label: "کالای ثبت نشده", icon: <SuperMarket />, path: "/unregistered" },
-  { label: "ضایعات", icon: <SuperMarket />, path: "/waste" },
-  { label: "تخفیف", icon: <SuperMarket />, path: "/discounts" },
-  { label: "مشتریان", icon: <SuperMarket />, path: "/customers" },
-  { label: "ارسال با پیک", icon: <SuperMarket />, path: "/delivery" },
-  { label: "نسیه", icon: <SuperMarket />, path: "/credit" },
-  { label: "تنظیمات", icon: <SuperMarket />, path: "/settings" },
+  {
+    label: "کالای ثبت نشده",
+    icon: <UnregisteredIcon />,
+    path: "/unregistered",
+  },
+  { label: "ضایعات", icon: <WasteIcon />, path: "/waste" },
+  { label: "تخفیف", icon: <DiscountIcon />, path: "/discounts" },
+  { label: "مشتریان", icon: <CustomerIcon />, path: "/customers" },
+  { label: "ارسال با پیک", icon: <DeliveryIcon />, path: "/delivery" },
+  { label: "نسیه", icon: <CreditIcon />, path: "/credit" },
+  { label: "تنظیمات", icon: <SettingsIcon />, path: "/settings" },
 ];
 
 export default function SideMenu() {
   const [shopInfo, setShopInfo] = useState<any>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   const goTo = (path: string) => {
     navigate(path);
@@ -46,17 +58,39 @@ export default function SideMenu() {
         </MenuItem>
         <hr className="border-white/20" />
 
-        {menuItems.map(({ label, icon, path }) => (
-          <MenuItem
-            key={label}
-            textClassName="font-21"
-            icon={icon}
-            onClick={() => goTo(path)}
-            className="cursor-pointer hover:text-gray-200 transition-colors"
-          >
-            {label}
-          </MenuItem>
-        ))}
+        {menuItems.map(({ label, icon, path }) => {
+          const isActive = location.pathname === path;
+          return (
+            <MenuItem
+              key={label}
+              textClassName="font-21"
+              icon={icon}
+              onClick={() => goTo(path)}
+              className="cursor-pointer hover:text-gray-200 transition-colors relative"
+              style={{ position: "relative" }}
+            >
+              {isActive && (
+                <span
+                  style={{
+                    position: "absolute",
+                    left: "-27.5px",
+                    //rotation 180deg
+                    transform: "rotate(180deg)",
+                    top: "-15px",
+                    // transform: "translateY(-50%)",
+                    width: 0,
+                    height: 0,
+                    borderTop: "35px solid transparent",
+                    borderBottom: "35px solid transparent",
+                    borderRight: "40px solid #fff",
+                    zIndex: 2,
+                  }}
+                />
+              )}
+              {label}
+            </MenuItem>
+          );
+        })}
       </ul>
 
       <div className="text-center text-regular">

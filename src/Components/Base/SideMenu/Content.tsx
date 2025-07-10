@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "../../Ui/Button/button";
 import Input from "../../Ui/Input/input";
-import { Switch } from "../../Ui/switch/switch";
 import { BinIcon, CloseSmIcon } from "../../icons";
 import CloseIcon from "../../../assets/close.svg";
 
@@ -43,6 +42,7 @@ interface Item {
   price: number;
   discount: number | string;
   total: number;
+  vatRate?: string;
 }
 
 interface Customer {
@@ -108,6 +108,11 @@ const Content: React.FC = () => {
     { amount: number; type: string }[]
   >([]);
 
+  const [vatSwitch, setVatSwitch] = useState(false);
+  // حذف state های مربوط به saved factors
+  // const [isSavedFactorsOpen, setIsSavedFactorsOpen] = useState(false);
+  // const [savedFactors, setSavedFactors] = useState<any[]>([]);
+
   const generateNewInvoiceNumber = () => {
     try {
       const savedInvoices = JSON.parse(
@@ -125,7 +130,6 @@ const Content: React.FC = () => {
   const [successMessage, setSuccessMessage] = useState("");
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Barcode scanner hook
   const { isListening } = useBarcodeScanner({
     onBarcodeScanned: React.useCallback((barcode: string) => {
       handleBarcodeScanned(barcode);
@@ -133,7 +137,6 @@ const Content: React.FC = () => {
     enabled: true,
   });
 
-  // Calculate totals
   const totalItems = items.length;
   const totalAmount = items.reduce((sum, item) => {
     const quantity = parseInt(item.quantity) || 0;
@@ -155,11 +158,18 @@ const Content: React.FC = () => {
     (sum, p) => sum + p.amount,
     0
   );
+  const totalVat = items.reduce((sum, item) => {
+    const vatRate = item.vatRate ? parseFloat(item.vatRate) : 0;
+    if (!vatRate) return sum;
+    const quantity = parseInt(item.quantity) || 0;
+    return sum + (item.price * quantity * vatRate) / 100;
+  }, 0);
   const finalAmount =
     totalAmount -
     totalDiscount -
     (showCreditInfo ? creditAmount : 0) -
-    totalPartialPaid;
+    totalPartialPaid +
+    (vatSwitch ? totalVat : 0);
 
   useEffect(() => {
     if (barcodeInputRef.current) {
@@ -167,7 +177,28 @@ const Content: React.FC = () => {
       setIsBarcodeInputFocused(true);
     }
     generateNewInvoiceNumber();
+    // حذف loadSavedFactors();
   }, []);
+
+  // ارسال handler به GlobalHeader برای ارتباط با NavBar
+  useEffect(() => {
+    const event = new CustomEvent("setLoadFactorHandler", {
+      detail: { handler: handleLoadSavedFactor },
+    });
+    window.dispatchEvent(event);
+  }, []); // فقط یک بار اجرا شود
+
+  // حذف event listener برای saved factors
+  // useEffect(() => {
+  //   const handleStorageChange = (e: StorageEvent) => {
+  //     if (e.key === "savedInvoices") {
+  //       loadSavedFactors();
+  //     }
+  //   };
+  //   window.addEventListener("storage", handleStorageChange);
+  //   return () => window.removeEventListener("storage", handleStorageChange);
+  // }, []);
+
   useEffect(() => {
     if (!isProductNotFoundOpen && barcodeInputRef.current) {
       const timer = setTimeout(() => {
@@ -272,6 +303,7 @@ const Content: React.FC = () => {
         setShowCreditInfo(false);
         setCreditAmount(0);
         generateNewInvoiceNumber();
+        // حذف loadSavedFactors();
         setSuccessMessage("فاکتور با موفقیت ذخیره شد");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
@@ -292,7 +324,6 @@ const Content: React.FC = () => {
       return;
     }
 
-    // اگر پرداخت در محل تیک نیست و تحویل پیک است، ابتدا SendPaykModal باز کن
     if (deliveryMedivod === "پیک" && !payAtLocation) {
       setPendingPaymentMethod(paymentMedivod);
       openSendPaykModal();
@@ -505,6 +536,7 @@ const Content: React.FC = () => {
                     ...item,
                     quantity: (parseInt(item.quantity) + 1).toString(),
                     total: item.price * (parseInt(item.quantity) + 1),
+                    vatRate: product.vatRate || "0", // string
                   }
                 : item
             )
@@ -518,6 +550,7 @@ const Content: React.FC = () => {
             price: product.price,
             discount: product.discount || 0,
             total: product.price,
+            vatRate: product.vatRate || "0", // string
           };
 
           setItems([...items, newItem]);
@@ -565,7 +598,6 @@ const Content: React.FC = () => {
   const handleSendPaykConfirm = (customerData: any, courierData: any) => {
     closeSendPaykModal();
 
-    // Save payk invoice data
     savePaykInvoice(customerData, courierData);
     if (payAtLocation) {
       setPaymentAmount(finalAmount);
@@ -668,6 +700,73 @@ const Content: React.FC = () => {
       console.error(e);
     }
   };
+
+  // تابع برای بارگذاری فاکتور ذخیره شده در Content
+  const handleLoadSavedFactor = (factor: any) => {
+    // پاک کردن داده‌های فعلی
+    setItems([]);
+    setSelectedCustomer(null);
+    setShowCreditInfo(false);
+    setCreditAmount(0);
+    setPartialPayments([]);
+
+    // بارگذاری داده‌های فاکتور ذخیره شده
+    try {
+      const savedInvoices = JSON.parse(
+        localStorage.getItem("savedInvoices") || "[]"
+      );
+      const savedFactor = savedInvoices.find(
+        (invoice: any) => invoice.invoiceNumber === factor.id
+      );
+
+      if (savedFactor) {
+        // تنظیم شماره فاکتور
+        setInvoiceNumber(savedFactor.invoiceNumber);
+
+        // تنظیم مشتری
+        setSelectedCustomer({
+          id: savedFactor.customer.id || Date.now(),
+          name: savedFactor.customer.name,
+          phone: savedFactor.customer.phone,
+          debt: savedFactor.customer.debt || 0,
+          address: savedFactor.customer.address || "",
+          nationalCode: savedFactor.customer.nationalCode || "",
+        });
+
+        // تنظیم آیتم‌ها
+        const loadedItems = savedFactor.items.map(
+          (item: any, index: number) => ({
+            id: index + 1,
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            price: item.price,
+            discount: item.discount,
+            total: item.total,
+            vatRate: item.vatRate || "0",
+          })
+        );
+        setItems(loadedItems);
+
+        // تنظیم روش پرداخت و تحویل
+        setPaymentMedivod(savedFactor.paymentMethod || "کارتی");
+        setDeliveryMedivod(savedFactor.deliveryMethod || "حضوری");
+
+        setSuccessMessage(
+          `فاکتور ${savedFactor.invoiceNumber} با موفقیت بارگذاری شد`
+        );
+        setTimeout(() => setSuccessMessage(""), 3000);
+      }
+    } catch (error) {
+      console.error("خطا در بارگذاری فاکتور:", error);
+      setSuccessMessage("خطا در بارگذاری فاکتور");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+  };
+
+  // حذف توابع مربوط به saved factors
+  // const loadSavedFactors = () => { ... };
+  // const handleDeleteFactor = (id: string) => { ... };
 
   return (
     <>
@@ -797,13 +896,11 @@ const Content: React.FC = () => {
           onClose={closeProductNotFoundModal}
           barcode={notFoundBarcode}
           onProductAdded={() => {
-            // نمایش پیام و پیشنهاد رفتن به صفحه Unregistered
             if (
               confirm(
                 "کالا با موفقیت اضافه شد. آیا می‌خواهید به صفحه کالاهای ثبت نشده بروید؟"
               )
             ) {
-              // اینجا می‌توانید navigation اضافه کنید
               window.location.href = "/unregistered";
             }
           }}
@@ -879,6 +976,9 @@ const Content: React.FC = () => {
                 onOpenCustomerDefinition={handleOpenCustomerDefinition}
               />
             </div>
+
+            {/* حذف دکمه فاکتورهای ذخیره شده */}
+
             <Button
               label="ذخیره"
               color="#4973DE"
@@ -940,7 +1040,6 @@ const Content: React.FC = () => {
               </p>
             </div>
           ) : (
-            // نمایش جدول وقتی کالا وجود دارد
             <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto h-[640px]">
               <div className="flex justify-between">
                 <div className="bg-our-choice h-10 w-10 p-4 rounded-md flex items-center justify-center">
@@ -1063,14 +1162,54 @@ const Content: React.FC = () => {
               </div>
               <div className="flex justify-between bg-[#EFEFEF] rounded-lg px-4 py-2">
                 <span>مالیات بر ارزش افزوده</span>
-                <span>
-                  <span className="mx-1 font-16"> - ریال</span>{" "}
-                  <Switch
-                    on={false}
-                    onToggle={function (): void {
-                      throw new Error("Function not implemented.");
+                <span className="flex items-center gap-2">
+                  <span className="mx-1 font-16">
+                    {commaSeparator(totalVat)} ریال
+                  </span>{" "}
+                  <label
+                    style={{
+                      display: "inline-block",
+                      position: "relative",
+                      width: 64,
+                      height: 28,
                     }}
-                  />
+                  >
+                    <input
+                      type="checkbox"
+                      checked={vatSwitch}
+                      onChange={() => setVatSwitch((v) => !v)}
+                      style={{ opacity: 0, width: 0, height: 0 }}
+                    />
+                    <span
+                      style={{
+                        position: "absolute",
+                        cursor: "pointer",
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        background: vatSwitch ? "#7485E5" : "#ccc",
+                        borderRadius: 28,
+                        transition: "background 0.2s",
+                        display: "block",
+                      }}
+                    >
+                      <span
+                        style={{
+                          position: "absolute",
+                          left: vatSwitch ? 40 : 2,
+                          top: 2,
+                          width: 24,
+                          height: 24,
+                          background: "#fff",
+                          borderRadius: "50%",
+                          transition: "left 0.2s",
+                          boxShadow: "0 1px 4px rgba(0,0,0,0.15)",
+                          display: "block",
+                        }}
+                      />
+                    </span>
+                  </label>
                 </span>
               </div>
               <div className="flex justify-between px-4 py-2">

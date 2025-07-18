@@ -68,21 +68,6 @@ const Customers: React.FC = () => {
   const { token } = useSelector((state: RootState) => state.auth);
   const { isOpen, openModal, closeModal } = useModal();
 
-  const {
-    execute: fetchCustomers,
-    loading: customersLoading,
-    error: customersError,
-  } = useRequest<{ data: CustomerApiResponse[] }>(
-    PRODUCT_ENDPOINTS.customerList,
-
-    "POST",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-
   const { loading: addCustomerLoading, execute: addCustomerHandler } =
     useRequest<{
       data: CustomerApiResponse[];
@@ -116,27 +101,12 @@ const Customers: React.FC = () => {
     useState<CustomerApiResponseShow | null>(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-
-  // const createSearchPayload = (searchValue: string = "") => {
-  //   return {
-  //     conditionType: "OR",
-  //     conditions: [
-  //       {
-  //         fieldName: "mobile",
-  //         operationType: "LIKE",
-  //         values: [searchValue],
-  //       },
-  //       {
-  //         fieldName: "name",
-  //         operationType: "LIKE",
-  //         values: [searchValue],
-  //       },
-  //     ],
-  //   };
-  // };
+  const [customersLoading, setCustomersLoading] = useState(false);
+  const [customersError, setCustomersError] = useState<string | null>(null);
 
   const fetchCustomerList = async (searchValue: string = "") => {
     try {
+      setCustomersLoading(true);
       // const searchPayload = createSearchPayload(searchValue);
       console.log(searchValue, "searchValue");
 
@@ -146,12 +116,24 @@ const Customers: React.FC = () => {
         values: [],
       };
       // const params = "?page=0&size=1000&sort=id,desc";
-      const response: any = await fetchCustomers({
-        searchPayload,
-        page: 1,
-        sort: "id,desc",
-        size: 10,
-      });
+      //when change page number call this function
+      //and get data from api
+      //and set data to items
+      //and set data to allFinalData
+      //and set data to localStorage
+      //and set data to allFinalData
+      const response: any = await axios.post(
+        PRODUCT_ENDPOINTS.customerList(0, 10000),
+        {
+          searchPayload,
+          sort: "id,desc",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       const customers: CustomerApiResponse[] = response.data;
 
@@ -165,6 +147,9 @@ const Customers: React.FC = () => {
       }
     } catch (error) {
       console.error("Error fetching customers:", error);
+      setCustomersError(String(error));
+    } finally {
+      setCustomersLoading(false);
     }
   };
 
@@ -187,20 +172,7 @@ const Customers: React.FC = () => {
 
   // Load customers from localStorage on mount
   useEffect(() => {
-    const localCustomers = localStorage.getItem("customers");
-    if (localCustomers) {
-      try {
-        const parsed: CustomerApiResponseShow[] = JSON.parse(localCustomers);
-        const nonArchived = parsed.filter((item) => !item.isArchive);
-        setAllFinalData(nonArchived);
-        setItems(nonArchived);
-      } catch (e) {
-        // fallback to API if parse fails
-        if (token) fetchCustomerList();
-      }
-    } else if (token) {
-      fetchCustomerList();
-    }
+    fetchCustomerList();
   }, [token]);
   const productSectionMaxHeight = showFilter ? 450 : 600;
 
@@ -213,6 +185,7 @@ const Customers: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // fetchCustomerList();
   };
 
   const handleSeachCustomer = async (value: string) => {

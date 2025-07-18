@@ -43,6 +43,8 @@ interface Item {
   discount: number | string;
   total: number;
   vatRate?: string;
+  sku?: string;
+  itemId?: string;
 }
 
 interface Customer {
@@ -81,6 +83,8 @@ const Content: React.FC = () => {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
+  const [shopBizItemDtoList, setShopBizItemDtoList] = useState<any[]>([]);
+  // const [shopBizPaymentDtoList, setShopBizPaymentDtoList] = useState<any[]>([]);
   const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
     useState(false);
   const [isCreditPaymentModalOpen, setIsCreditPaymentModalOpen] =
@@ -105,7 +109,7 @@ const Content: React.FC = () => {
   const [invoiceNumber, setInvoiceNumber] = useState("256");
   const [, setShowCashInfo] = useState(false);
   const [partialPayments, setPartialPayments] = useState<
-    { amount: number; type: string }[]
+    { receiveAmount: number }[]
   >([]);
 
   const [vatSwitch, setVatSwitch] = useState(false);
@@ -127,14 +131,17 @@ const Content: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isBarcodeInputFocused, setIsBarcodeInputFocused] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
+  const [mobileInput, setMobileInput] = useState("");
+  const [isMobileInputFocused, setIsMobileInputFocused] = useState(false);
+  const [, setSuccessMessage] = useState("");
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
+  const mobileInputRef = React.useRef<HTMLInputElement>(null);
 
   const { isListening } = useBarcodeScanner({
     onBarcodeScanned: React.useCallback((barcode: string) => {
       handleBarcodeScanned(barcode);
     }, []),
-    enabled: true,
+    enabled: !isProductNotFoundOpen && !isBarcodeInputFocused,
   });
 
   const totalItems = items.length;
@@ -155,7 +162,7 @@ const Content: React.FC = () => {
   }, 0);
 
   const totalPartialPaid = partialPayments.reduce(
-    (sum, p) => sum + p.amount,
+    (sum, p) => sum + p.receiveAmount,
     0
   );
   const totalVat = items.reduce((sum, item) => {
@@ -204,7 +211,7 @@ const Content: React.FC = () => {
       const timer = setTimeout(() => {
         barcodeInputRef.current?.focus();
         setIsBarcodeInputFocused(true);
-      }, 200);
+      }, 100);
 
       return () => clearTimeout(timer);
     }
@@ -261,6 +268,8 @@ const Content: React.FC = () => {
     setSuccessMessage("فاکتور با موفقیت حذف شد");
     setTimeout(() => setSuccessMessage(""), 3000);
     setIsDeleteModalOpen(false);
+    setPaymentAmount(0);
+    setPartialPayments([]);
   };
 
   const handleSaveInvoice = () => {
@@ -269,23 +278,27 @@ const Content: React.FC = () => {
       return;
     }
 
-    if (!selectedCustomer) {
-      alert("لطفاً یک مشتری انتخاب کنید");
-      return;
-    }
+    // if (!selectedCustomer) {
+    //   alert("لطفاً یک مشتری انتخاب کنید");
+    //   return;
+    // }
 
     try {
+      const customerObj = selectedCustomer
+        ? selectedCustomer
+        : {
+            id: Date.now(),
+            name: "",
+            phone: "",
+            debt: 0,
+            address: "",
+            nationalCode: "",
+          };
       const newInvoice = {
         id: Date.now(),
         invoiceNumber: invoiceNumber,
         date: new Date().toISOString(),
-        customer: selectedCustomer || {
-          name: "",
-          phone: "",
-          debt: 0,
-          address: "",
-          nationalCode: "",
-        },
+        customer: customerObj,
         items: items,
         totalAmount,
         totalDiscount,
@@ -293,6 +306,11 @@ const Content: React.FC = () => {
         paymentMethod: paymentMedivod,
         deliveryMethod: deliveryMedivod,
         status: "saved",
+        partialPayments: partialPayments,
+        remainingAmount:
+          finalAmount -
+          partialPayments.reduce((sum, p) => sum + p.receiveAmount, 0), // مبلغ مانده
+        paymentType: paymentMedivod,
       };
 
       const success = saveInvoice(newInvoice);
@@ -303,6 +321,9 @@ const Content: React.FC = () => {
         setShowCreditInfo(false);
         setCreditAmount(0);
         generateNewInvoiceNumber();
+        setInvoiceNumber("");
+        setPaymentAmount(0); // صفر کردن مبلغ قابل پرداخت
+        setPartialPayments([]); // حذف مبالغ پرداختی قبلی
         // حذف loadSavedFactors();
         setSuccessMessage("فاکتور با موفقیت ذخیره شد");
         setTimeout(() => setSuccessMessage(""), 3000);
@@ -342,7 +363,9 @@ const Content: React.FC = () => {
       openCartPayment();
     }
   };
-
+  const toPersianNumber = (number: string) => {
+    return number.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d)]);
+  };
   const handleCartPaymentConfirm = (amount: number) => {
     setPaymentAmount(amount);
 
@@ -351,13 +374,44 @@ const Content: React.FC = () => {
       setPartialPayments((prev) => [
         ...prev,
         {
-          amount,
-          type:
+          acceptorExternalNo: "",
+          acceptorName: "",
+          acceptorPhone: "",
+          changeAmount: 0,
+          id: generateUUID(),
+          issuerName: "",
+          maskPan: "",
+          method:
             currentPaymentMethod === "نقدی"
               ? "1"
               : currentPaymentMethod === "نسیه"
-              ? "credit"
-              : "card",
+              ? "10"
+              : currentPaymentMethod === "کارتی"
+              ? "4"
+              : "0",
+          note: "",
+          receiveAmount: amount,
+          referenceNo: "",
+          saleTxId: generateUUID(),
+          settleFailReason: "",
+          status: "1",
+          terminalSerial: "TP100004859",
+          time: new Date().toISOString().split(".")[0] + "Z",
+          totalAmount: amount,
+          trace: "",
+
+          // paymentId: generateUUID(),
+          // paymentMethod: currentPaymentMethod,
+          // paymentType: "1",
+          // paymentTypeDescription: "1",
+          // paymentTypeDescription: "1",
+          // amount,
+          // type:
+          //   currentPaymentMethod === "نقدی"
+          //     ? "1"
+          //     : currentPaymentMethod === "نسیه"
+          //     ? "credit"
+          //     : "card",
         },
       ]);
     }
@@ -501,6 +555,13 @@ const Content: React.FC = () => {
       existingInvoices.push(creditInvoice);
       localStorage.setItem("creditInvoices", JSON.stringify(existingInvoices));
     }
+    // ریست کامل فاکتور پس از پرداخت موفق
+    setItems([]);
+    setSelectedCustomer(null);
+    setShowCreditInfo(false);
+    setCreditAmount(0);
+    setPaymentAmount(0);
+    setPartialPayments([]);
   };
 
   const handleRemainingPayment = () => {
@@ -534,9 +595,12 @@ const Content: React.FC = () => {
               item.id === existingItem.id
                 ? {
                     ...item,
+
                     quantity: (parseInt(item.quantity) + 1).toString(),
                     total: item.price * (parseInt(item.quantity) + 1),
                     vatRate: product.vatRate || "0", // string
+                    sku: product.sku || "",
+                    itemId: product.id,
                   }
                 : item
             )
@@ -546,17 +610,38 @@ const Content: React.FC = () => {
             id: items.length + 1,
             name: product.name,
             quantity: "1",
-            unit: product.unitType || "عدد",
+            unit: getUnitLabel(String(product.unitType)),
             price: product.price,
             discount: product.discount || 0,
             total: product.price,
             vatRate: product.vatRate || "0", // string
+            sku: product.sku || "",
+            itemId: product.id,
           };
 
           setItems([...items, newItem]);
+          const shop: any = {
+            brokerage: 0,
+            constructionFee: 0,
+            discountPerItem: 0,
+            govId: product.govId || "",
+            isPrinted: false,
+            itemId: product.id,
+            name: product.name,
+            price: product.price,
+            saleCount: newItem.quantity || 1,
+            sellerProfit: 0,
+            sku: product.sku || "",
+            totalAmount: product.price,
+            unitType: product.unitType,
+            vatRate: product.vatRate || "0",
+          };
+          setShopBizItemDtoList([...shopBizItemDtoList, shop]);
         }
         setSuccessMessage(`محصول ${product.name} با موفقیت اضافه شد`);
         setTimeout(() => setSuccessMessage(""), 3000);
+        // Clear barcode input only when product is found
+        setBarcodeInput("");
         if (barcodeInputRef.current) {
           barcodeInputRef.current.focus();
           setIsBarcodeInputFocused(true);
@@ -574,18 +659,26 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeSubmit = () => {
-    const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
-    const englishDigits = "0123456789";
-    const englishBarcode = barcodeInput.replace(
-      /[۰-۹]/g,
-      (d) => englishDigits[persianDigits.indexOf(d)]
-    );
+    // const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
+    // const englishDigits = "0123456789";
+    // const englishBarcode = barcodeInput.replace(
+    //   /[۰-۹]/g,
+    //   (d) => englishDigits[persianDigits.indexOf(d)]
+    // );
+    // console.log("English barcode:", englishBarcode);
 
-    if (englishBarcode.trim()) {
-      handleBarcodeScanned(englishBarcode.trim());
-      setBarcodeInput("");
+    if (barcodeInput) {
+      handleBarcodeScanned(barcodeInput.trim());
+      // Don't clear input here - let handleBarcodeScanned handle it
     }
   };
+
+  // const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  //   if (e.key === "Enter") {
+  //     e.preventDefault();
+  //     handleBarcodeSubmit();
+  //   }
+  // };
 
   const handleBarcodeInputFocus = () => {
     setIsBarcodeInputFocused(true);
@@ -593,6 +686,18 @@ const Content: React.FC = () => {
 
   const handleBarcodeInputBlur = () => {
     setIsBarcodeInputFocused(false);
+  };
+
+  const handleMobileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setMobileInput(e.target.value);
+  };
+
+  const handleMobileInputClick = () => {
+    setIsMobileInputFocused(true);
+  };
+
+  const handleMobileDialPadChange = (value: string) => {
+    setMobileInput(value);
   };
 
   const handleSendPaykConfirm = (customerData: any, courierData: any) => {
@@ -662,42 +767,73 @@ const Content: React.FC = () => {
     },
   });
 
+  const generateUUID = () => {
+    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
+      /[xy]/g,
+      function (c) {
+        var r = (Math.random() * 16) | 0,
+          v = c === "x" ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+      }
+    );
+  };
   const handlePrintFactor = async () => {
-    function generateUUID() {
-      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
-        /[xy]/g,
-        function (c) {
-          var r = (Math.random() * 16) | 0,
-            v = c === "x" ? r : (r & 0x3) | 0x8;
-          return v.toString(16);
-        }
-      );
-    }
     try {
+      // Calculate total amount from all partial payments
+      const totalAmount = partialPayments.reduce(
+        (sum, payment) => sum + payment.receiveAmount,
+        0
+      );
+
+      // Create shopBizItemDtoList dynamically from current items with correct quantities
+      const dynamicShopBizItemDtoList = items.map((item) => ({
+        brokerage: 0,
+        constructionFee: 0,
+        // discount: typeof item.discount === "number" ? item.discount : 0,
+        discountPerItem: 0,
+        govId: "",
+        isPrinted: false,
+        itemId: item.itemId || "",
+        name: item.name,
+        price: item.price,
+        saleCount: item.quantity.toString(), // Use actual quantity from items
+        sellerProfit: 0,
+        sku: item.sku || "",
+        totalAmount: item.total,
+        unitType: item.unit === "عدد" ? "0" : item.unit === "وزن" ? "1" : "0",
+        vatRate: item.vatRate?.toString() || "0",
+      }));
+
       const payload = {
-        customerId: selectedCustomer?.id || "",
-        mobile: selectedCustomer?.phone || "",
-        amount: paymentAmount,
+        amount: totalAmount,
+        createdDate: new Date().toISOString(),
+        customerId: selectedCustomer?.id?.toString() || "",
         customerNote: "",
         customerType: "",
         deliveryStatus: deliveryMedivod === "حضوری" ? "3" : "2",
-        dynamicCode: 0,
-        isBNPL: partialPayments.filter((p) => p.type !== "0").length > 0,
+        deviceDate: new Date().toISOString().split(".")[0] + "Z",
+        isBNPL: false,
         isPrinted: true,
-        receiptCode: "2",
+        mobile: selectedCustomer?.phone || "",
+        receiptCode: invoiceNumber,
         saleStatus: "1010",
-        shopBizItemDtoList: items,
-        shopBizPaymentDtoList: partialPayments.filter((p) => p.type !== "0"),
+        shopBizItemDtoList: dynamicShopBizItemDtoList,
+        shopBizPaymentDtoList: partialPayments,
         shopBizUuid: generateUUID(),
         tableNumber: "",
-        taxInvoicePattern: 1,
+        taxInvoicePattern: 3,
         taxInvoiceType: 2,
+        taxIdDate: new Date().toISOString(),
         tax: 0,
         userDiscount: 0,
+        tip: 0,
       };
+
+      console.log("Print factor payload:", payload);
       await printFactor(payload);
+      console.log("Print factor API call successful");
     } catch (e) {
-      console.error(e);
+      console.error("Error in print factor:", e);
     }
   };
 
@@ -743,7 +879,7 @@ const Content: React.FC = () => {
             price: item.price,
             discount: item.discount,
             total: item.total,
-            vatRate: item.vatRate || "0",
+            vatRate: item.vatRate || 0,
           })
         );
         setItems(loadedItems);
@@ -751,6 +887,10 @@ const Content: React.FC = () => {
         // تنظیم روش پرداخت و تحویل
         setPaymentMedivod(savedFactor.paymentMethod || "کارتی");
         setDeliveryMedivod(savedFactor.deliveryMethod || "حضوری");
+
+        // بارگذاری مبالغ پرداختی و مانده
+        setPartialPayments(savedFactor.partialPayments || []);
+        // اگر remainingAmount ذخیره شده بود، می‌توان آن را در state جداگانه قرار داد یا در نمایش استفاده کرد
 
         setSuccessMessage(
           `فاکتور ${savedFactor.invoiceNumber} با موفقیت بارگذاری شد`
@@ -767,6 +907,13 @@ const Content: React.FC = () => {
   // حذف توابع مربوط به saved factors
   // const loadSavedFactors = () => { ... };
   // const handleDeleteFactor = (id: string) => { ... };
+
+  // تابع کمکی برای تبدیل مقدار واحد به متن مناسب
+  const getUnitLabel = (unit: string) => {
+    if (unit === "0" || unit === "0") return "عدد";
+    if (unit === "1" || unit === "1") return "وزن";
+    return unit || "عدد";
+  };
 
   return (
     <>
@@ -786,16 +933,18 @@ const Content: React.FC = () => {
       `}
       </style>
       <section
-        style={{
-          position: "fixed",
-          width: "1575px",
-          height: "848px",
-          left: "53px",
-          top: "90px",
-          zIndex: 1,
-          backgroundColor: "#fff",
-          padding: "30px",
-        }}
+        style={
+          {
+            // position: "fixed",
+            // width: "1575px",
+            // height: "848px",
+            // left: "53px",
+            // top: "90px",
+            // zIndex: 1,
+            // backgroundColor: "#fff",
+            // padding: "30px",
+          }
+        }
       >
         <NoBarcodeModal
           isOpen={isOpen}
@@ -862,6 +1011,7 @@ const Content: React.FC = () => {
           onClose={handleSuccessPaymentClose}
           onRemainingPayment={handleRemainingPayment}
           onPrint={handlePrintFactor}
+          // autoPrint={true}
         />
         <FailedPaymentModal
           amount={paymentAmount}
@@ -915,11 +1065,12 @@ const Content: React.FC = () => {
         <div
           style={{
             position: "absolute",
-            width: "1030px",
-            height: "920px",
-            right: 0,
+            width: "1020px",
+            height: "800px",
+            right: "-50px",
+            marginLeft: "80px",
             top: 0,
-            background: "#FFFFFF",
+            background: "#fff",
             borderRadius: "10px",
           }}
           className="p-8"
@@ -954,12 +1105,12 @@ const Content: React.FC = () => {
                   <span></span>
                 </div>
               )}
-              {successMessage && (
+              {/* {successMessage && (
                 <div className="flex items-center gap-1 text-green-600 text-sm animate-fade-in">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                   <span></span>
                 </div>
-              )}
+              )} */}
             </div>
 
             <div style={{ position: "relative" }}>
@@ -995,7 +1146,7 @@ const Content: React.FC = () => {
 
           <div className="flex items-center justify-between gap-8 max-h-10 mt-8">
             <span className="bg-[#D1D1D1] font-21 text-black px-4 py-2 rounded-md">
-              فاکتور فروش {invoiceNumber}
+              فاکتور فروش {toPersianNumber(invoiceNumber)}
             </span>
             {/* just show when selectedCustomer */}
             {selectedCustomer ? (
@@ -1024,7 +1175,7 @@ const Content: React.FC = () => {
               disabled={items.length === 0}
             /> */}
             <span className="bg-[#D1D1D1] font-21 text-black px-4 py-2 rounded-md">
-              تعداد اقلام {totalItems}
+              تعداد اقلام {toPersianNumber(totalItems.toString())}
             </span>
           </div>
 
@@ -1103,20 +1254,93 @@ const Content: React.FC = () => {
                           }
                         }}
                       >
-                        <span
-                          className="bg-our-choice h-10 min-w-10 px-2 overflow-hidden flex justify-center items-center rounded-md font-semibold cursor-pointer"
-                          onClick={() =>
-                            handleQuantityClick(item.id, item.quantity)
-                          }
-                        >
-                          {selectedItemId === item.id
-                            ? tempQuantity
-                            : item.quantity}
-                        </span>
+                        <div className="flex items-center justify-center">
+                          {selectedItemId === item.id ? (
+                            <>
+                              <button
+                                style={{
+                                  width: 30,
+                                  height: 30,
+                                  background: "#479E55",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: 6,
+                                  fontSize: 22,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginLeft: 8,
+                                  cursor: "pointer",
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newValue = (
+                                    Number(tempQuantity) + 1
+                                  ).toString();
+                                  setTempQuantity(newValue);
+                                  handleQuantityChange(newValue); // این تابع همین کار را انجام می‌دهد
+                                }}
+                              >
+                                +
+                              </button>
+                              <span
+                                className="bg-our-choice h-10 min-w-10 px-2 overflow-hidden flex justify-center items-center rounded-md font-semibold cursor-pointer"
+                                onClick={() =>
+                                  handleQuantityClick(item.id, item.quantity)
+                                }
+                                style={{ fontSize: 18 }}
+                              >
+                                {toPersianNumber(tempQuantity)}
+                              </span>
+                              <button
+                                style={{
+                                  width: 30,
+                                  height: 30,
+                                  background: "#DE4949",
+                                  color: "#fff",
+                                  border: "none",
+                                  borderRadius: 6,
+                                  fontSize: 22,
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  marginRight: 8,
+                                  cursor:
+                                    Number(tempQuantity) <= 1
+                                      ? "not-allowed"
+                                      : "pointer",
+                                  opacity: Number(tempQuantity) <= 1 ? 0.5 : 1,
+                                }}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const newValue = (
+                                    Number(tempQuantity) - 1
+                                  ).toString();
+                                  setTempQuantity(newValue);
+                                  handleQuantityChange(newValue);
+                                }}
+                                disabled={Number(tempQuantity) <= 1}
+                              >
+                                -
+                              </button>
+                            </>
+                          ) : (
+                            <span
+                              className="bg-our-choice h-10 min-w-10 px-2 overflow-hidden flex justify-center items-center rounded-md font-semibold cursor-pointer"
+                              onClick={() =>
+                                handleQuantityClick(item.id, item.quantity)
+                              }
+                              style={{ fontSize: 18 }}
+                            >
+                              {/* {item.quantity} to persian number*/}
+                              {toPersianNumber(item.quantity)}
+                            </span>
+                          )}
+                        </div>
                       </Tooltip>
                     </div>
                     <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[86px]">
-                      {item.unit}
+                      {getUnitLabel(String(item.unit))}
                     </div>
                     <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center min-w-[120px]">
                       {item.price.toLocaleString("fa-IR")}
@@ -1143,17 +1367,18 @@ const Content: React.FC = () => {
           style={{
             position: "absolute",
             width: "568px",
-            height: "920px",
+            height: "800px",
             left: 0,
             top: 0,
             background: "#FFFFFF",
             borderRadius: "10px",
           }}
-          className="p-8"
+          className="p-8 flex flex-col"
         >
-          <div className="rounded-xl space-y-4 text-right">
-            <div className="flex flex-col gap-4 font-21 bg-our-choice-100 p-4 rounded-lg">
-              <div className="flex justify-between px-4 py-2">
+          <div className="rounded-xl space-y-4 text-right flex flex-col h-full">
+            {/* بخش اسکرول‌خور */}
+            <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
+              <div className="flex justify-between px-4 py-2 mt-2">
                 <span>مبلغ</span>
                 <span>
                   {commaSeparator(totalAmount)}
@@ -1212,7 +1437,7 @@ const Content: React.FC = () => {
                   </label>
                 </span>
               </div>
-              <div className="flex justify-between px-4 py-2">
+              <div className="flex justify-between px-4 py-2 mt-2">
                 <span>تخفیف</span>
                 <span className="flex items-center">
                   <span className="mx-1">
@@ -1221,60 +1446,90 @@ const Content: React.FC = () => {
                   <BinIcon />
                 </span>
               </div>
-              <div className="flex justify-between bg-[#EFEFEF] rounded-lg px-4 py-2">
+              <div className="flex justify-between bg-[#EFEFEF] rounded-lg px-4 py-2 mt-2">
                 <span>تعداد اقلام</span>
                 <span className="font-16">{totalItems} عدد</span>
               </div>
-              <div className="flex justify-between font-semibold rounded-lg px-4 py-2">
+              <div className="flex justify-between font-semibold rounded-lg px-4 py-2 mt-2">
                 <span>مبلغ کل</span>
                 <span className="font-16">
                   {commaSeparator(totalAmount)} ریال
                 </span>
               </div>
-              <div className="flex justify-between text-lg font-bold bg-[#E7E7E7] rounded-lg px-4 py-2">
+              <div className="flex justify-between text-lg font-bold bg-[#E7E7E7] rounded-lg px-4 py-2 mt-2">
                 <span>مبلغ قابل پرداخت</span>
                 <span>
                   {commaSeparator(finalAmount)}{" "}
                   <span className="font-16">ریال</span>
                 </span>
               </div>
-              <div className="text-center text-sm text-gray-600 font-19">
+              <div className="text-center text-sm text-gray-600 font-21 py-2 mt-2">
                 {numberToPersianToman(finalAmount)}
               </div>
-              <input
-                type="text"
-                placeholder="موبایل خریدار را جهت فاکتور دیجیتال وارد کنید"
-                className="w-full border rounded-md px-3 py-2 mt-2 text-sm"
-              />
-            </div>
+              <div style={{ position: "relative" }} className="mt-2">
+                <Tooltip
+                  component={
+                    <DialPad
+                      value={mobileInput}
+                      onChange={handleMobileDialPadChange}
+                      onConfirm={() => setIsMobileInputFocused(false)}
+                      onClose={() => setIsMobileInputFocused(false)}
+                    />
+                  }
+                  isOpen={isMobileInputFocused}
+                  setIsOpen={setIsMobileInputFocused}
+                  position="bottom"
+                >
+                  {/* set width of input 100%  */}
+                  <input
+                    ref={mobileInputRef}
+                    type="text"
+                    placeholder="موبایل خریدار را جهت فاکتور دیجیتال وارد کنید"
+                    className="w-full border rounded-md px-3 py-2 mt-10 f-21 cursor-pointer"
+                    value={mobileInput}
+                    onChange={handleMobileInputChange}
+                    onClick={handleMobileInputClick}
+                    readOnly
+                    style={{
+                      width: "500px",
+                      outline: "none",
+                      // border: "none",
+                      borderRadius: "10px",
+                      padding: "10px",
+                      // backgroundColor: "#E7E7E7",
+                      fontSize: "21px",
+                    }}
+                  />
+                </Tooltip>
+              </div>
 
-            <div className="flex justify-between items-center py-5 rounded-md">
-              <span className="font-25 ml-2">تحویل:</span>
-              <div className="bg-[#E7E7E7] flex justify-between items-center flex-grow rounded-lg">
-                <button
-                  onClick={() => setDeliveryMedivod("پیک")}
-                  className={`flex-1 py-2 rounded-md text-sm font-medium font-23 h-12 ${
-                    deliveryMedivod === "پیک"
-                      ? "bg-success text-white"
-                      : "bg-[#E7E7E7]"
-                  }`}
-                >
-                  پیک
-                </button>
-                <button
-                  onClick={() => setDeliveryMedivod("حضوری")}
-                  className={`flex-1 py-2 rounded-md text-sm font-medium font-23 h-12 ${
-                    deliveryMedivod === "حضوری"
-                      ? "bg-success text-white"
-                      : "bg-[#E7E7E7]"
-                  }`}
-                >
-                  حضوری
-                </button>
+              <div className="flex justify-between items-center py-5 mt-4 rounded-md">
+                <span className="font-25 ml-2">تحویل:</span>
+                <div className="bg-[#E7E7E7] flex justify-between items-center flex-grow rounded-lg">
+                  <button
+                    onClick={() => setDeliveryMedivod("پیک")}
+                    className={`flex-1 py-2 rounded-md text-sm font-medium font-23 h-12 ${
+                      deliveryMedivod === "پیک"
+                        ? "bg-success text-white"
+                        : "bg-[#E7E7E7]"
+                    }`}
+                  >
+                    پیک
+                  </button>
+                  <button
+                    onClick={() => setDeliveryMedivod("حضوری")}
+                    className={`flex-1 py-2 rounded-md text-sm font-medium font-23 h-12 ${
+                      deliveryMedivod === "حضوری"
+                        ? "bg-success text-white"
+                        : "bg-[#E7E7E7]"
+                    }`}
+                  >
+                    حضوری
+                  </button>
+                </div>
               </div>
             </div>
-
-            <div className="space-y-2 border border-black rounded-xl p-6 relative">
+            <div className="space-y-2 border border-black rounded-xl p-6 relative mt-4">
               <div className="font-semibold bg-white absolute -top-5 px-2 font-25">
                 پرداخت:
               </div>
@@ -1326,7 +1581,7 @@ const Content: React.FC = () => {
                 </label>
               </div>
             )}
-
+            {/* بخش ثابت پایین */}
             {showCreditInfo && (
               <div className="w-full h-[48px] bg-[#E99C43] rounded-lg flex items-center justify-center text-white font-medium mb-4">
                 مبلغ {creditAmount.toLocaleString("fa-IR")} ریال نسیه تعلق گرفته
@@ -1334,14 +1589,37 @@ const Content: React.FC = () => {
               </div>
             )}
             {partialPayments.length > 0 && (
-              <div className="flex flex-col gap-2 mb-4">
+              <div className=" bg-[#E99C43] p-4 flex flex-col gap-2 mb-4">
                 {partialPayments.map((p, idx) => (
                   <div
                     key={idx}
-                    className="w-full h-[48px] bg-[#E99C43] rounded-lg flex items-center justify-center text-white font-medium"
+                    className="w-full h-[48px] bg-[#B97321] rounded-lg flex items-center justify-center text-white font-medium relative"
                   >
-                    مبلغ {p.amount.toLocaleString("fa-IR")} ریال به صورت{" "}
-                    {p.type} پرداخت شد
+                    مبلغ {p.receiveAmount.toLocaleString("fa-IR")} ریال به صورت{" "}
+                    {paymentMedivod} پرداخت شد
+                    {paymentMedivod === "نقدی" && (
+                      <button
+                        style={{
+                          position: "absolute",
+                          left: 16,
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          background: "transparent",
+                          border: "none",
+                          color: "white",
+                          fontSize: 24,
+                          cursor: "pointer",
+                        }}
+                        onClick={() => {
+                          setPartialPayments((prev) =>
+                            prev.filter((_, i) => i !== idx)
+                          );
+                          setPaymentAmount((prev) => prev + p.receiveAmount);
+                        }}
+                      >
+                        ×
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

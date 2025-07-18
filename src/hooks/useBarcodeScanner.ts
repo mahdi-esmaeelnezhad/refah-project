@@ -32,8 +32,6 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
       }
       return;
     }
-
-    // فقط کاراکترهای عددی و حروف را اضافه کن
     if (/^[a-zA-Z0-9]$/.test(event.key)) {
       setBarcodeBuffer(prev => prev + event.key);
     }

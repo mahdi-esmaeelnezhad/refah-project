@@ -33,6 +33,7 @@ const menuItems = [
 
 export default function SideMenu() {
   const [shopInfo, setShopInfo] = useState<any>(null);
+  const [unregisteredCount, setUnregisteredCount] = useState(0);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -40,9 +41,29 @@ export default function SideMenu() {
     navigate(path);
   };
 
+  const loadUnregisteredCount = () => {
+    try {
+      const unregisteredProducts = JSON.parse(
+        localStorage.getItem("unregisteredProducts") || "[]"
+      );
+      setUnregisteredCount(unregisteredProducts.length);
+    } catch (error) {
+      setUnregisteredCount(0);
+    }
+  };
+
   useEffect(() => {
     const shopInfo = localStorage.getItem("shopInfo");
     setShopInfo(JSON.parse(shopInfo || "{}"));
+    loadUnregisteredCount();
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      loadUnregisteredCount();
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
   }, []);
   return (
     <section className="fixed w-[246px] h-[972px] bg-[var(--color-primary)] text-white p-7 flex flex-col justify-between">
@@ -60,6 +81,10 @@ export default function SideMenu() {
 
         {menuItems.map(({ label, icon, path }) => {
           const isActive = location.pathname === path;
+          const isUnregisteredPage = path === "/unregistered";
+          const showBadge =
+            isUnregisteredPage && !isActive && unregisteredCount > 0;
+
           return (
             <MenuItem
               key={label}
@@ -68,6 +93,7 @@ export default function SideMenu() {
               onClick={() => goTo(path)}
               className="cursor-pointer hover:text-gray-200 transition-colors relative"
               style={{ position: "relative" }}
+              badge={showBadge ? unregisteredCount : undefined}
             >
               {isActive && (
                 <span
@@ -82,7 +108,7 @@ export default function SideMenu() {
                     height: 0,
                     borderTop: "35px solid transparent",
                     borderBottom: "35px solid transparent",
-                    borderRight: "40px solid #fff",
+                    borderRight: "40px solid #eaeaea",
                     zIndex: 2,
                   }}
                 />

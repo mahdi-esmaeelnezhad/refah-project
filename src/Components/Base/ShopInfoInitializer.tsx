@@ -36,24 +36,15 @@ const ShopInfoInitializer: React.FC = () => {
       },
     }
   );
-  const { execute: getCacheProductList } = useRequest<any>(
-    BASE_ENDPOINTS.cacheProductList,
-    "POST",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
-  const { execute: getCustomers } = useRequest<any>(
-    PRODUCT_ENDPOINTS.customerList,
-    "POST",
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  // const { execute: getCacheProductList } = useRequest<any>(
+  //   BASE_ENDPOINTS.cacheProductList,
+  //   "POST",
+  //   {
+  //     headers: {
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   }
+  // );
   useEffect(() => {
     const fetchShopInfo = async () => {
       if (!token) return;
@@ -95,26 +86,33 @@ const ShopInfoInitializer: React.FC = () => {
               "cacheBrandList",
               JSON.stringify(cacheBrandListRes?.data)
             );
-            const cacheProductListRes = await getCacheProductList({
-              shopId,
-              version: cacheRes.data.product,
-            });
-            localStorage.setItem(
-              "cacheProductList",
-              JSON.stringify(cacheProductListRes?.data)
-            );
+            // const cacheProductListRes = await getCacheProductList({
+            //   shopId,
+            //   version: cacheRes.data.product,
+            // });
+            // localStorage.setItem(
+            //   "cacheProductList",
+            //   JSON.stringify(cacheProductListRes?.data)
+            // );
 
             const searchPayload = {
               conditionType: "OR",
               conditions: [],
               values: [],
             };
-            const customersRes = await getCustomers({
-              searchPayload,
-              page: 1,
-              sort: "id,desc",
-              size: 100, // تعداد بیشتری مشتری دریافت کن
-            });
+            const customersRes = await axios.post(
+              PRODUCT_ENDPOINTS.customerList(0, 1000),
+              {
+                searchPayload,
+                sort: "id,desc",
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
+            console.log("customersRes", customersRes);
             localStorage.setItem(
               "customers",
               JSON.stringify(customersRes?.data)

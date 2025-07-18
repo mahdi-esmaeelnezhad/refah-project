@@ -1,6 +1,6 @@
 import React from "react";
-import nextArrow from "../../assets/nextArrow.svg";
-import previousArrow from "../../assets/perviosArrow.svg";
+import previousArrow from "../../assets/nextArrow.svg";
+import nextArrow from "../../assets/perviosArrow.svg";
 
 interface PaginationProps {
   currentPage: number;

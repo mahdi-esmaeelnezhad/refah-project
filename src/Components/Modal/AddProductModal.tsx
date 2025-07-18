@@ -98,13 +98,23 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
     if (!form.salePrice) newErrors.salePrice = "این فیلد اجباری است";
     return newErrors;
   };
+  // تابع کمکی برای تبدیل مقدار واحد به 0 یا 1
+  const getUnitTypeValue = (unit: string | number) => {
+    if (unit === "عدد" || unit === 0 || unit === "0") return 0;
+    if (unit === "وزن" || unit === 1 || unit === "1") return 1;
+    return unit;
+  };
   const handleSubmit = () => {
     const errs = validate();
     if (Object.keys(errs).length) {
       setErrors(errs);
       return;
     }
-    onAdd(form);
+    const formToSend = {
+      ...form,
+      unitType: getUnitTypeValue(form.unit?.name ?? "عدد"),
+    };
+    onAdd(formToSend);
     setForm(initialState);
     onClose();
   };

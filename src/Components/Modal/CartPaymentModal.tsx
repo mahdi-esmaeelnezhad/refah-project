@@ -1,16 +1,14 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import closeIcon from "../../assets/close.svg";
 import infoIcon from "../../assets/info.svg";
-import {
-  // commaSeparator,
-  numberToPersianToman,
-} from "../../utils/numberToPersianWord";
+import { numberToPersianToman } from "../../utils/numberToPersianWord";
 import cartPayment from "../../assets/img/cartPayment.png";
-import rial from "../../assets/img/rial.png";
 import editIcon from "../../assets/edit.svg";
 import { Button } from "../Ui/Button/button";
 import { useModal } from "../../hooks/useModal";
 import { usePaymentStore } from "../../hooks/usePaymentStore";
+import Tooltip from "../Base/SideMenu/Tooltip";
+import { DialPad } from "../Base/SideMenu/DialPad";
 
 interface CartPaymentModalProps {
   totalAmount: number;
@@ -30,14 +28,27 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     closeCartPaymentLoading,
     openCartPaymentPassword,
     openSuccessPayment,
-    // openSendSmsModal,
-    // closeSendSmsModal,
   } = useModal();
   const [editableAmountStr, setEditableAmountStr] = useState(
     totalAmount.toString()
   );
   const [editableAmount, setEditableAmount] = useState(totalAmount);
   const setPaymentAmount = usePaymentStore((state) => state.setEditableAmount);
+  const [isAmountTooltipOpen, setIsAmountTooltipOpen] = useState(false);
+  const toPersianNumber = (input: string | number): string => {
+    const number = input.toString().replace(/,/g, "");
+
+    const formatted = Number(number).toLocaleString("en-US");
+
+    const persian = formatted.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d)]);
+
+    return persian;
+  };
+
+  useEffect(() => {
+    setEditableAmountStr(totalAmount.toString());
+    setEditableAmount(totalAmount);
+  }, [totalAmount]);
 
   if (!isCartPaymentOpen) return null;
 
@@ -46,25 +57,25 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
       alert("مبلغ وارد شده نمی‌تواند بیشتر از مبلغ کل باشد");
       return;
     }
-    onConfirm(editableAmount);
 
+    const englishVal = editableAmount
+      .toString()
+      .replace(/[\u0660-\u0669]/g, (d) => String(d.charCodeAt(0) - 0x0660));
+    setEditableAmount(englishVal ? parseInt(englishVal, 10) : 0);
+    onConfirm(englishVal ? parseInt(englishVal, 10) : 0);
     if (paymentType === "cash") {
-      // For cash payment, directly show success modal
       setPaymentAmount(editableAmount);
       closeCartPayment();
       openSuccessPayment();
     } else if (paymentType === "credit") {
-      console.log("credit");
       setPaymentAmount(editableAmount);
       closeCartPayment();
     } else {
-      // For card payment, use existing logic
       try {
         setPaymentAmount(editableAmount);
         closeCartPayment();
         openCartPaymentLoading();
 
-        // Simulate card payment process
         setTimeout(() => {
           closeCartPaymentLoading();
           openCartPaymentPassword();
@@ -80,12 +91,12 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     return num.toLocaleString("fa-IR");
   };
 
-  const handleAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/[^0-9]/g, "");
-    // Remove leading zeros
-    value = value.replace(/^0+/, "");
-    setEditableAmountStr(value);
-    setEditableAmount(value ? parseInt(value, 10) : 0);
+  const handleDialPadAmountChange = (val: string) => {
+    const englishVal = val.replace(/[\u0660-\u0669]/g, (d) =>
+      String(d.charCodeAt(0) - 0x0660)
+    );
+    setEditableAmountStr(englishVal);
+    setEditableAmount(englishVal ? parseInt(englishVal, 10) : 0);
   };
 
   return (
@@ -179,23 +190,39 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                   alignItems: "center",
                 }}
               >
-                <input
-                  type="text"
-                  value={editableAmountStr}
-                  onChange={handleAmountChange}
-                  style={{
-                    width: "207px",
-                    height: "36px",
-                    backgroundColor: "white",
-                    border: "none",
-                    padding: "0 16px",
-                    textAlign: "center",
-                    fontSize: "20px",
-                    fontWeight: 500,
-                    borderRadius: "15px",
-                    direction: "ltr",
-                  }}
-                />
+                <Tooltip
+                  component={
+                    <DialPad
+                      value={editableAmountStr}
+                      onChange={handleDialPadAmountChange}
+                      onConfirm={() => setIsAmountTooltipOpen(false)}
+                      onClose={() => setIsAmountTooltipOpen(false)}
+                    />
+                  }
+                  isOpen={isAmountTooltipOpen}
+                  setIsOpen={setIsAmountTooltipOpen}
+                  position="bottom"
+                >
+                  <input
+                    type="text"
+                    value={toPersianNumber(editableAmountStr)}
+                    readOnly
+                    onClick={() => setIsAmountTooltipOpen(true)}
+                    style={{
+                      width: "207px",
+                      height: "36px",
+                      backgroundColor: "white",
+                      border: "none",
+                      padding: "0 16px",
+                      textAlign: "center",
+                      fontSize: "20px",
+                      fontWeight: 500,
+                      borderRadius: "15px",
+                      direction: "ltr",
+                      cursor: "pointer",
+                    }}
+                  />
+                </Tooltip>
                 <div
                   style={{
                     position: "absolute",
@@ -204,7 +231,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                     gap: "4px",
                   }}
                 >
-                  <img src={rial} alt="rial" className="w-6 h-6 ml-1" />
+                  <p style={{ fontSize: "16px", fontWeight: 500 }}>ریال</p>
                   <img src={editIcon} alt="edit" className="w-6 h-6" />
                 </div>
               </div>
@@ -245,6 +272,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                   color: "white",
                   borderRadius: "15px",
                 }}
+                disabled={editableAmount === 0}
               />
               <Button
                 label="انصراف"

@@ -1,13 +1,13 @@
 html,
 body {
-  font-family: "Peyda", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: "Peyda";
   width: 100%;
   max-width: 1920px;
   height: 100%;
-  max-height: 972px;
+  max-height: 1080px;
   margin: 0;
   background: #eaeaea;
-  zoom: 0.8;
+  /* zoom: 0.81; */
 }
 
 :root {

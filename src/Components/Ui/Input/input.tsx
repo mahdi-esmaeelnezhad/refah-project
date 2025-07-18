@@ -18,6 +18,7 @@ interface InputProps {
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   error?: string;
   type?: string;
@@ -46,6 +47,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onChange,
       onFocus,
       onBlur,
+      onKeyDown,
       disabled = false,
       error,
       type,
@@ -101,6 +103,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onChange={onChange}
             onFocus={onFocus}
             onBlur={onBlur}
+            onKeyDown={onKeyDown}
             disabled={disabled}
             style={{
               height: typeof height === "number" ? `${height - 30}px` : height,

@@ -2,7 +2,7 @@
 .factor-container {
   position: fixed;
   width: 1575px;
-  height: 848px;
+  height: 800px;
   left: 53px;
   top: 90px;
   background-color: #fff;
@@ -28,8 +28,8 @@
 }
 
 .close-button img {
-  width: 32px;
-  height: 32px;
+  width: 48px;
+  height: 48px;
   position: absolute;
   top: 10px !important;
   left: 10px;

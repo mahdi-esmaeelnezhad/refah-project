@@ -23,30 +23,48 @@ interface DialPadProps {
 }
 
 export function DialPad({ value, onChange, onClose }: DialPadProps) {
+  // مپ اعداد انگلیسی به فارسی
+  const toPersian = (d: string) => {
+    const map: Record<string, string> = {
+      "0": "۰",
+      "1": "۱",
+      "2": "۲",
+      "3": "۳",
+      "4": "۴",
+      "5": "۵",
+      "6": "۶",
+      "7": "۷",
+      "8": "۸",
+      "9": "۹",
+      ".": "٫",
+    };
+    return map[d] || d;
+  };
   const handlePress = (input: string) => {
     if (input === "delete") {
       if (value.length > 1) {
         onChange(value.slice(0, -1));
       } else if (value.length === 1) {
-        onChange("1");
+        onChange("");
       }
     } else if (input === "tick") {
       onClose();
     } else {
-      // max number
-      if (value.length > 6) {
+      // if (value.length >= 12) {
+      //   return;
+      // }
+      if (value === "" && input === "0") {
         return;
       }
-
-      if (value === "0" && input !== ".") {
-        onChange(input);
-      } else if (value === "1" && input !== ".") {
-        onChange(input);
-      } else if (value === "" && input === ".") {
-        onChange("0.");
-      } else if (input === "." && value.includes(".")) {
+      if (!/^[0-9.]$/.test(input)) {
         return;
-      } else {
+      }
+      if (value === "" && input.match(/[1-9]/)) {
+        onChange(input);
+      } else if (value !== "") {
+        if (input === "." && value.includes(".")) {
+          return;
+        }
         onChange(value + input);
       }
     }
@@ -63,13 +81,13 @@ export function DialPad({ value, onChange, onClose }: DialPadProps) {
           <EnterIcon />
         </DialButton>
         <DialButton className="bg-our-choice" onClick={() => handlePress("3")}>
-          3
+          {toPersian("3")}
         </DialButton>
         <DialButton className="bg-our-choice" onClick={() => handlePress("2")}>
-          2
+          {toPersian("2")}
         </DialButton>
         <DialButton className="bg-our-choice" onClick={() => handlePress("1")}>
-          1
+          {toPersian("1")}
         </DialButton>
       </div>
 
@@ -87,19 +105,19 @@ export function DialPad({ value, onChange, onClose }: DialPadProps) {
               className="bg-our-choice"
               onClick={() => handlePress("6")}
             >
-              6
+              {toPersian("6")}
             </DialButton>
             <DialButton
               className="bg-our-choice"
               onClick={() => handlePress("5")}
             >
-              5
+              {toPersian("5")}
             </DialButton>
             <DialButton
               className="bg-our-choice"
               onClick={() => handlePress("4")}
             >
-              4
+              {toPersian("4")}
             </DialButton>
           </div>
           <div className="flex gap-2">
@@ -107,19 +125,19 @@ export function DialPad({ value, onChange, onClose }: DialPadProps) {
               className="bg-our-choice"
               onClick={() => handlePress("9")}
             >
-              9
+              {toPersian("9")}
             </DialButton>
             <DialButton
               className="bg-our-choice"
               onClick={() => handlePress("8")}
             >
-              8
+              {toPersian("8")}
             </DialButton>
             <DialButton
               className="bg-our-choice"
               onClick={() => handlePress("7")}
             >
-              7
+              {toPersian("7")}
             </DialButton>
           </div>
           <div className="flex gap-2">
@@ -127,13 +145,13 @@ export function DialPad({ value, onChange, onClose }: DialPadProps) {
               className="bg-our-choice"
               onClick={() => handlePress(".")}
             >
-              .
+              {toPersian(".")}
             </DialButton>
             <DialButton
               className="bg-our-choice w-[138px]"
               onClick={() => handlePress("0")}
             >
-              0
+              {toPersian("0")}
             </DialButton>
           </div>
         </div>

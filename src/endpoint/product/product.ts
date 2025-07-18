@@ -6,9 +6,9 @@ export const PRODUCT_ENDPOINTS = {
   cacheCategoryList: `${BASE_URL}/api/shop_biz/cache/category/list`,
   addProduct: `${BASE_URL}/api/shop_biz/shop_items`,
   deleteProduct: (id: string | number) => `${BASE_URL}/api/shop_biz/shop_items/${id}`,
-  customerList: `${BASE_URL}/api/shop_biz/customers/list`,
+  customerList: (page: number, size: number) => `${BASE_URL}/api/shop_biz/customers/list?page=${page}&size=${size}`,
   addCustomer: `${BASE_URL}/api/shop_biz/customers`,
   deleteCustomer: (id: string | number) => `${BASE_URL}/api/shop_biz/customers/${id}`,
   customerSalesList: `${BASE_URL}/api/shop_biz/report/customer_sales`,
   customerInfo: `${BASE_URL}/api/shop_biz/report/customer_sales`,
-};
+};  

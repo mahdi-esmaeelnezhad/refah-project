@@ -160,7 +160,7 @@ export function NavBar({
           height: "42px",
           left: "53px",
           top: "22px",
-          zIndex: 10,
+          // zIndex: 10,
         }}
         className="flex items-center gap-[26px]"
       >

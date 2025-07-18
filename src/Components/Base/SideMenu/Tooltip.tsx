@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { createPortal } from "react-dom";
 
 type ClickTooltipProps = {
   component: React.ReactNode;
@@ -6,6 +7,7 @@ type ClickTooltipProps = {
   isOpen: boolean;
   setIsOpen: (isOpen: boolean) => void;
   position?: "left" | "bottom";
+  left?: number;
 };
 
 const ClickTooltip: React.FC<ClickTooltipProps> = ({
@@ -37,17 +39,21 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
   }, [setIsOpen]);
 
   const getTooltipStyles = () => {
+    if (!buttonRef.current) return {};
+
+    const buttonRect = buttonRef.current.getBoundingClientRect();
+
     if (position === "left") {
       return {
-        top: "50%",
-        right: "calc(100% + 8px)",
+        top: buttonRect.top + buttonRect.height / 2,
+        right: window.innerWidth - buttonRect.left + 8,
         transform: "translateY(-50%)",
       };
     }
     // default bottom position
     return {
-      top: "calc(100% + 8px)",
-      left: "50%",
+      top: buttonRect.bottom + 8,
+      left: buttonRect.left + buttonRect.width / 2,
       transform: "translateX(-50%)",
     };
   };
@@ -62,7 +68,7 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
         width: "8px",
         height: "8px",
         backgroundColor: "white",
-        zIndex: 50,
+        zIndex: 9999,
       };
     }
     // default bottom position
@@ -74,7 +80,7 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
       width: "8px",
       height: "8px",
       backgroundColor: "white",
-      zIndex: 50,
+      zIndex: 9999,
     };
   };
 
@@ -90,16 +96,21 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
       </div>
 
       {/* Tooltip */}
-      {isOpen && (
-        <div
-          ref={tooltipRef}
-          className="absolute z-50 whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
-          style={getTooltipStyles()}
-        >
-          {component}
-          <div style={getArrowStyles()}></div>
-        </div>
-      )}
+      {isOpen &&
+        createPortal(
+          <div
+            ref={tooltipRef}
+            className="fixed whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
+            style={{
+              ...getTooltipStyles(),
+              zIndex: 9999,
+            }}
+          >
+            {component}
+            <div style={getArrowStyles()}></div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 };

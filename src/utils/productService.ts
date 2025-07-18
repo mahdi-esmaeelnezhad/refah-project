@@ -43,8 +43,9 @@ export const findProductBySku = (sku: string): ProductItem | null => {
 };
 
 export const findProductByBarcode = (barcode: string): ProductItem | null => {
+  console.log("barcode", barcode);
+  
   try {
-    // از localStorage محصولات را دریافت کن
     const cachedProducts = localStorage.getItem('finalDataStorage');
     if (!cachedProducts) {
       console.warn('No cached products found');
@@ -53,18 +54,15 @@ export const findProductByBarcode = (barcode: string): ProductItem | null => {
 
     const products: ProductItem[] = JSON.parse(cachedProducts);
     
-    // ابتدا بر اساس SKU جستجو کن
     let product = products.find(p => p.sku === barcode);
     
-    // اگر پیدا نشد، بر اساس govId (شناسه دولتی) جستجو کن
-    if (!product) {
-      product = products.find(p => p.govId === barcode);
-    }
+    // if (!product) {
+    //   product = products.find(p => p.govId === barcode);
+    // }
     
-    // اگر هنوز پیدا نشد، بر اساس نام محصول جستجو کن
-    if (!product) {
-      product = products.find(p => p.name.includes(barcode));
-    }
+    // if (!product) {
+    //   product = products.find(p => p.name.includes(barcode));
+    // }
     
     if (product) {
       console.log('Product found by barcode:', product);

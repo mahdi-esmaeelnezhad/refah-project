@@ -33,6 +33,10 @@
   font-size: 1.25rem;
   direction: rtl;
 }
+.input:focus {
+  border: none;
+  outline: none;
+}
 
 .withIcon {
   padding-right: 2rem;

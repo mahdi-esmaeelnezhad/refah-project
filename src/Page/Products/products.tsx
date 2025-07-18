@@ -19,6 +19,7 @@ import AddProductModal from "../../Components/Modal/AddProductModal";
 import useRequest from "../../hooks/useRequest";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 import axios from "axios";
+import { BASE_ENDPOINTS } from "../../endpoint/base/base";
 // import { useSelector } from "react-redux";
 // import type { RootState } from "../../store/store";
 
@@ -79,6 +80,9 @@ const Products: React.FC = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [deleteProduct, setDeleteProduct] = useState<ProductItem | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(
+    null
+  );
   const token = localStorage.getItem("token");
   const shopId = localStorage.getItem("shopId");
   const { execute: addProductRequest } = useRequest(
@@ -102,7 +106,15 @@ const Products: React.FC = () => {
     if (!cacheCategoryList) return;
     setCategoriesCount(cacheCategoryList.length);
   };
-
+  const { execute: getCacheProductList } = useRequest<any>(
+    BASE_ENDPOINTS.cacheProductList,
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
   const getInfo = async () => {
     const shopId = localStorage.getItem("shopId");
     if (!shopId) return;
@@ -117,10 +129,8 @@ const Products: React.FC = () => {
       const cacheBrandList = JSON.parse(
         localStorage.getItem("cacheBrandList") || "[]"
       );
-      const cacheProductList = JSON.parse(
-        localStorage.getItem("cacheProductList") || "[]"
-      );
-
+      const res: any = await getCacheProductList({ shopId });
+      const cacheProductList = res.data;
       if (
         cacheProductList &&
         Array.isArray(cacheProductList) &&
@@ -196,7 +206,11 @@ const Products: React.FC = () => {
     setSearchTerm(value);
 
     let searchData: ProductItem[] = [];
-    allFinalData.forEach((item) => {
+    let baseData = selectedCategoryId
+      ? allFinalData.filter((item) => item.categoryId === selectedCategoryId)
+      : allFinalData;
+
+    baseData.forEach((item) => {
       if (
         item.name.toLowerCase().includes(value.toLowerCase()) ||
         item.id.includes(value)
@@ -205,7 +219,7 @@ const Products: React.FC = () => {
       }
     });
 
-    setFinalData(value ? searchData : allFinalData);
+    setFinalData(value ? searchData : baseData);
     setCurrentPage(1);
   };
   const closeCategoryModal = () => {
@@ -233,6 +247,23 @@ const Products: React.FC = () => {
     setOpenCategoryTooltipId(null);
     setCategoryDelete(true);
     setShowCategoryId(id);
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    if (selectedCategoryId === categoryId) {
+      // If same category is clicked again, remove filter
+      setSelectedCategoryId(null);
+      setFinalData(allFinalData);
+      setCurrentPage(1);
+    } else {
+      // Filter by selected category
+      setSelectedCategoryId(categoryId);
+      const filteredData = allFinalData.filter(
+        (item) => item.categoryId === categoryId
+      );
+      setFinalData(filteredData);
+      setCurrentPage(1);
+    }
   };
 
   const formatNumber = (num: number) => {
@@ -265,32 +296,43 @@ const Products: React.FC = () => {
     return [...new Set(types)];
   }, [allFinalData]);
 
-  const productSectionMaxHeight = showFilter ? 230 : 400;
+  const productSectionMaxHeight = showFilter ? 385 : 535;
 
   const brands = ["برند نمونه ۱", "برند نمونه ۲", "برند نمونه ۳"];
-  const unitsItem = ["عدد", "کیلوگرم", "گرم", "لیتر"];
+  const unitsItem = ["عدد", "وزن"];
 
   const handleEditProduct = (item: ProductItem) => {
     setEditProduct(item);
     setIsEditModalOpen(true);
   };
+  const getUnitTypeValue = (unit: string | number) => {
+    if (unit === "عدد" || unit === 0 || unit === "0") return 0;
+    if (unit === "وزن" || unit === 1 || unit === "1") return 1;
+    return unit;
+  };
   const submitEditProduct = async (data: any) => {
-    const body = {
-      categoryId: {
-        id: data.category?.categoryId || "",
-      },
-      id: data.id || "",
-      name: data.name || "",
-      price: String(data.salePrice) || "",
-      shopId: shopId,
-      sku: data.sku || "",
-      unitType: data.unit?.name || "0",
-      vatRate: data.vatRate || 0,
-      govId: data.govId || "",
-    };
-    await addProductRequest(body);
-    setIsEditModalOpen(false);
-    getInfo();
+    try {
+      const body = {
+        categoryId: {
+          id: data.category?.categoryId || "",
+        },
+        id: data.id || "",
+        name: data.name || "",
+        price: String(data.salePrice) || "",
+        shopId: shopId,
+        sku: data.sku || "",
+        unitType: getUnitTypeValue(data.unit?.name),
+        vatRate: data.vatRate || 0,
+        govId: data.govId || "",
+      };
+      await addProductRequest(body);
+      alert("کالا با موفقیت ویرایش شد");
+      setIsEditModalOpen(false);
+      getInfo();
+    } catch (error) {
+      alert("خطا در ویرایش کالا");
+      console.error("Error editing product:", error);
+    }
   };
   const handleDeleteProduct = (item: ProductItem) => {
     setDeleteProduct(item);
@@ -298,13 +340,19 @@ const Products: React.FC = () => {
   };
   const submitDeleteProduct = async () => {
     if (!deleteProduct) return;
-    await axios.delete(PRODUCT_ENDPOINTS.deleteProduct(deleteProduct.id), {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    setIsDeleteModalOpen(false);
-    getInfo();
+    try {
+      await axios.delete(PRODUCT_ENDPOINTS.deleteProduct(deleteProduct.id), {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      alert("کالا با موفقیت حذف شد");
+      setIsDeleteModalOpen(false);
+      getInfo();
+    } catch (error) {
+      alert("خطا در حذف کالا");
+      console.error("Error deleting product:", error);
+    }
   };
 
   if (error) {
@@ -345,22 +393,28 @@ const Products: React.FC = () => {
         units={unitsItem}
         brands={brands}
         onAdd={async (data) => {
-          const body = {
-            categoryId: {
-              id: data.category?.categoryId || "",
-            },
-            id: "",
-            name: data.name || "",
-            price: String(data.salePrice) || "",
-            shopId: shopId,
-            sku: data.sku || "",
-            unitType: data.unit?.name || "",
-            vatRate: data.vatRate || 0,
-            govId: data.govId || "",
-          };
-          await addProductRequest(body);
-          closeModal();
-          getInfo();
+          try {
+            const body = {
+              categoryId: {
+                id: data.category?.categoryId || "",
+              },
+              id: "",
+              name: data.name || "",
+              price: String(data.salePrice) || "",
+              shopId: shopId,
+              sku: data.sku || "",
+              unitType: getUnitTypeValue(data.unit?.name),
+              vatRate: data.vatRate || 0,
+              govId: data.govId || "",
+            };
+            await addProductRequest(body);
+            alert("کالا با موفقیت تعریف شد");
+            closeModal();
+            getInfo();
+          } catch (error) {
+            alert("خطا در تعریف کالا");
+            console.error("Error adding product:", error);
+          }
         }}
       />
       <AddProductModal
@@ -471,6 +525,13 @@ const Products: React.FC = () => {
 
               let filtered = allFinalData;
 
+              // Apply category filter from selected category first
+              if (selectedCategoryId) {
+                filtered = filtered.filter(
+                  (item) => item.categoryId === selectedCategoryId
+                );
+              }
+
               if (filters.category) {
                 filtered = filtered.filter(
                   (item) => item.categoryId === filters.category.categoryId
@@ -508,70 +569,172 @@ const Products: React.FC = () => {
             onReset={() => {
               setFinalData(allFinalData);
               setCurrentPage(1);
+              setSelectedCategoryId(null);
+              setSearchTerm("");
             }}
             showReset={finalData !== allFinalData}
           />
         )}
-        <section className="flex flex-wrap mt-2">
-          <div
-            className="flex mx-1 mt-2 p-4"
-            style={{
-              borderRadius: "5px",
-              backgroundColor: "#DEDEDE",
-            }}
-          >
-            <img style={{ marginBottom: "5px" }} src={starFull} alt="star" />
-          </div>
-          {availableCategories?.map((item) => (
+        <div style={{ position: "relative", marginTop: 16 }}>
+          <div style={{ display: "flex", alignItems: "center" }}>
+            {/* Container for scrollable categories */}
             <div
-              key={item.categoryId}
-              className="flex justify-between mx-1 mt-2 px-4 py-2"
               style={{
+                display: "flex",
+                flexDirection: "row",
+                overflowX: "auto",
+                overflowY: "hidden",
+                whiteSpace: "nowrap",
+                scrollbarWidth: "none",
+                msOverflowStyle: "none",
+                paddingBottom: 8,
+                flex: 1,
+                marginRight: 16, // Space for fixed add button
+              }}
+              className="hide-scrollbar"
+            >
+              <div
+                className="flex mx-1 mt-2 p-4"
+                style={{
+                  borderRadius: "5px",
+                  backgroundColor: "#DEDEDE",
+                  minWidth: 140,
+                  maxWidth: 140,
+                  height: 56,
+                  alignItems: "center",
+                  justifyContent: "center",
+                  display: "flex",
+                }}
+              >
+                <img
+                  style={{ marginBottom: "5px" }}
+                  src={starFull}
+                  alt="star"
+                />
+              </div>
+              {availableCategories?.map((item) => (
+                <div
+                  key={item.categoryId}
+                  className="flex justify-between mx-1 px-4 mt-2 px-4 py-2 cursor-pointer"
+                  style={{
+                    borderRadius: "5px",
+                    backgroundColor:
+                      selectedCategoryId === item.categoryId
+                        ? "#7485E5"
+                        : "#DEDEDE",
+                    color:
+                      selectedCategoryId === item.categoryId
+                        ? "white"
+                        : "black",
+                    // minWidth: 250,
+                    // maxWidth: 800,
+                    height: 56,
+                    alignItems: "center",
+                    justifyContent: "center",
+                    display: "flex",
+                    transition: "all 0.2s ease",
+                  }}
+                  onClick={() => handleCategoryClick(item.categoryId)}
+                >
+                  <span
+                    className="ml-8 py-2"
+                    style={{
+                      fontSize: "20px",
+                      fontWeight: 500,
+                      color:
+                        selectedCategoryId === item.categoryId
+                          ? "white"
+                          : "black",
+                    }}
+                  >
+                    {item.categoryName}
+                  </span>
+                  <div className="relative">
+                    <Tooltip
+                      component={
+                        <CategoryOption
+                          category={item}
+                          onDelete={handleDeleteCategory}
+                        />
+                      }
+                      isOpen={openCategoryTooltipId === item.categoryId}
+                      setIsOpen={(isOpen) => {
+                        if (!isOpen) {
+                          setOpenCategoryTooltipId(null);
+                          setSelectedItemId(null);
+                        } else {
+                          setOpenCategoryTooltipId(item.categoryId);
+                        }
+                      }}
+                    >
+                      {/* <img
+                        style={{
+                          height: "25px",
+                          width: "5px",
+                          marginTop: "12px",
+                        }}
+                        src={optionIcon}
+                        alt="options"
+                      /> */}
+                      <span
+                        className="flex"
+                        style={{ width: "100%", height: "100%" }}
+                      >
+                        <div style={{ visibility: "hidden" }}>&</div>
+                        <img
+                          style={{
+                            height: "25px",
+                            width: "5px",
+                            filter:
+                              selectedCategoryId === item.categoryId
+                                ? "brightness(0) invert(1)"
+                                : "none",
+                          }}
+                          src={optionIcon}
+                          alt="options"
+                        />
+                      </span>
+                    </Tooltip>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Fixed add button outside scrollable area */}
+            <div
+              style={{
+                minWidth: 56,
+                maxWidth: 56,
+                height: 56,
+                background: "#DEDEDE",
                 borderRadius: "5px",
-                backgroundColor: "#DEDEDE",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                marginRight: 16,
+                flexShrink: 0, // Prevent shrinking
+              }}
+              onClick={() => {
+                /* اکشن افزودن دسته‌بندی */
               }}
             >
-              <span
-                className="ml-8 py-2"
-                style={{ fontSize: "20px", fontWeight: 500 }}
-              >
-                {item.categoryName}
-              </span>
-
-              <div className="relative">
-                <Tooltip
-                  component={
-                    <CategoryOption
-                      category={item}
-                      onDelete={handleDeleteCategory}
-                    />
-                  }
-                  isOpen={openCategoryTooltipId === item.categoryId}
-                  setIsOpen={(isOpen) => {
-                    if (!isOpen) {
-                      setOpenCategoryTooltipId(null);
-                      setSelectedItemId(null);
-                    } else {
-                      setOpenCategoryTooltipId(item.categoryId);
-                    }
-                  }}
-                >
-                  <img
-                    style={{
-                      height: "25px",
-                      width: "5px",
-                      marginTop: "12px",
-                    }}
-                    src={optionIcon}
-                    alt="options"
-                  />
-                </Tooltip>
-              </div>
+              <span style={{ fontSize: 30, fontWeight: 300 }}>+</span>
+              {/* <img
+                src={addIcon}
+                alt="افزودن دسته"
+                style={{ width: 27, height: 27, filter: "invert(1)" }}
+              /> */}
             </div>
-          ))}
-        </section>
+          </div>
+          <style>{`
+            .hide-scrollbar::-webkit-scrollbar { display: none; }
+          `}</style>
+        </div>
       </div>
-      <section className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto">
+      <section
+        style={{ zIndex: 1 }}
+        className="w-full text-right mt-8 flex flex-col gap-2 overflow-y-auto"
+      >
         <div className="flex justify-between">
           <div className="bg-our-choice h-10 p-4 rounded-md flex items-center justify-center w-[50px]">
             #
@@ -630,6 +793,7 @@ const Products: React.FC = () => {
               <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
                 <div>{item.discount ? formatNumber(item.discount) : "-"}</div>
                 <Tooltip
+                  left={20}
                   component={
                     <ProductOption
                       product={item}

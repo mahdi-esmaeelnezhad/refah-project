@@ -148,11 +148,11 @@ const FactorFilter: React.FC<FactorFilterProps> = ({
   };
 
   const paymentTypeOptions = [
-    { name: "کارتی" },
-    { name: "اعتباری" },
-    { name: "نسیه" },
-    { name: "نقدی" },
-    { name: "ترکیبی" },
+    { name: "کارتی", id: 4 },
+    { name: "اعتباری", id: 0 },
+    { name: "نسیه", id: 11 },
+    { name: "نقدی", id: 1 },
+    { name: "ترکیبی", id: 3 },
   ];
 
   return (

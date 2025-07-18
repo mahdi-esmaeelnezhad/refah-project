@@ -144,10 +144,7 @@ const Unregistered: React.FC = () => {
             بارکد
           </div>
         </div>
-        <section
-          className="overflow-y-auto relative"
-          style={{ maxHeight: 650 }}
-        >
+        <section className="overflow-y-auto relative" style={{ height: 650 }}>
           {paginatedItems && paginatedItems.length > 0 ? (
             paginatedItems.map((item, index) => (
               <div key={item.id} style={{ position: "relative" }}>
@@ -168,13 +165,26 @@ const Unregistered: React.FC = () => {
                       .replace(/\B(?=(\d{3})+(?!\d))/g, ",")}
                   </div>
                   <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[470px] font-semibold">
-                    {item.barcode.toLocaleString()}
+                    <span
+                      style={{
+                        width: "200px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {item.barcode.toLocaleString()}
+                    </span>
                     <img
                       src={arrowDownn}
                       alt="arrow"
                       style={{
+                        position: "relative",
+                        right: "150px",
                         cursor: "pointer",
                         transition: "transform 0.2s",
+                        color: "black",
+                        backgroundColor: "black",
                         transform:
                           openTooltipId === item.id
                             ? "rotate(180deg)"

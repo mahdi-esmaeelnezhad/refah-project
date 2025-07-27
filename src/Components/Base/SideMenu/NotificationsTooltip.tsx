@@ -49,16 +49,16 @@ const NotificationsTooltip: React.FC<NotificationsTooltipProps> = ({
     <div
       ref={tooltipRef}
       style={{
-        position: "absolute",
-        top: "100%",
-        right: 0,
+        position: "fixed",
+        top: "50%",
+        left: "50%",
+        transform: "translate(-50%, -50%)",
         width: "384px",
         backgroundColor: "white",
         borderRadius: "10px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-        zIndex: 1000,
+        zIndex: 999999,
         padding: "20px",
-        marginTop: "10px",
         overflowY: "auto",
         maxHeight: "600px",
       }}

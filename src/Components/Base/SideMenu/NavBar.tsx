@@ -13,23 +13,27 @@ import Input from "../../Ui/Input/input";
 import Tooltip from "./Tooltip";
 import SavedFactorsTooltip from "./SavedFactorsTooltip";
 import NotificationsTooltip from "./NotificationsTooltip";
+import ProductsTooltip from "./ProductsTooltip";
 import { useNetworkStatus } from "../../../hooks/useNetworkStatus";
 import InternetDisconnectedModal from "../../Modal/InternetDisconnectedModal";
 
 interface NavBarProps {
   children?: React.ReactNode;
   showFullNav?: boolean;
-  onLoadSavedFactor?: (factor: any) => void; // اضافه شد
+  onLoadSavedFactor?: (factor: any) => void;
+  onSelectProduct?: (product: any) => void; // اضافه شد
 }
 
 export function NavBar({
   children = "",
   showFullNav = false,
   onLoadSavedFactor,
+  onSelectProduct,
 }: NavBarProps) {
   const [searchProduct, setSearchProduct] = useState("");
   const [isSavedFactorsOpen, setIsSavedFactorsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isProductsOpen, setIsProductsOpen] = useState(false); // اضافه شد
   const [savedFactors, setSavedFactors] = useState<any[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
   const [unregisteredCount, setUnregisteredCount] = useState(0);
@@ -148,6 +152,16 @@ export function NavBar({
     handleDeleteFactor(factor.id);
   };
 
+  const handleProductSelect = (product: any) => {
+    // بستن tooltip
+    setIsProductsOpen(false);
+
+    // فراخوانی تابع انتخاب محصول در Content
+    if (onSelectProduct) {
+      onSelectProduct(product);
+    }
+  };
+
   const removeNotification = (id: string) => {
     setNotifications((prev) =>
       prev.filter((notification) => notification.id !== id)
@@ -198,13 +212,46 @@ export function NavBar({
           </Tooltip>
         </div>
 
-        <span
-          className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[286px] font-23 relative"
+        <div
+          className="relative"
           style={{ visibility: showFullNav ? "visible" : "hidden" }}
         >
-          <ProductsIcon />
-          محصولات
-        </span>
+          <Tooltip
+            top={60}
+            left={1000}
+            component={
+              <ProductsTooltip
+                isOpen={isProductsOpen}
+                setIsOpen={setIsProductsOpen}
+                onSelectProduct={handleProductSelect}
+                onOpenAddProduct={() => setIsProductsOpen(false)}
+              />
+            }
+            isOpen={isProductsOpen}
+            setIsOpen={setIsProductsOpen}
+          >
+            <span
+              className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[286px] font-23 cursor-pointer"
+              onClick={() => setIsProductsOpen(!isProductsOpen)}
+            >
+              <ProductsIcon />
+              محصولات
+            </span>
+          </Tooltip>
+          {/* <span
+            className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[286px] font-23 cursor-pointer"
+            onClick={() => setIsProductsOpen(!isProductsOpen)}
+          >
+            <ProductsIcon />
+            محصولات
+          </span>
+          <ProductsTooltip
+            isOpen={isProductsOpen}
+            setIsOpen={setIsProductsOpen}
+            onSelectProduct={handleProductSelect}
+            onOpenAddProduct={() => setIsProductsOpen(false)}
+          /> */}
+        </div>
 
         <Input
           value={searchProduct}
@@ -220,18 +267,29 @@ export function NavBar({
             className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 font-23 px-4 min-w-36 cursor-pointer"
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
           >
-            <NofiIcon />
-            اعلانات
+            <Tooltip
+              top={130}
+              left={500}
+              component={
+                <NotificationsTooltip
+                  isOpen={isNotificationsOpen}
+                  setIsOpen={setIsNotificationsOpen}
+                  notifications={notifications}
+                  closeNotification={(id: string) => removeNotification(id)}
+                />
+              }
+              isOpen={isNotificationsOpen}
+              setIsOpen={setIsNotificationsOpen}
+            >
+              <span className="flex items-center gap-3">
+                <NofiIcon />
+                <span>اعلانات</span>
+              </span>
+            </Tooltip>
             <div className="absolute -top-2 -left-2 w-[28px] h-[29px] bg-[#49CD3D] rounded-full flex items-center justify-center text-white text-[14px] font-[500] font-21">
               {toPersianNumber(notifications.length.toString())}
             </div>
           </span>
-          <NotificationsTooltip
-            isOpen={isNotificationsOpen}
-            setIsOpen={setIsNotificationsOpen}
-            notifications={notifications}
-            closeNotification={(id: string) => removeNotification(id)}
-          />
         </div>
 
         <span className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-4 font-23 px-4  min-w-[302px]">

@@ -16,7 +16,7 @@ import { useModal } from "../../../hooks/useModal";
 import DeleteModal from "../../Modal/DeleteModal";
 import CartPaymentModal from "../../Modal/CartPaymentModal";
 import CartPaymentLoading from "../../Modal/CartPaymentLoading";
-import CartPaymentPassword from "../../Modal/CartPaymentPassword";
+// import CartPaymentPassword from "../../Modal/CartPaymentPassword";
 import SuccessPaymentModal from "../../Modal/SuccessPaymentModal";
 import FailedPaymentModal from "../../Modal/FailedPaymentModal";
 import CustomerTooltip from "./CustomerTooltip";
@@ -194,6 +194,11 @@ const Content: React.FC = () => {
       detail: { handler: handleLoadSavedFactor },
     });
     window.dispatchEvent(event);
+
+    const productEvent = new CustomEvent("setSelectProductHandler", {
+      detail: { handler: handleProductSelect },
+    });
+    window.dispatchEvent(productEvent);
   }, []); // فقط یک بار اجرا شود
 
   // حذف event listener برای saved factors
@@ -585,6 +590,40 @@ const Content: React.FC = () => {
 
   const handleAddCustomer = (customerData: any) => {
     console.log("New customer data:", customerData);
+  };
+
+  const handleProductSelect = (product: any) => {
+    // اضافه کردن محصول به فاکتور
+    const existingItem = items.find((item) => item.name === product.name);
+
+    if (existingItem) {
+      setItems(
+        items.map((item) =>
+          item.id === existingItem.id
+            ? {
+                ...item,
+                quantity: (parseInt(item.quantity) + 1).toString(),
+                total: item.price * (parseInt(item.quantity) + 1),
+              }
+            : item
+        )
+      );
+    } else {
+      const newItem: Item = {
+        id: items.length + 1,
+        name: product.name,
+        quantity: "1",
+        unit: getUnitLabel(String(product.unitType || "0")),
+        price: product.price,
+        discount: product.discount || 0,
+        total: product.price,
+        vatRate: product.vatRate || "0",
+        sku: product.sku || "",
+        itemId: product.id,
+      };
+
+      setItems([...items, newItem]);
+    }
   };
 
   const handleBarcodeScanned = React.useCallback(
@@ -984,7 +1023,7 @@ const Content: React.FC = () => {
           }
         />
         <CartPaymentLoading amount={paymentAmount} />
-        <CartPaymentPassword amount={paymentAmount} />
+        {/* <CartPaymentPassword amount={paymentAmount} /> */}
         <SuccessPaymentModal
           amount={paymentAmount}
           transactionType={
@@ -1128,7 +1167,19 @@ const Content: React.FC = () => {
               <Button
                 label="مشتری"
                 color="#DAA51A"
-                onClick={() => setIsCustomerTooltipOpen(!isCustomerTooltipOpen)}
+                //when a click , do not click on the button
+                onClick={(e) => {
+                  //onable the button
+                  e.currentTarget.disabled = false;
+                  // e.stopPropagation();
+                  if (isCustomerTooltipOpen) {
+                    setIsCustomerTooltipOpen(false);
+                  } else {
+                    setIsCustomerTooltipOpen(true);
+                    //disable the button
+                    // e.currentTarget.disabled = true;
+                  }
+                }}
                 disabled={items.length === 0}
               />
               <CustomerTooltip

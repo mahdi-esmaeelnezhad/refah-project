@@ -17,6 +17,7 @@ interface ProductItem {
 
 export const findProductBySku = (sku: string): ProductItem | null => {
   try {
+    
     // از localStorage محصولات را دریافت کن
     const cachedProducts = localStorage.getItem('finalDataStorage');
     if (!cachedProducts) {
@@ -65,6 +66,8 @@ export const findProductByBarcode = (barcode: string): ProductItem | null => {
     // }
     
     if (product) {
+      console.log("cachedProducts", cachedProducts);
+
       console.log('Product found by barcode:', product);
       return product;
     } else {

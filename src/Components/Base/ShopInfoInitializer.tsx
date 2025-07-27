@@ -5,7 +5,32 @@ import { BASE_ENDPOINTS } from "../../endpoint/base/base";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 // import type { RootState } from "../../store/store";
 import axios from "axios";
+interface ProductItem {
+  id: string;
+  name: string;
+  price: number;
+  categoryId: string;
+  brandId: string;
+  categoryName: string;
+  brandName: string;
+  sku: string;
+  unitType: string;
+  onlineStockThreshold: number;
+  discount?: number;
+  govId: string;
+  vatRate: string;
+  isAvailable: boolean;
+}
 
+// interface Category {
+//   id: string;
+//   title: string;
+// }
+
+interface CategoryOption {
+  categoryId: string;
+  categoryName: string;
+}
 const ShopInfoInitializer: React.FC = () => {
   const token = localStorage.getItem("token");
 
@@ -36,6 +61,86 @@ const ShopInfoInitializer: React.FC = () => {
       },
     }
   );
+  const { execute: getCacheProductList } = useRequest<any>(
+    BASE_ENDPOINTS.cacheProductList,
+    "POST",
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  const getInfo = async () => {
+    const shopId = localStorage.getItem("shopId");
+    if (!shopId) return;
+    // please json parse
+    const cacheCategoryList = JSON.parse(
+      localStorage.getItem("cacheCategoryList") || "[]"
+    );
+    const cacheBrandList = JSON.parse(
+      localStorage.getItem("cacheBrandList") || "[]"
+    );
+    const res: any = await getCacheProductList({ shopId });
+    const cacheProductList = res.data;
+    if (
+      cacheProductList &&
+      Array.isArray(cacheProductList) &&
+      cacheCategoryList &&
+      Array.isArray(cacheCategoryList) &&
+      cacheBrandList &&
+      Array.isArray(cacheBrandList)
+    ) {
+      // const categoriesResponse = await categoryRequest({ shopId });
+      const categoryMap = new Map<string, string>();
+      const brandMap = new Map<string, string>();
+
+      if (cacheCategoryList) {
+        cacheCategoryList?.forEach((cat: any) => {
+          categoryMap.set(cat.id, cat.title);
+        });
+      }
+      let processedData: ProductItem[] = cacheProductList.map((item: any) => ({
+        id: item.id || item.itemDto?.id || "",
+        name: item.name || item.itemDto?.name || "",
+        price: item.price || item.itemDto?.price || 0,
+        categoryId: item.categoryId || "",
+        brandId: item.brandId || "",
+        brandName: brandMap.get(item.brandId) || item.brandName || "",
+        sku: item.sku || "",
+        govId: item.govId || "",
+        isAvailable: item.isAvailable || false,
+        vatRate: item.vatRate || "",
+        categoryName:
+          categoryMap.get(item.categoryId) || item.categoryName || "",
+        unitType: item.unitType || "",
+        onlineStockThreshold: item.onlineStockThreshold || 0,
+        discount: item.discount || 0,
+      }));
+      const availableProducts = processedData.filter(
+        (item) => item.isAvailable
+      );
+      // setFinalData(availableProducts);
+      // setAllFinalData(availableProducts);
+      localStorage.setItem(
+        "finalDataStorage",
+        JSON.stringify(availableProducts)
+      );
+      const availableCategoriesArray: CategoryOption[] = [];
+      availableProducts.forEach((item) => {
+        if (item.categoryId && categoryMap.has(item.categoryId)) {
+          const existing = availableCategoriesArray.find(
+            (cat) => cat.categoryId === item.categoryId
+          );
+          if (!existing) {
+            availableCategoriesArray.push({
+              categoryId: item.categoryId,
+              categoryName: categoryMap.get(item.categoryId) || "",
+            });
+          }
+        }
+      });
+    }
+  };
   // const { execute: getCacheProductList } = useRequest<any>(
   //   BASE_ENDPOINTS.cacheProductList,
   //   "POST",
@@ -86,14 +191,6 @@ const ShopInfoInitializer: React.FC = () => {
               "cacheBrandList",
               JSON.stringify(cacheBrandListRes?.data)
             );
-            // const cacheProductListRes = await getCacheProductList({
-            //   shopId,
-            //   version: cacheRes.data.product,
-            // });
-            // localStorage.setItem(
-            //   "cacheProductList",
-            //   JSON.stringify(cacheProductListRes?.data)
-            // );
 
             const searchPayload = {
               conditionType: "OR",
@@ -117,6 +214,7 @@ const ShopInfoInitializer: React.FC = () => {
               "customers",
               JSON.stringify(customersRes?.data)
             );
+            getInfo();
           }
         }
       } catch (err) {

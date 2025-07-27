@@ -403,6 +403,8 @@ const Factors: React.FC = () => {
                       : "ترکیبی"}
                   </div>
                   <Tooltip
+                    positioning="parent"
+                    top={40}
                     left={40}
                     component={
                       <FactorOption

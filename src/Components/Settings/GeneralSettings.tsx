@@ -10,6 +10,7 @@ import software from "../../assets/softwere.svg";
 import key from "../../assets/key copy.svg";
 import logout from "../../assets/logout.svg";
 import reload from "../../assets/reload.svg";
+import LogoutConfirmModal from "../Modal/LogoutConfirmModal";
 
 // Simple tab component for two-item tabs
 interface SimpleTabProps {
@@ -85,11 +86,20 @@ const GeneralSettings: React.FC = () => {
   const [shopName, setShopName] = useState("");
   const [terminalId, setTerminalId] = useState("");
   const [receiverNumber, setReceiverNumber] = useState("");
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setIsLogoutModalOpen(true);
+  };
+
+  const handleLogoutConfirm = () => {
     localStorage.removeItem("token");
     dispatch(clearToken());
     navigate("/");
+  };
+
+  const handleLogoutCancel = () => {
+    setIsLogoutModalOpen(false);
   };
 
   return (
@@ -496,13 +506,20 @@ const GeneralSettings: React.FC = () => {
               fontSize: "18px",
               fontWeight: 500,
             }}
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
           >
             <img className="mx-2" src={logout} alt="logout" />
             <span style={{ fontSize: "18px", fontWeight: 500 }}>خروج</span>
           </Button>
         </div>
       </div>
+
+      {/* Logout Confirm Modal */}
+      <LogoutConfirmModal
+        isOpen={isLogoutModalOpen}
+        onClose={handleLogoutCancel}
+        onConfirm={handleLogoutConfirm}
+      />
     </div>
   );
 };

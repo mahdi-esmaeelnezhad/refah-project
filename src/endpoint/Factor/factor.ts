@@ -3,7 +3,8 @@ export const FACTOR_ENDPOINTS = {
 
   factor : `${BASE_URL}/api/shop_biz/sale`,
   // add page and size to the url
-  factorList : (page: number, size: number) => `${BASE_URL}/api/shop_biz/user/report/seller_simple_sale/list?page=${page}&size=${size}`
+  factorList : (page: number, size: number) => `${BASE_URL}/api/shop_biz/user/report/seller_simple_sale/list?page=${page}&size=${size}`,
   // factorList : `${BASE_URL}/api/shop_biz/sale/list`,
+  factorDetail : (id: string) => `${BASE_URL}/api/shop_biz/sale/${id}`
   // factorDetail : `${BASE_URL}/api/shop_biz/sale/`
 }

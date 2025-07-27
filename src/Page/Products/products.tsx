@@ -651,6 +651,9 @@ const Products: React.FC = () => {
                   </span>
                   <div className="relative">
                     <Tooltip
+                      positioning="parent"
+                      top={40}
+                      left={40}
                       component={
                         <CategoryOption
                           category={item}
@@ -793,7 +796,9 @@ const Products: React.FC = () => {
               <div className="h-[49px] p-4 rounded-md flex items-center justify-center min-w-[180px]">
                 <div>{item.discount ? formatNumber(item.discount) : "-"}</div>
                 <Tooltip
-                  left={20}
+                  positioning="parent"
+                  top={40}
+                  left={40}
                   component={
                     <ProductOption
                       product={item}

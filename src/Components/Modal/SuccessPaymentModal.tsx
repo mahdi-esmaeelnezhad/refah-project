@@ -79,8 +79,14 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
           <div className="flex justify-between">
             <div
               onClick={() => {
-                closeSuccessPayment();
-                onClose?.();
+                // اگر مبلغ باقی‌مانده وجود دارد، فقط modal را ببند
+                if (showRemainingAmount) {
+                  closeSuccessPayment();
+                } else {
+                  // اگر مبلغ کامل پرداخت شده، modal را ببند و فاکتور را پاک کن
+                  closeSuccessPayment();
+                  onClose?.();
+                }
               }}
               style={{ cursor: "pointer" }}
             >

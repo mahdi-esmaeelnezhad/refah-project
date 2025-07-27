@@ -10,6 +10,7 @@ type ClickTooltipProps = {
   left?: number;
   top?: number;
   right?: number;
+  positioning?: "body" | "parent"; // حالت جدید برای انتخاب positioning
 };
 
 const ClickTooltip: React.FC<ClickTooltipProps> = ({
@@ -21,6 +22,7 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
   top,
   right,
   left,
+  positioning = "body", // حالت پیش‌فرض body
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -48,20 +50,56 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
 
     const buttonRect = buttonRef.current.getBoundingClientRect();
 
-    if (position === "left") {
+    if (positioning === "parent") {
+      // حالت parent-based positioning
+      const parentRect =
+        buttonRef.current.parentElement?.getBoundingClientRect();
+
+      if (position === "left") {
+        return {
+          top:
+            top !== undefined
+              ? top
+              : buttonRect.top - (parentRect?.top || 0) + buttonRect.height / 2,
+          right:
+            right !== undefined
+              ? right
+              : (parentRect?.right || 0) - buttonRect.left + 8,
+          transform: "translateY(-50%)",
+        };
+      }
+      // default bottom position
       return {
-        top: top !== undefined ? top : buttonRect.top + buttonRect.height / 2,
-        right:
-          right !== undefined ? right : window.innerWidth - buttonRect.left + 8,
-        transform: "translateY(-50%)",
+        top:
+          top !== undefined
+            ? top
+            : buttonRect.bottom - (parentRect?.top || 0) + 8,
+        left:
+          left !== undefined
+            ? left
+            : buttonRect.left - (parentRect?.left || 0) + buttonRect.width / 2,
+        transform: "translateX(-50%)",
+      };
+    } else {
+      // حالت body-based positioning (حالت قبل)
+      if (position === "left") {
+        return {
+          top: top !== undefined ? top : buttonRect.top + buttonRect.height / 2,
+          right:
+            right !== undefined
+              ? right
+              : window.innerWidth - buttonRect.left + 8,
+          transform: "translateY(-50%)",
+        };
+      }
+      // default bottom position
+      return {
+        top: top !== undefined ? top : buttonRect.bottom + 8,
+        left:
+          left !== undefined ? left : buttonRect.left + buttonRect.width / 2,
+        transform: "translateX(-50%)",
       };
     }
-    // default bottom position
-    return {
-      top: top !== undefined ? top : buttonRect.bottom + 8,
-      left: left !== undefined ? left : buttonRect.left + buttonRect.width / 2,
-      transform: "translateX(-50%)",
-    };
   };
 
   const getArrowStyles = () => {
@@ -103,10 +141,10 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
 
       {/* Tooltip */}
       {isOpen &&
-        createPortal(
+        (positioning === "parent" ? (
           <div
             ref={tooltipRef}
-            className="fixed whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
+            className="absolute whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
             style={{
               ...getTooltipStyles(),
               zIndex: 9999,
@@ -114,9 +152,24 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
           >
             {component}
             <div style={getArrowStyles()}></div>
-          </div>,
-          document.body
-        )}
+          </div>
+        ) : (
+          createPortal(
+            <div
+              ref={tooltipRef}
+              className="fixed whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
+              style={{
+                position: "absolute",
+                ...getTooltipStyles(),
+                zIndex: 9999,
+              }}
+            >
+              {component}
+              <div style={getArrowStyles()}></div>
+            </div>,
+            document.body
+          )
+        ))}
     </div>
   );
 };

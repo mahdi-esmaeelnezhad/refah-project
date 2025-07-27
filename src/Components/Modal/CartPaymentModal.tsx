@@ -48,7 +48,7 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
   useEffect(() => {
     setEditableAmountStr(totalAmount.toString());
     setEditableAmount(totalAmount);
-  }, [totalAmount]);
+  }, [totalAmount, isCartPaymentOpen]);
 
   if (!isCartPaymentOpen) return null;
 
@@ -95,8 +95,15 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
     const englishVal = val.replace(/[\u0660-\u0669]/g, (d) =>
       String(d.charCodeAt(0) - 0x0660)
     );
+    const numericValue = englishVal ? parseInt(englishVal, 10) : 0;
+
+    // اگر مبلغ وارد شده بیشتر از مبلغ کل باشد، اجازه وارد کردن نده
+    if (numericValue > totalAmount) {
+      return;
+    }
+
     setEditableAmountStr(englishVal);
-    setEditableAmount(englishVal ? parseInt(englishVal, 10) : 0);
+    setEditableAmount(numericValue);
   };
 
   return (
@@ -191,6 +198,8 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 }}
               >
                 <Tooltip
+                  top={600}
+                  left={1050}
                   component={
                     <DialPad
                       value={editableAmountStr}

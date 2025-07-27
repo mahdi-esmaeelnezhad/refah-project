@@ -375,6 +375,9 @@ const Credit: React.FC = () => {
                         {item.totalDebt.toLocaleString("fa-IR")}
                       </div>
                       <Tooltip
+                        positioning="parent"
+                        top={40}
+                        left={40}
                         isOpen={openTooltipId === item.id}
                         setIsOpen={(isOpen) =>
                           setOpenTooltipId(isOpen ? item.id : null)

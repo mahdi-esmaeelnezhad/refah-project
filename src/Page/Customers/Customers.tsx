@@ -444,6 +444,9 @@ const Customers: React.FC = () => {
                   <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[200px]">
                     <div> {item.debt > 0 ? "بدهکار" : "تسویه"}</div>
                     <Tooltip
+                      positioning="parent"
+                      top={40}
+                      left={40}
                       component={
                         <CustomerOption
                           product={item}

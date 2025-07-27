@@ -1,8 +1,10 @@
 // FactorPrintWeb.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import "./factorPrint.css";
 import { Button } from "../Ui/Button/button";
 import closeIcon from "../../assets/close.svg";
+import { FACTOR_ENDPOINTS } from "../../endpoint/Factor/factor";
+import axios from "axios";
 
 interface ShopBizItemDto {
   itemId: string;
@@ -64,11 +66,26 @@ interface Props {
   factordetail: Factor; // Directly pass the Factor object
   onClose: () => void;
 }
+
 const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
-  const factor = factordetail; // Use factordetail directly as it's already a Factor object
+  let factor = factordetail;
+  const [factorData, setFactorData] = useState<any>();
   const formatPrice = (price?: number) =>
     price?.toLocaleString("fa-IR") + " ریال";
 
+  const factorDetailHandler = async () => {
+    const token = localStorage.getItem("token");
+    const response = await axios.get(FACTOR_ENDPOINTS.factorDetail(factor.id), {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    setFactorData(response.data);
+    return response.data;
+  };
+  useEffect(() => {
+    factorDetailHandler();
+  }, [factor.id]);
   const handlePrint = () => {
     window.print();
   };
@@ -86,11 +103,10 @@ const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
           </button>
         </div>
         <div className="factor-row">
-          <span>شماره فاکتور: {factor.receiptCode}</span>
+          <span>شماره فاکتور: {factorData?.receiptCode}</span>
           <span>
-            {new Date(factor.createdDate).toLocaleDateString("fa-IR")}
+            {new Date(factorData?.createdDate).toLocaleDateString("fa-IR")}
           </span>{" "}
-          {/* Format date */}
         </div>
         <div className="factor-row">
           <span>نام مشتری: {factor.customerDto?.displayName}</span>
@@ -102,33 +118,94 @@ const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
           <span className="w-[25%]">قیمت (ریال)</span>
           <span className="w-[25%]">جمع کل (ریال)</span>
         </div>
-        {factor.shopBizItemDtoList.map((item, index) => (
-          <div
-            className="factor-table-row flex justify-between px-4"
-            key={index}
-          >
-            <span className=" w-[25%]">{item.name}</span>
-            <span className="w-[25%] pr-4">{item.saleCount}</span>
-            <span className="w-[25%] pr-2">{formatPrice(item.price)}</span>{" "}
-            {/* Use item.price */}
-            <span className="w-[25%] pr-2">
-              {formatPrice(item.totalAmount)}
-            </span>
-          </div>
-        ))}
-        {/* <hr /> */}
+        {factorData?.shopBizItemDtoList.map(
+          (
+            item: {
+              name:
+                | string
+                | number
+                | bigint
+                | boolean
+                | React.ReactElement<
+                    unknown,
+                    string | React.JSXElementConstructor<any>
+                  >
+                | Iterable<React.ReactNode>
+                | React.ReactPortal
+                | Promise<
+                    | string
+                    | number
+                    | bigint
+                    | boolean
+                    | React.ReactPortal
+                    | React.ReactElement<
+                        unknown,
+                        string | React.JSXElementConstructor<any>
+                      >
+                    | Iterable<React.ReactNode>
+                    | null
+                    | undefined
+                  >
+                | null
+                | undefined;
+              saleCount:
+                | string
+                | number
+                | bigint
+                | boolean
+                | React.ReactElement<
+                    unknown,
+                    string | React.JSXElementConstructor<any>
+                  >
+                | Iterable<React.ReactNode>
+                | React.ReactPortal
+                | Promise<
+                    | string
+                    | number
+                    | bigint
+                    | boolean
+                    | React.ReactPortal
+                    | React.ReactElement<
+                        unknown,
+                        string | React.JSXElementConstructor<any>
+                      >
+                    | Iterable<React.ReactNode>
+                    | null
+                    | undefined
+                  >
+                | null
+                | undefined;
+              price: number | undefined;
+              totalAmount: number | undefined;
+            },
+            index: React.Key | null | undefined
+          ) => (
+            <div
+              className="factor-table-row flex justify-between px-4"
+              key={index}
+            >
+              <span className=" w-[25%]">{item.name}</span>
+              <span className="w-[25%] pr-4">{item.saleCount}</span>
+              <span className="w-[25%] pr-2">
+                {formatPrice(item.price)}
+              </span>{" "}
+              <span className="w-[25%] pr-2">
+                {formatPrice(item.totalAmount)}
+              </span>
+            </div>
+          )
+        )}
         <div className="factor-summary px-4">
           <span>
             تعداد اقلام:{" "}
-            {factor.shopBizItemDtoList.reduce(
-              (acc, curr) => acc + curr.saleCount,
+            {factorData.shopBizItemDtoList.reduce(
+              (acc: any, curr: { saleCount: any }) => acc + curr.saleCount,
               0
             )}
           </span>{" "}
-          {/* Calculate total items */}
           <span></span>
           <span>مبلغ کل:</span>
-          <span>{formatPrice(factor.amount)}</span>
+          <span>{formatPrice(factorData?.amount)}</span>
         </div>
         <div className="factor-summary px-4">
           <span>تخفیف:</span>
@@ -136,25 +213,25 @@ const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
         </div>
         <div className="factor-summary px-4">
           <span>مالیات بر ارزش افزوده:</span>
-          <span>{formatPrice(factor.tax)}</span> {/* Use actual tax */}
+          <span>{formatPrice(factorData?.tax)}</span>
         </div>
         <div className="factor-summary px-4">
           <span>هزینه ارسال:</span>
-          <span>{formatPrice(factor.shippingCost)}</span>
+          <span>{formatPrice(factorData?.shippingCost)}</span>
         </div>
         <div className="factor-total px-4 mt-10">
           <strong>جمع مبلغ پرداختی:</strong>
-          <strong>{formatPrice(factor.totalAmount)}</strong>
+          <strong>{formatPrice(factorData?.totalAmount)}</strong>
         </div>
         <div className="factor-debt px-4">
           <strong>بدهی این فاکتور:</strong>
           <strong>
             {formatPrice(
-              factor.shopBizPaymentDtoList.find((p) => p.method === 0)
-                ?.totalAmount || 0
+              factorData.shopBizPaymentDtoList.find(
+                (p: { method: number }) => p.method === 0
+              )?.totalAmount || 0
             )}
           </strong>{" "}
-          {/* Calculate debt */}
         </div>
         <div className="print-button-container mt-20 flex justify-center">
           <Button

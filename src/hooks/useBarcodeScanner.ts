@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 
 interface UseBarcodeScannerProps {
   onBarcodeScanned: (barcode: string) => void;
@@ -8,34 +8,61 @@ interface UseBarcodeScannerProps {
 export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarcodeScannerProps) => {
   const [isListening, setIsListening] = useState(false);
   const [barcodeBuffer, setBarcodeBuffer] = useState('');
-  const [lastKeyTime, setLastKeyTime] = useState(0);
+  const lastKeyTimeRef = useRef(0);
+  const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isProcessingRef = useRef(false);
+
+  const clearBuffer = useCallback(() => {
+    setBarcodeBuffer('');
+    if (bufferTimeoutRef.current) {
+      clearTimeout(bufferTimeoutRef.current);
+      bufferTimeoutRef.current = null;
+    }
+  }, []);
 
   const handleKeyPress = useCallback((event: KeyboardEvent) => {
-    if (!enabled) return;
+    if (!enabled || isProcessingRef.current) return;
 
     const currentTime = Date.now();
     
-    // اگر فاصله زمانی بین کلیدها بیشتر از 50ms باشد، بافر را پاک کن
-    if (currentTime - lastKeyTime > 50) {
-      setBarcodeBuffer('');
+    // اگر فاصله زمانی بین کلیدها بیشتر از 100ms باشد، بافر را پاک کن
+    if (currentTime - lastKeyTimeRef.current > 100) {
+      clearBuffer();
     }
     
-    setLastKeyTime(currentTime);
+    lastKeyTimeRef.current = currentTime;
 
     // اگر کلید Enter فشرده شد، بارکد کامل شده
     if (event.key === 'Enter') {
       if (barcodeBuffer.length > 0) {
+        isProcessingRef.current = true;
         onBarcodeScanned(barcodeBuffer);
-        setBarcodeBuffer('');
+        clearBuffer();
         // جلوگیری از submit فرم
         event.preventDefault();
+        
+        // تاخیر کوتاه برای جلوگیری از اسکن‌های پشت سر هم
+        setTimeout(() => {
+          isProcessingRef.current = false;
+        }, 200);
       }
       return;
     }
-    if (/^[a-zA-Z0-9]$/.test(event.key)) {
-      setBarcodeBuffer(prev => prev + event.key);
+
+    // فقط کاراکترهای مجاز را اضافه کن
+    if (/^[a-zA-Z0-9\-_]$/.test(event.key)) {
+      setBarcodeBuffer(prev => {
+        const newBuffer = prev + event.key;
+        
+        // اگر بافر خیلی طولانی شد، آن را پاک کن
+        if (newBuffer.length > 50) {
+          return event.key;
+        }
+        
+        return newBuffer;
+      });
     }
-  }, [enabled, onBarcodeScanned, barcodeBuffer, lastKeyTime]);
+  }, [enabled, onBarcodeScanned, barcodeBuffer, clearBuffer]);
 
   useEffect(() => {
     if (enabled && !isListening) {
@@ -47,13 +74,29 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
       if (isListening) {
         document.removeEventListener('keydown', handleKeyPress);
         setIsListening(false);
+        clearBuffer();
       }
     };
-  }, [enabled, isListening, handleKeyPress]);
+  }, [enabled, isListening, handleKeyPress, clearBuffer]);
+
+  // پاک کردن بافر بعد از مدتی عدم فعالیت
+  useEffect(() => {
+    if (barcodeBuffer.length > 0) {
+      bufferTimeoutRef.current = setTimeout(() => {
+        clearBuffer();
+      }, 2000);
+    }
+
+    return () => {
+      if (bufferTimeoutRef.current) {
+        clearTimeout(bufferTimeoutRef.current);
+      }
+    };
+  }, [barcodeBuffer, clearBuffer]);
 
   return {
     isListening,
     barcodeBuffer,
-    clearBuffer: () => setBarcodeBuffer('')
+    clearBuffer
   };
 }; 

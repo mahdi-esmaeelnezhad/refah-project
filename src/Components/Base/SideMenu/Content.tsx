@@ -3,6 +3,7 @@ import { Button } from "../../Ui/Button/button";
 import Input from "../../Ui/Input/input";
 import { BinIcon, CloseSmIcon } from "../../icons";
 import CloseIcon from "../../../assets/close.svg";
+import trashIcon from "../../../assets/trash.svg";
 
 import {
   commaSeparator,
@@ -246,6 +247,10 @@ const Content: React.FC = () => {
         })
       );
     }
+  };
+
+  const handleRemoveProduct = (itemId: number) => {
+    setItems(items.filter((item) => item.id !== itemId));
   };
 
   const handleQuantityConfirm = () => {};
@@ -584,6 +589,9 @@ const Content: React.FC = () => {
 
   const handleBarcodeScanned = React.useCallback(
     (barcode: string) => {
+      // جلوگیری از پردازش بارکدهای تکراری
+      if (!barcode || barcode.trim().length === 0) return;
+
       const product = findProductByBarcode(barcode);
 
       if (product) {
@@ -595,10 +603,9 @@ const Content: React.FC = () => {
               item.id === existingItem.id
                 ? {
                     ...item,
-
                     quantity: (parseInt(item.quantity) + 1).toString(),
                     total: item.price * (parseInt(item.quantity) + 1),
-                    vatRate: product.vatRate || "0", // string
+                    vatRate: product.vatRate || "0",
                     sku: product.sku || "",
                     itemId: product.id,
                   }
@@ -614,7 +621,7 @@ const Content: React.FC = () => {
             price: product.price,
             discount: product.discount || 0,
             total: product.price,
-            vatRate: product.vatRate || "0", // string
+            vatRate: product.vatRate || "0",
             sku: product.sku || "",
             itemId: product.id,
           };
@@ -638,8 +645,7 @@ const Content: React.FC = () => {
           };
           setShopBizItemDtoList([...shopBizItemDtoList, shop]);
         }
-        setSuccessMessage(`محصول ${product.name} با موفقیت اضافه شد`);
-        setTimeout(() => setSuccessMessage(""), 3000);
+
         // Clear barcode input only when product is found
         setBarcodeInput("");
         if (barcodeInputRef.current) {
@@ -651,34 +657,38 @@ const Content: React.FC = () => {
         openProductNotFoundModal(barcode);
       }
     },
-    [items, openProductNotFoundModal]
+    [items, openProductNotFoundModal, shopBizItemDtoList]
   );
 
   const handleBarcodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setBarcodeInput(e.target.value);
-  };
+    const newValue = e.target.value;
+    setBarcodeInput(newValue);
 
-  const handleBarcodeSubmit = () => {
-    // const persianDigits = "۰۱۲۳۴۵۶۷۸۹";
-    // const englishDigits = "0123456789";
-    // const englishBarcode = barcodeInput.replace(
-    //   /[۰-۹]/g,
-    //   (d) => englishDigits[persianDigits.indexOf(d)]
-    // );
-    // console.log("English barcode:", englishBarcode);
-
-    if (barcodeInput) {
-      handleBarcodeScanned(barcodeInput.trim());
-      // Don't clear input here - let handleBarcodeScanned handle it
+    // اگر بارکد با دستگاه اسکن شده (طول مناسب و سرعت بالا)
+    if (newValue.length >= 8 && newValue.length <= 20) {
+      // تاخیر کوتاه برای اطمینان از کامل شدن بارکد
+      setTimeout(() => {
+        if (barcodeInput === newValue) {
+          handleBarcodeScanned(newValue.trim());
+          setBarcodeInput("");
+        }
+      }, 150);
     }
   };
 
-  // const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-  //   if (e.key === "Enter") {
-  //     e.preventDefault();
-  //     handleBarcodeSubmit();
-  //   }
-  // };
+  const handleBarcodeSubmit = () => {
+    if (barcodeInput) {
+      handleBarcodeScanned(barcodeInput.trim());
+      setBarcodeInput("");
+    }
+  };
+
+  const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      handleBarcodeSubmit();
+    }
+  };
 
   const handleBarcodeInputFocus = () => {
     setIsBarcodeInputFocused(true);
@@ -1087,6 +1097,7 @@ const Content: React.FC = () => {
                 onFocus={handleBarcodeInputFocus}
                 onBlur={handleBarcodeInputBlur}
                 onButtonClick={handleBarcodeSubmit}
+                onKeyDown={handleBarcodeKeyDown}
                 style={{
                   width: "445px",
                   borderRadius: "55px",
@@ -1231,6 +1242,8 @@ const Content: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-center min-w-[108px]">
                       <Tooltip
+                        top={360}
+                        left={1300}
                         component={
                           <DialPad
                             value={
@@ -1305,23 +1318,39 @@ const Content: React.FC = () => {
                                   alignItems: "center",
                                   justifyContent: "center",
                                   marginRight: 8,
-                                  cursor:
-                                    Number(tempQuantity) <= 1
-                                      ? "not-allowed"
-                                      : "pointer",
-                                  opacity: Number(tempQuantity) <= 1 ? 0.5 : 1,
+                                  cursor: "pointer",
                                 }}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  const newValue = (
-                                    Number(tempQuantity) - 1
-                                  ).toString();
-                                  setTempQuantity(newValue);
-                                  handleQuantityChange(newValue);
+                                  if (Number(tempQuantity) <= 1) {
+                                    // Remove product when quantity is 1 or less
+                                    handleRemoveProduct(item.id);
+                                    setOpenTooltipId(null);
+                                    setSelectedItemId(null);
+                                    setTempQuantity("");
+                                  } else {
+                                    // Decrease quantity
+                                    const newValue = (
+                                      Number(tempQuantity) - 1
+                                    ).toString();
+                                    setTempQuantity(newValue);
+                                    handleQuantityChange(newValue);
+                                  }
                                 }}
-                                disabled={Number(tempQuantity) <= 1}
                               >
-                                -
+                                {Number(tempQuantity) <= 1 ? (
+                                  <img
+                                    src={trashIcon}
+                                    alt="حذف"
+                                    style={{
+                                      width: 24,
+                                      height: 24,
+                                      backgroundColor: "white",
+                                    }}
+                                  />
+                                ) : (
+                                  "-"
+                                )}
                               </button>
                             </>
                           ) : (
@@ -1351,9 +1380,7 @@ const Content: React.FC = () => {
                     <div className="h-10 w-10 rounded-md flex items-center justify-center min-w-[158px] font-23 gap-3">
                       {item.total.toLocaleString("fa-IR")}
                       <CloseSmIcon
-                        onClick={() => {
-                          /* handle delete */
-                        }}
+                        onClick={() => handleRemoveProduct(item.id)}
                       />
                     </div>
                   </div>
@@ -1448,7 +1475,9 @@ const Content: React.FC = () => {
               </div>
               <div className="flex justify-between bg-[#EFEFEF] rounded-lg px-4 py-2 mt-2">
                 <span>تعداد اقلام</span>
-                <span className="font-16">{totalItems} عدد</span>
+                <span className="font-16">
+                  {toPersianNumber(totalItems.toString())} عدد
+                </span>
               </div>
               <div className="flex justify-between font-semibold rounded-lg px-4 py-2 mt-2">
                 <span>مبلغ کل</span>
@@ -1468,6 +1497,8 @@ const Content: React.FC = () => {
               </div>
               <div style={{ position: "relative" }} className="mt-2">
                 <Tooltip
+                  top={560}
+                  left={340}
                   component={
                     <DialPad
                       value={mobileInput}

@@ -8,6 +8,8 @@ type ClickTooltipProps = {
   setIsOpen: (isOpen: boolean) => void;
   position?: "left" | "bottom";
   left?: number;
+  top?: number;
+  right?: number;
 };
 
 const ClickTooltip: React.FC<ClickTooltipProps> = ({
@@ -16,6 +18,9 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
   isOpen,
   setIsOpen,
   position = "bottom",
+  top,
+  right,
+  left,
 }) => {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLDivElement>(null);
@@ -45,15 +50,16 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
 
     if (position === "left") {
       return {
-        top: buttonRect.top + buttonRect.height / 2,
-        right: window.innerWidth - buttonRect.left + 8,
+        top: top !== undefined ? top : buttonRect.top + buttonRect.height / 2,
+        right:
+          right !== undefined ? right : window.innerWidth - buttonRect.left + 8,
         transform: "translateY(-50%)",
       };
     }
     // default bottom position
     return {
-      top: buttonRect.bottom + 8,
-      left: buttonRect.left + buttonRect.width / 2,
+      top: top !== undefined ? top : buttonRect.bottom + 8,
+      left: left !== undefined ? left : buttonRect.left + buttonRect.width / 2,
       transform: "translateX(-50%)",
     };
   };

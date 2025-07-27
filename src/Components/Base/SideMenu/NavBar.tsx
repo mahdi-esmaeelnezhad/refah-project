@@ -70,6 +70,9 @@ export function NavBar({
       setUnregisteredCount(0);
     }
   };
+  const toPersianNumber = (number: string) => {
+    return number.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d)]);
+  };
 
   const updateNotifications = () => {
     const updated = [
@@ -170,6 +173,8 @@ export function NavBar({
           style={{ visibility: showFullNav ? "visible" : "hidden" }}
         >
           <Tooltip
+            top={60}
+            left={1500}
             component={
               <SavedFactorsTooltip
                 factors={savedFactors}
@@ -187,7 +192,7 @@ export function NavBar({
               <SavedFactorsIcon />
               فاکتورهای ذخیره شده
               <div className="absolute -top-2 -left-2 w-[28px] h-[29px] bg-[#49CD3D] rounded-full flex items-center justify-center text-white text-[14px] font-[500] font-21">
-                {savedFactors.length}
+                {toPersianNumber(savedFactors.length.toString())}
               </div>
             </span>
           </Tooltip>
@@ -218,7 +223,7 @@ export function NavBar({
             <NofiIcon />
             اعلانات
             <div className="absolute -top-2 -left-2 w-[28px] h-[29px] bg-[#49CD3D] rounded-full flex items-center justify-center text-white text-[14px] font-[500] font-21">
-              {notifications.length}
+              {toPersianNumber(notifications.length.toString())}
             </div>
           </span>
           <NotificationsTooltip

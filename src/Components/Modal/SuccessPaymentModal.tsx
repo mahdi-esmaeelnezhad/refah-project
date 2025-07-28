@@ -36,17 +36,19 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   const { isSuccessPaymentOpen, closeSuccessPayment } = useModal(); //openCartPayment
   const editableAmount = usePaymentStore((state) => state.editableAmount);
 
-  if (!isSuccessPaymentOpen) return null;
-
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("fa-IR").format(num);
   };
 
   const handlePrint = () => {
+    // اگر پرداخت کامل است، چاپ خودکار انجام شده و نیازی به چاپ مجدد نیست
+    if (isPaymentComplete) {
+      return;
+    }
+
     if (typeof onPrint === "function") {
       onPrint();
     }
-    // اینجا باید منطق چاپ فاکتور پیاده‌سازی شود
   };
 
   const handleSendDigital = () => {
@@ -67,6 +69,41 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
     typeof totalAmount === "number" &&
     totalAmount !== 0;
   console.log(showRemainingAmount, "showRemainingAmount");
+
+  // تشخیص پرداخت کامل
+  const isPaymentComplete = React.useMemo(() => {
+    // اگر مبلغ باقی‌مانده‌ای وجود ندارد، پرداخت کامل است
+    return !showRemainingAmount;
+  }, [showRemainingAmount]);
+
+  // چاپ خودکار فاکتور در صورت پرداخت کامل
+  const hasAutoPrinted = React.useRef(false);
+
+  React.useEffect(() => {
+    if (
+      isSuccessPaymentOpen &&
+      isPaymentComplete &&
+      onPrint &&
+      !hasAutoPrinted.current
+    ) {
+      hasAutoPrinted.current = true;
+      // تاخیر کوتاه برای اطمینان از باز شدن کامل مدال
+      const timer = setTimeout(() => {
+        onPrint();
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+  }, [isSuccessPaymentOpen, isPaymentComplete, onPrint]);
+
+  // ریست کردن flag وقتی مدال بسته می‌شود
+  React.useEffect(() => {
+    if (!isSuccessPaymentOpen) {
+      hasAutoPrinted.current = false;
+    }
+  }, [isSuccessPaymentOpen]);
+
+  if (!isSuccessPaymentOpen) return null;
 
   return (
     <>

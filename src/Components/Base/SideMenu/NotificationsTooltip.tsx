@@ -49,75 +49,97 @@ const NotificationsTooltip: React.FC<NotificationsTooltipProps> = ({
     <div
       ref={tooltipRef}
       style={{
-        position: "fixed",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
+        position: "absolute",
+        top: "100%",
+        left: "0",
         width: "384px",
         backgroundColor: "white",
         borderRadius: "10px",
         boxShadow: "0 4px 20px rgba(0, 0, 0, 0.15)",
-        zIndex: 999999,
+        zIndex: 1000,
         padding: "20px",
-        overflowY: "auto",
-        maxHeight: "600px",
+        marginTop: "10px",
+        height: "400px", // ارتفاع ثابت
+        overflowY: "auto", // اسکرول در صورت نیاز
       }}
     >
-      <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-        {notifications.map((notification) => (
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "12px",
+          height: "100%",
+        }}
+      >
+        {notifications.length === 0 ? (
           <div
-            key={notification.id}
             style={{
-              width: "340px",
-              minHeight: "103px",
-              backgroundColor: "#4973DE",
-              borderRadius: "8px",
-              padding: "12px",
-              position: "relative",
+              display: "flex",
+              justifyContent: "center",
+              alignItems: "center",
+              height: "100%",
+              color: "#666",
+              fontSize: "16px",
             }}
           >
-            {/* Top icons */}
+            هیچ اعلانی وجود ندارد
+          </div>
+        ) : (
+          notifications.map((notification) => (
             <div
+              key={notification.id}
               style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-                // marginBottom: "8px",
+                width: "100%",
+                minHeight: "103px",
+                backgroundColor: "#4973DE",
+                borderRadius: "8px",
+                padding: "12px",
+                position: "relative",
+                flexShrink: 0,
               }}
             >
-              <img src={InfoIcon} alt="info" style={{ color: "white" }} />
-              <img
-                src={CloseIcon}
-                alt="close"
-                onClick={() => closeNotification(notification.id)}
-                style={{ filter: "invert(1)" }}
-              />
-            </div>
-
-            {/* Message */}
-            <div
-              style={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                minHeight: "40px",
-                marginTop: "-10px",
-              }}
-            >
-              <span
+              {/* Top icons */}
+              <div
                 style={{
-                  color: "white",
-                  fontSize: "17px",
-                  fontWeight: 500,
-                  textAlign: "center",
-                  lineHeight: "1.4",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "flex-start",
                 }}
               >
-                {notification.message}
-              </span>
+                <img src={InfoIcon} alt="info" style={{ color: "white" }} />
+                <img
+                  src={CloseIcon}
+                  alt="close"
+                  onClick={() => closeNotification(notification.id)}
+                  style={{ filter: "invert(1)", cursor: "pointer" }}
+                />
+              </div>
+
+              {/* Message */}
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  minHeight: "40px",
+                  marginTop: "-10px",
+                }}
+              >
+                <span
+                  style={{
+                    color: "white",
+                    fontSize: "17px",
+                    fontWeight: 500,
+                    textAlign: "center",
+                    lineHeight: "1.4",
+                  }}
+                >
+                  {notification.message}
+                </span>
+              </div>
             </div>
-          </div>
-        ))}
+          ))
+        )}
       </div>
     </div>
   );

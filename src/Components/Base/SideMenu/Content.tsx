@@ -120,13 +120,20 @@ const Content: React.FC = () => {
 
   const generateNewInvoiceNumber = () => {
     try {
-      const savedInvoices = JSON.parse(
-        localStorage.getItem("savedInvoices") || "[]"
-      );
-      const nextNumber = savedInvoices.length + 1;
+      // دریافت آخرین شماره فاکتور از localStorage
+      const lastInvoiceNumber = localStorage.getItem("lastInvoiceNumber");
+      let nextNumber = 1;
+
+      if (lastInvoiceNumber) {
+        nextNumber = parseInt(lastInvoiceNumber) + 1;
+      }
+
       setInvoiceNumber(nextNumber.toString());
+      // ذخیره شماره جدید در localStorage
+      localStorage.setItem("lastInvoiceNumber", nextNumber.toString());
     } catch (error) {
       console.error("خطا در تولید شماره فاکتور:", error);
+      setInvoiceNumber("1");
     }
   };
   const [paymentAmount, setPaymentAmount] = useState(0);
@@ -212,7 +219,17 @@ const Content: React.FC = () => {
       barcodeInputRef.current.focus();
       setIsBarcodeInputFocused(true);
     }
-    generateNewInvoiceNumber();
+
+    // بررسی و تنظیم شماره فاکتور اولیه
+    const lastInvoiceNumber = localStorage.getItem("lastInvoiceNumber");
+    if (!lastInvoiceNumber) {
+      localStorage.setItem("lastInvoiceNumber", "1");
+      setInvoiceNumber("1");
+    } else {
+      // فقط شماره فعلی را تنظیم کن، نه شماره جدید تولید کن
+      setInvoiceNumber(lastInvoiceNumber);
+    }
+
     // حذف loadSavedFactors();
   }, []);
 
@@ -345,8 +362,7 @@ const Content: React.FC = () => {
         setSelectedCustomer(null);
         setShowCreditInfo(false);
         setCreditAmount(0);
-        generateNewInvoiceNumber();
-        setInvoiceNumber("");
+        generateNewInvoiceNumber(); // این تابع شماره جدید تولید می‌کند
         setPaymentAmount(0); // صفر کردن مبلغ قابل پرداخت
         setPartialPayments([]); // حذف مبالغ پرداختی قبلی
         // حذف loadSavedFactors();
@@ -587,6 +603,8 @@ const Content: React.FC = () => {
     setCreditAmount(0);
     setPaymentAmount(0);
     setPartialPayments([]);
+    // تولید شماره فاکتور جدید
+    generateNewInvoiceNumber();
   };
 
   const handleRemainingPayment = () => {
@@ -719,11 +737,11 @@ const Content: React.FC = () => {
         openProductNotFoundModal(barcode);
       }
 
-      // Reset processing flag after a short delay
+      // Reset processing flag after a delay to prevent overlapping scans
       setTimeout(() => {
         barcodeProcessingRef.current = false;
         lastProcessedBarcodeRef.current = "";
-      }, 100);
+      }, 300);
     },
     [items, openProductNotFoundModal, shopBizItemDtoList]
   );
@@ -1335,8 +1353,9 @@ const Content: React.FC = () => {
                     </div>
                     <div className="flex items-center justify-center min-w-[108px]">
                       <Tooltip
-                        top={360}
-                        left={1300}
+                        positioning="parent"
+                        top={38}
+                        left={55}
                         component={
                           <DialPad
                             value={

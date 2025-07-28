@@ -11,12 +11,18 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
   const lastKeyTimeRef = useRef(0);
   const bufferTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const isProcessingRef = useRef(false);
+  const barcodeStartTimeRef = useRef(0);
+  const autoProcessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearBuffer = useCallback(() => {
     setBarcodeBuffer('');
     if (bufferTimeoutRef.current) {
       clearTimeout(bufferTimeoutRef.current);
       bufferTimeoutRef.current = null;
+    }
+    if (autoProcessTimeoutRef.current) {
+      clearTimeout(autoProcessTimeoutRef.current);
+      autoProcessTimeoutRef.current = null;
     }
   }, []);
 
@@ -25,9 +31,11 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
 
     const currentTime = Date.now();
     
-    // کاهش فاصله زمانی به 50ms برای سرعت بیشتر
-    if (currentTime - lastKeyTimeRef.current > 50) {
+    // اگر فاصله زمانی بین کلیدها بیشتر از 150ms باشد، بافر را پاک کن
+    // این کار از اتصال بارکدهای مختلف جلوگیری می‌کند
+    if (currentTime - lastKeyTimeRef.current > 150) {
       clearBuffer();
+      barcodeStartTimeRef.current = currentTime;
     }
     
     lastKeyTimeRef.current = currentTime;
@@ -41,10 +49,10 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
         // جلوگیری از submit فرم
         event.preventDefault();
         
-        // کاهش تاخیر به 50ms برای سرعت بیشتر
+        // افزایش تاخیر به 300ms برای اطمینان از عدم تداخل
         setTimeout(() => {
           isProcessingRef.current = false;
-        }, 50);
+        }, 300);
       }
       return;
     }
@@ -57,6 +65,26 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
         // اگر بافر خیلی طولانی شد، آن را پاک کن
         if (newBuffer.length > 50) {
           return event.key;
+        }
+        
+        // اگر بارکد به طول مناسب رسید، تایمر خودکار را تنظیم کن
+        if (newBuffer.length >= 8 && newBuffer.length <= 13) {
+          // پاک کردن تایمر قبلی
+          if (autoProcessTimeoutRef.current) {
+            clearTimeout(autoProcessTimeoutRef.current);
+          }
+          
+          // تنظیم تایمر جدید برای پردازش خودکار
+          autoProcessTimeoutRef.current = setTimeout(() => {
+            if (barcodeBuffer === newBuffer && !isProcessingRef.current) {
+              isProcessingRef.current = true;
+              onBarcodeScanned(newBuffer);
+              clearBuffer();
+              setTimeout(() => {
+                isProcessingRef.current = false;
+              }, 300);
+            }
+          }, 300);
         }
         
         return newBuffer;
@@ -79,12 +107,12 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
     };
   }, [enabled, isListening, handleKeyPress, clearBuffer]);
 
-  // پاک کردن بافر بعد از مدتی عدم فعالیت - کاهش به 500ms
+  // پاک کردن بافر بعد از مدتی عدم فعالیت - افزایش به 1500ms
   useEffect(() => {
     if (barcodeBuffer.length > 0) {
       bufferTimeoutRef.current = setTimeout(() => {
         clearBuffer();
-      }, 500);
+      }, 1500);
     }
 
     return () => {

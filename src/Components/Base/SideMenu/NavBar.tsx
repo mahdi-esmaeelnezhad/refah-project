@@ -79,6 +79,11 @@ export function NavBar({
   };
 
   const updateNotifications = () => {
+    // دریافت اعلانات حذف شده
+    const dismissedNotifications = JSON.parse(
+      localStorage.getItem("dismissedNotifications") || "[]"
+    );
+
     const updated = [
       {
         id: "unregistered",
@@ -92,12 +97,43 @@ export function NavBar({
         type: "pending_invoice",
       })),
     ];
-    setNotifications(updated);
+
+    // فیلتر کردن اعلانات حذف شده
+    const filteredNotifications = updated.filter((notification) => {
+      // اگر اعلان حذف شده است، نمایش نده
+      if (dismissedNotifications.includes(notification.id)) {
+        return false;
+      }
+
+      // اگر کالای ثبت نشده وجود ندارد، اعلان آن را نمایش نده
+      if (notification.id === "unregistered") {
+        return unregisteredCount > 0;
+      }
+
+      return true; // فاکتورهای در انتظار همیشه نمایش داده می‌شوند
+    });
+
+    setNotifications(filteredNotifications);
+    localStorage.setItem(
+      "notifications",
+      JSON.stringify(filteredNotifications)
+    );
   };
 
   useEffect(() => {
     loadSavedInvoices();
     loadUnregisteredCount();
+
+    // بارگذاری اعلانات از localStorage در ابتدا
+    try {
+      const savedNotifications = JSON.parse(
+        localStorage.getItem("notifications") || "[]"
+      );
+      setNotifications(savedNotifications);
+    } catch (error) {
+      console.error("خطا در بارگذاری اعلانات:", error);
+      setNotifications([]);
+    }
   }, []);
 
   useEffect(() => {
@@ -163,9 +199,44 @@ export function NavBar({
   };
 
   const removeNotification = (id: string) => {
-    setNotifications((prev) =>
-      prev.filter((notification) => notification.id !== id)
+    // حذف از state محلی
+    const updatedNotifications = notifications.filter(
+      (notification) => notification.id !== id
     );
+    setNotifications(updatedNotifications);
+
+    // اضافه کردن به لیست اعلانات حذف شده
+    try {
+      const dismissedNotifications = JSON.parse(
+        localStorage.getItem("dismissedNotifications") || "[]"
+      );
+
+      if (!dismissedNotifications.includes(id)) {
+        dismissedNotifications.push(id);
+        localStorage.setItem(
+          "dismissedNotifications",
+          JSON.stringify(dismissedNotifications)
+        );
+      }
+    } catch (error) {
+      console.error("خطا در ذخیره اعلان حذف شده:", error);
+    }
+
+    // حذف از localStorage فقط برای کالاهای ثبت نشده
+    try {
+      if (id === "unregistered") {
+        localStorage.removeItem("unregisteredProducts");
+        setUnregisteredCount(0);
+      }
+      // برای فاکتورها، فقط اعلان حذف می‌شود، فاکتور باقی می‌ماند
+    } catch (error) {
+      console.error("خطا در حذف اعلان از localStorage:", error);
+    }
+
+    // اگر هیچ اعلانی باقی نماند، tooltip را ببند
+    if (updatedNotifications.length === 0) {
+      setIsNotificationsOpen(false);
+    }
   };
 
   return (
@@ -257,7 +328,11 @@ export function NavBar({
           value={searchProduct}
           onChange={(e) => setSearchProduct(e.target.value)}
           placeholder="کالای مورد نظر خود را جستجو کنید"
-          style={{ minWidth: "384px", marginBottom: 0 }}
+          style={{
+            minWidth: "384px",
+            marginBottom: 0,
+            visibility: showFullNav ? "visible" : "hidden",
+          }}
           icon={<SearchIcon />}
           height={48}
         />
@@ -268,8 +343,8 @@ export function NavBar({
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
           >
             <Tooltip
-              top={130}
-              left={500}
+              top={60}
+              left={300}
               component={
                 <NotificationsTooltip
                   isOpen={isNotificationsOpen}

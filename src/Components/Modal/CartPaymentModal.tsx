@@ -198,8 +198,9 @@ const CartPaymentModal: React.FC<CartPaymentModalProps> = ({
                 }}
               >
                 <Tooltip
-                  top={600}
-                  left={1050}
+                  positioning="parent"
+                  top={35}
+                  left={55}
                   component={
                     <DialPad
                       value={editableAmountStr}

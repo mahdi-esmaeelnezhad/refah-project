@@ -49,12 +49,17 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
     if (isOpen) {
       // وقتی tooltip باز می‌شود، مشتریان را از API دریافت کن
       fetchCustomersFromAPI();
+    } else {
+      // وقتی tooltip بسته می‌شود، state مشتریان را پاک کن
+      setCustomers([]);
+      setSearchTerm("");
     }
   }, [isOpen]);
 
   const fetchCustomersFromAPI = async () => {
     try {
       const response: any = localStorage.getItem("customers");
+      console.log("Raw localStorage data:", response);
 
       const apiCustomers: CustomerApiResponse[] = JSON.parse(response);
       console.log(apiCustomers, " apiCustomers");
@@ -64,7 +69,10 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
           .filter((customer) => !customer.isArchive)
           .map((customer) => ({
             id: parseInt(customer.id),
-            name: customer.displayName || "نامشخص",
+            name:
+              customer.displayName && customer.displayName.trim() !== ""
+                ? customer.displayName
+                : "نامشخص",
             phone: customer.mobile || "",
             debt: customer.debt || 0,
             address: customer.address || "",
@@ -72,10 +80,13 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
           }));
 
         setCustomers(convertedCustomers);
-        localStorage.setItem("customers", JSON.stringify(convertedCustomers));
+      } else {
+        // اگر داده‌ای در localStorage نباشد، آرایه خالی تنظیم کن
+        setCustomers([]);
       }
     } catch (error) {
       console.error("خطا در دریافت مشتریان از API:", error);
+      setCustomers([]);
     }
   };
 

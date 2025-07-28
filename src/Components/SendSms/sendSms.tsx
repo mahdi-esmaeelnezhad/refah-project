@@ -19,9 +19,9 @@ const SendSms: React.FC<SendSmsProps> = ({
   const [timer, setTimer] = useState<number>(90); // 1:30 in seconds
   const [canResend, setCanResend] = useState<boolean>(false);
   const [otpValues, setOtpValues] = useState<string[]>(Array(6).fill(""));
-  const [resetTimer, setResetTimer] = useState<number>(0); // Add this to trigger timer reset
   const [otpError, setOtpError] = useState<string>("");
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [isTimerActive, setIsTimerActive] = useState<boolean>(true);
   const inputRefs = useRef<(HTMLInputElement | null)[]>(Array(6).fill(null));
 
   const { execute: verifyCodeRequest, loading: verifyLoading } =
@@ -31,19 +31,27 @@ const SendSms: React.FC<SendSmsProps> = ({
     useRequest<any>(AUTH_ENDPOINTS.resetPassword, "POST");
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      setTimer((prev) => {
-        if (prev <= 1) {
-          clearInterval(interval);
-          setCanResend(true);
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
+    let interval: number | null = null;
 
-    return () => clearInterval(interval);
-  }, [resetTimer]); // Add resetTimer as a dependency
+    if (isTimerActive && timer > 0) {
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            setCanResend(true);
+            setIsTimerActive(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isTimerActive, timer]);
 
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
@@ -53,16 +61,23 @@ const SendSms: React.FC<SendSmsProps> = ({
 
   const handleResend = async () => {
     if (canResend) {
+      // Reset timer immediately when API call starts
+      setTimer(90);
+      setCanResend(false);
+      setIsTimerActive(true);
+      setOtpError("");
+
       try {
         const response = await resendCodeRequest({ mobile: phoneNumber });
         if (response?.status === 204) {
-          setTimer(90);
-          setCanResend(false);
-          setResetTimer((prev) => prev + 1);
-          setOtpError("");
+          // API call successful - timer is already reset
+        } else {
+          // If API call fails, we still keep the timer running
+          // User can try again after timer ends
         }
       } catch (error: any) {
         setOtpError(error?.response?.data?.title || "خطا در ارسال مجدد کد");
+        // Even if API fails, timer continues running
       }
     }
   };

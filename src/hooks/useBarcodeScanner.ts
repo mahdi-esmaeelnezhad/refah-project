@@ -25,8 +25,8 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
 
     const currentTime = Date.now();
     
-    // اگر فاصله زمانی بین کلیدها بیشتر از 100ms باشد، بافر را پاک کن
-    if (currentTime - lastKeyTimeRef.current > 100) {
+    // کاهش فاصله زمانی به 50ms برای سرعت بیشتر
+    if (currentTime - lastKeyTimeRef.current > 50) {
       clearBuffer();
     }
     
@@ -41,10 +41,10 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
         // جلوگیری از submit فرم
         event.preventDefault();
         
-        // تاخیر کوتاه برای جلوگیری از اسکن‌های پشت سر هم
+        // کاهش تاخیر به 50ms برای سرعت بیشتر
         setTimeout(() => {
           isProcessingRef.current = false;
-        }, 200);
+        }, 50);
       }
       return;
     }
@@ -79,12 +79,12 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
     };
   }, [enabled, isListening, handleKeyPress, clearBuffer]);
 
-  // پاک کردن بافر بعد از مدتی عدم فعالیت
+  // پاک کردن بافر بعد از مدتی عدم فعالیت - کاهش به 500ms
   useEffect(() => {
     if (barcodeBuffer.length > 0) {
       bufferTimeoutRef.current = setTimeout(() => {
         clearBuffer();
-      }, 2000);
+      }, 500);
     }
 
     return () => {

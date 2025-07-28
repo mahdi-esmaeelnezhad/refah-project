@@ -137,6 +137,8 @@ const Content: React.FC = () => {
   const [, setSuccessMessage] = useState("");
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
   const mobileInputRef = React.useRef<HTMLInputElement>(null);
+  const lastProcessedBarcodeRef = React.useRef<string>("");
+  const barcodeProcessingRef = React.useRef(false);
 
   const { isListening } = useBarcodeScanner({
     onBarcodeScanned: React.useCallback((barcode: string) => {
@@ -145,39 +147,65 @@ const Content: React.FC = () => {
     enabled: !isProductNotFoundOpen && !isBarcodeInputFocused,
   });
 
-  const totalItems = items.length;
-  const totalAmount = items.reduce((sum, item) => {
-    const quantity = parseInt(item.quantity) || 0;
-    return sum + item.price * quantity;
-  }, 0);
+  const totalItems = React.useMemo(() => items.length, [items.length]);
 
-  const totalDiscount = items.reduce((sum, item) => {
-    if (item.discount !== "-") {
-      const discountAmount =
-        typeof item.discount === "number"
-          ? item.discount
-          : parseInt(item.discount.toString()) || 0;
-      return sum + discountAmount;
-    }
-    return sum;
-  }, 0);
-
-  const totalPartialPaid = partialPayments.reduce(
-    (sum, p) => sum + p.receiveAmount,
-    0
+  const totalAmount = React.useMemo(
+    () =>
+      items.reduce((sum, item) => {
+        const quantity = parseInt(item.quantity) || 0;
+        return sum + item.price * quantity;
+      }, 0),
+    [items]
   );
-  const totalVat = items.reduce((sum, item) => {
-    const vatRate = item.vatRate ? parseFloat(item.vatRate) : 0;
-    if (!vatRate) return sum;
-    const quantity = parseInt(item.quantity) || 0;
-    return sum + (item.price * quantity * vatRate) / 100;
-  }, 0);
-  const finalAmount =
-    totalAmount -
-    totalDiscount -
-    (showCreditInfo ? creditAmount : 0) -
-    totalPartialPaid +
-    (vatSwitch ? totalVat : 0);
+
+  const totalDiscount = React.useMemo(
+    () =>
+      items.reduce((sum, item) => {
+        if (item.discount !== "-") {
+          const discountAmount =
+            typeof item.discount === "number"
+              ? item.discount
+              : parseInt(item.discount.toString()) || 0;
+          return sum + discountAmount;
+        }
+        return sum;
+      }, 0),
+    [items]
+  );
+
+  const totalPartialPaid = React.useMemo(
+    () => partialPayments.reduce((sum, p) => sum + p.receiveAmount, 0),
+    [partialPayments]
+  );
+
+  const totalVat = React.useMemo(
+    () =>
+      items.reduce((sum, item) => {
+        const vatRate = item.vatRate ? parseFloat(item.vatRate) : 0;
+        if (!vatRate) return sum;
+        const quantity = parseInt(item.quantity) || 0;
+        return sum + (item.price * quantity * vatRate) / 100;
+      }, 0),
+    [items]
+  );
+
+  const finalAmount = React.useMemo(
+    () =>
+      totalAmount -
+      totalDiscount -
+      (showCreditInfo ? creditAmount : 0) -
+      totalPartialPaid +
+      (vatSwitch ? totalVat : 0),
+    [
+      totalAmount,
+      totalDiscount,
+      showCreditInfo,
+      creditAmount,
+      totalPartialPaid,
+      vatSwitch,
+      totalVat,
+    ]
+  );
 
   useEffect(() => {
     if (barcodeInputRef.current) {
@@ -187,19 +215,6 @@ const Content: React.FC = () => {
     generateNewInvoiceNumber();
     // حذف loadSavedFactors();
   }, []);
-
-  // ارسال handler به GlobalHeader برای ارتباط با NavBar
-  useEffect(() => {
-    const event = new CustomEvent("setLoadFactorHandler", {
-      detail: { handler: handleLoadSavedFactor },
-    });
-    window.dispatchEvent(event);
-
-    const productEvent = new CustomEvent("setSelectProductHandler", {
-      detail: { handler: handleProductSelect },
-    });
-    window.dispatchEvent(productEvent);
-  }, []); // فقط یک بار اجرا شود
 
   // حذف event listener برای saved factors
   // useEffect(() => {
@@ -592,44 +607,52 @@ const Content: React.FC = () => {
     console.log("New customer data:", customerData);
   };
 
-  const handleProductSelect = (product: any) => {
-    // اضافه کردن محصول به فاکتور
-    const existingItem = items.find((item) => item.name === product.name);
+  const handleProductSelect = React.useCallback(
+    (product: any) => {
+      // اضافه کردن محصول به فاکتور
+      const existingItem = items.find((item) => item.name === product.name);
 
-    if (existingItem) {
-      setItems(
-        items.map((item) =>
-          item.id === existingItem.id
-            ? {
-                ...item,
-                quantity: (parseInt(item.quantity) + 1).toString(),
-                total: item.price * (parseInt(item.quantity) + 1),
-              }
-            : item
-        )
-      );
-    } else {
-      const newItem: Item = {
-        id: items.length + 1,
-        name: product.name,
-        quantity: "1",
-        unit: getUnitLabel(String(product.unitType || "0")),
-        price: product.price,
-        discount: product.discount || 0,
-        total: product.price,
-        vatRate: product.vatRate || "0",
-        sku: product.sku || "",
-        itemId: product.id,
-      };
+      if (existingItem) {
+        setItems(
+          items.map((item) =>
+            item.id === existingItem.id
+              ? {
+                  ...item,
+                  quantity: (parseInt(item.quantity) + 1).toString(),
+                  total: item.price * (parseInt(item.quantity) + 1),
+                }
+              : item
+          )
+        );
+      } else {
+        const newItem: Item = {
+          id: items.length + 1,
+          name: product.name,
+          quantity: "1",
+          unit: getUnitLabel(String(product.unitType || "0")),
+          price: product.price,
+          discount: product.discount || 0,
+          total: product.price,
+          vatRate: product.vatRate || "0",
+          sku: product.sku || "",
+          itemId: product.id,
+        };
 
-      setItems([...items, newItem]);
-    }
-  };
+        setItems([...items, newItem]);
+      }
+    },
+    [items]
+  );
 
   const handleBarcodeScanned = React.useCallback(
     (barcode: string) => {
-      // جلوگیری از پردازش بارکدهای تکراری
+      // جلوگیری از پردازش بارکدهای تکراری و همزمان
       if (!barcode || barcode.trim().length === 0) return;
+      if (barcodeProcessingRef.current) return;
+      if (lastProcessedBarcodeRef.current === barcode) return;
+
+      barcodeProcessingRef.current = true;
+      lastProcessedBarcodeRef.current = barcode;
 
       const product = findProductByBarcode(barcode);
 
@@ -695,6 +718,12 @@ const Content: React.FC = () => {
         console.warn(`محصولی با بارکد ${barcode} پیدا نشد`);
         openProductNotFoundModal(barcode);
       }
+
+      // Reset processing flag after a short delay
+      setTimeout(() => {
+        barcodeProcessingRef.current = false;
+        lastProcessedBarcodeRef.current = "";
+      }, 100);
     },
     [items, openProductNotFoundModal, shopBizItemDtoList]
   );
@@ -705,13 +734,13 @@ const Content: React.FC = () => {
 
     // اگر بارکد با دستگاه اسکن شده (طول مناسب و سرعت بالا)
     if (newValue.length >= 8 && newValue.length <= 20) {
-      // تاخیر کوتاه برای اطمینان از کامل شدن بارکد
+      // کاهش تاخیر به 50ms برای سرعت بیشتر
       setTimeout(() => {
         if (barcodeInput === newValue) {
           handleBarcodeScanned(newValue.trim());
           setBarcodeInput("");
         }
-      }, 150);
+      }, 50);
     }
   };
 
@@ -887,7 +916,7 @@ const Content: React.FC = () => {
   };
 
   // تابع برای بارگذاری فاکتور ذخیره شده در Content
-  const handleLoadSavedFactor = (factor: any) => {
+  const handleLoadSavedFactor = React.useCallback((factor: any) => {
     // پاک کردن داده‌های فعلی
     setItems([]);
     setSelectedCustomer(null);
@@ -951,7 +980,7 @@ const Content: React.FC = () => {
       setSuccessMessage("خطا در بارگذاری فاکتور");
       setTimeout(() => setSuccessMessage(""), 3000);
     }
-  };
+  }, []);
 
   // حذف توابع مربوط به saved factors
   // const loadSavedFactors = () => { ... };
@@ -963,6 +992,19 @@ const Content: React.FC = () => {
     if (unit === "1" || unit === "1") return "وزن";
     return unit || "عدد";
   };
+
+  // ارسال handler به GlobalHeader برای ارتباط با NavBar
+  useEffect(() => {
+    const event = new CustomEvent("setLoadFactorHandler", {
+      detail: { handler: handleLoadSavedFactor },
+    });
+    window.dispatchEvent(event);
+
+    const productEvent = new CustomEvent("setSelectProductHandler", {
+      detail: { handler: handleProductSelect },
+    });
+    window.dispatchEvent(productEvent);
+  }, [handleLoadSavedFactor, handleProductSelect]);
 
   return (
     <>

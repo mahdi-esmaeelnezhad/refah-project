@@ -107,7 +107,7 @@ const ProductDiscount: React.FC<ProductDiscountProps> = ({ onAddDiscount }) => {
           )}
         </div>
 
-        <div className="overflow-y-auto" style={{ maxHeight: "500px" }}>
+        <div className="overflow-y-auto" style={{ maxHeight: "530px" }}>
           {paginatedDiscounts.map((discount, index) => (
             <div
               key={discount.id}

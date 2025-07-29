@@ -184,8 +184,9 @@ export function NavBar({
       onLoadSavedFactor(factor);
     }
 
-    // حذف فاکتور از لیست ذخیره شده
-    handleDeleteFactor(factor.id);
+    // حذف فاکتور از لیست ذخیره شده - فقط اگر مدال باز نشده باشد
+    // اگر مدال باز شود، فاکتور در Content.tsx مدیریت می‌شود
+    // handleDeleteFactor(factor.id);
   };
 
   const handleProductSelect = (product: any) => {

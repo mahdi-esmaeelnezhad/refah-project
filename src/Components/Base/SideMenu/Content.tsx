@@ -32,8 +32,6 @@ import SendSmsModal from "../../Modal/SendSmsModal";
 import SendPaykModal from "../../Modal/SendPaykModal";
 import useRequest from "../../../hooks/useRequest";
 import { FACTOR_ENDPOINTS } from "../../../endpoint/Factor/factor";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../../store/store";
 
 interface Item {
   id: number;
@@ -140,6 +138,9 @@ const Content: React.FC = () => {
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isBarcodeInputFocused, setIsBarcodeInputFocused] = useState(false);
   const [isBarcodeDialPadOpen, setIsBarcodeDialPadOpen] = useState(false);
+  const [isSaveCurrentFactorModalOpen, setIsSaveCurrentFactorModalOpen] =
+    useState(false);
+  const [pendingLoadFactor, setPendingLoadFactor] = useState<any>(null);
   const [mobileInput, setMobileInput] = useState("");
   const [isMobileInputFocused, setIsMobileInputFocused] = useState(false);
   const [, setSuccessMessage] = useState("");
@@ -796,13 +797,131 @@ const Content: React.FC = () => {
 
   const handleBarcodeDialPadClose = () => {
     setIsBarcodeDialPadOpen(false);
-    // دوباره فوکوس روی input بارکد
+    // Re-focus on barcode input after DialPad closes
     setTimeout(() => {
       if (barcodeInputRef.current) {
         barcodeInputRef.current.focus();
         setIsBarcodeInputFocused(true);
       }
     }, 100);
+  };
+
+  // توابع مدیریت مدال ذخیره فاکتور فعلی
+  const handleSaveCurrentFactor = () => {
+    // ذخیره فاکتور فعلی بدون پاک کردن داده‌ها
+    const success = saveCurrentFactorOnly();
+    console.log("success", success);
+
+    // بستن مدال
+    setIsSaveCurrentFactorModalOpen(false);
+
+    // بارگذاری فاکتور انتخاب شده بعد از ذخیره
+    if (pendingLoadFactor && pendingLoadFactor.fullFactor) {
+      // کمی تاخیر برای اطمینان از ذخیره شدن
+      setTimeout(() => {
+        // پاک کردن داده‌های فعلی قبل از بارگذاری فاکتور جدید
+        setItems([]);
+        setSelectedCustomer(null);
+        setShowCreditInfo(false);
+        setCreditAmount(0);
+        setPaymentAmount(0);
+        setPartialPayments([]);
+
+        // بارگذاری فاکتور انتخاب شده
+        loadFactorDirectly(pendingLoadFactor.fullFactor);
+        setPendingLoadFactor(null);
+      }, 300);
+    } else {
+      console.log(
+        "خطا: pendingLoadFactor یا fullFactor موجود نیست:",
+        pendingLoadFactor
+      );
+    }
+  };
+
+  // تابع برای ذخیره فاکتور فعلی بدون پاک کردن داده‌ها
+  const saveCurrentFactorOnly = () => {
+    if (items.length === 0) {
+      alert("هیچ محصولی برای ذخیره وجود ندارد");
+      return false;
+    }
+
+    try {
+      const customerObj = selectedCustomer
+        ? selectedCustomer
+        : {
+            id: Date.now(),
+            name: "",
+            phone: "",
+            debt: 0,
+            address: "",
+            nationalCode: "",
+          };
+      const newInvoice = {
+        id: Date.now(),
+        invoiceNumber: invoiceNumber,
+        date: new Date().toISOString(),
+        customer: customerObj,
+        items: items,
+        totalAmount,
+        totalDiscount,
+        finalAmount,
+        paymentMethod: paymentMedivod,
+        deliveryMethod: deliveryMedivod,
+        status: "saved",
+        partialPayments: partialPayments,
+        remainingAmount:
+          finalAmount -
+          partialPayments.reduce((sum, p) => sum + p.receiveAmount, 0),
+        paymentType: paymentMedivod,
+      };
+
+      const success = saveInvoice(newInvoice);
+
+      if (success) {
+        setSuccessMessage("فاکتور با موفقیت ذخیره شد");
+        setTimeout(() => setSuccessMessage(""), 3000);
+        return true;
+      } else {
+        alert("خطا در ذخیره فاکتور");
+        return false;
+      }
+    } catch (error) {
+      alert("خطا در ذخیره فاکتور");
+      return false;
+    }
+  };
+
+  const handleDeleteCurrentFactor = () => {
+    // حذف فاکتور فعلی (پاک کردن داده‌ها)
+    setItems([]);
+    setSelectedCustomer(null);
+    setShowCreditInfo(false);
+    setCreditAmount(0);
+    setPaymentAmount(0);
+    setPartialPayments([]);
+    // بستن مدال
+    setIsSaveCurrentFactorModalOpen(false);
+    // بارگذاری فاکتور جدید
+    if (pendingLoadFactor && pendingLoadFactor.fullFactor) {
+      console.log(
+        "بارگذاری فاکتور انتخاب شده (حذف):",
+        pendingLoadFactor.fullFactor
+      );
+      loadFactorDirectly(pendingLoadFactor.fullFactor);
+      setPendingLoadFactor(null);
+    } else {
+      console.log(
+        "خطا: pendingLoadFactor یا fullFactor موجود نیست (حذف):",
+        pendingLoadFactor
+      );
+    }
+  };
+
+  const handleCancelSaveCurrentFactor = () => {
+    // بستن مدال بدون انجام عملیات
+    setIsSaveCurrentFactorModalOpen(false);
+    setPendingLoadFactor(null);
   };
 
   const handleMobileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -876,7 +995,7 @@ const Content: React.FC = () => {
     } catch (error) {}
   };
 
-  const { token } = useSelector((state: RootState) => state.auth);
+  const token = localStorage.getItem("token");
 
   const { execute: printFactor } = useRequest(FACTOR_ENDPOINTS.factor, "POST", {
     headers: {
@@ -946,16 +1065,56 @@ const Content: React.FC = () => {
         tip: 0,
       };
 
-      console.log("Print factor payload:", payload);
       await printFactor(payload);
-      console.log("Print factor API call successful");
     } catch (e) {
       console.error("Error in print factor:", e);
     }
   };
 
   // تابع برای بارگذاری فاکتور ذخیره شده در Content
-  const handleLoadSavedFactor = React.useCallback((factor: any) => {
+  const handleLoadSavedFactor = React.useCallback(
+    (factor: any) => {
+      // بررسی اینکه آیا فاکتوری در حال حاضر وجود دارد
+      if (items.length > 0) {
+        // اگر فاکتوری وجود دارد، اطلاعات کامل فاکتور را دریافت کن
+        try {
+          const savedInvoices = JSON.parse(
+            localStorage.getItem("savedInvoices") || "[]"
+          );
+          const savedFactor = savedInvoices.find(
+            (invoice: any) => invoice.invoiceNumber === factor.id
+          );
+
+          if (savedFactor) {
+            // اطلاعات کامل فاکتور را برای نمایش در مدال ذخیره کن
+            const factorInfo = {
+              ...factor,
+              itemsCount: savedFactor.items ? savedFactor.items.length : 0,
+              totalAmount: savedFactor.finalAmount || savedFactor.totalAmount,
+              customerName: savedFactor.customer
+                ? savedFactor.customer.name
+                : null,
+              date: savedFactor.date,
+              // اطلاعات کامل فاکتور برای بارگذاری
+              fullFactor: savedFactor,
+            };
+            setPendingLoadFactor(factorInfo);
+            setIsSaveCurrentFactorModalOpen(true);
+            return;
+          }
+        } catch (error) {
+          console.error("خطا در دریافت اطلاعات فاکتور:", error);
+        }
+      }
+
+      // اگر فاکتوری وجود ندارد، مستقیماً بارگذاری کن
+      loadFactorDirectly(factor);
+    },
+    [items.length]
+  );
+
+  // تابع برای بارگذاری مستقیم فاکتور
+  const loadFactorDirectly = (factor: any) => {
     // پاک کردن داده‌های فعلی
     setItems([]);
     setSelectedCustomer(null);
@@ -963,14 +1122,24 @@ const Content: React.FC = () => {
     setCreditAmount(0);
     setPartialPayments([]);
 
-    // بارگذاری داده‌های فاکتور ذخیره شده
     try {
-      const savedInvoices = JSON.parse(
-        localStorage.getItem("savedInvoices") || "[]"
-      );
-      const savedFactor = savedInvoices.find(
-        (invoice: any) => invoice.invoiceNumber === factor.id
-      );
+      let savedFactor = factor;
+
+      // اگر factor شامل fullFactor است، از آن استفاده کن
+      if (factor.fullFactor) {
+        savedFactor = factor.fullFactor;
+      } else if (factor.invoiceNumber) {
+        // اگر factor مستقیماً شامل invoiceNumber است، از آن استفاده کن
+        savedFactor = factor;
+      } else {
+        // در غیر این صورت، از localStorage دریافت کن
+        const savedInvoices = JSON.parse(
+          localStorage.getItem("savedInvoices") || "[]"
+        );
+        savedFactor = savedInvoices.find(
+          (invoice: any) => invoice.invoiceNumber === factor.id
+        );
+      }
 
       if (savedFactor) {
         // تنظیم شماره فاکتور
@@ -1013,13 +1182,35 @@ const Content: React.FC = () => {
           `فاکتور ${savedFactor.invoiceNumber} با موفقیت بارگذاری شد`
         );
         setTimeout(() => setSuccessMessage(""), 3000);
+
+        // حذف فاکتور از localStorage بعد از بارگذاری موفق
+        try {
+          const savedInvoices = JSON.parse(
+            localStorage.getItem("savedInvoices") || "[]"
+          );
+          const updatedInvoices = savedInvoices.filter(
+            (invoice: any) =>
+              invoice.invoiceNumber !== savedFactor.invoiceNumber
+          );
+          localStorage.setItem(
+            "savedInvoices",
+            JSON.stringify(updatedInvoices)
+          );
+
+          // ارسال event برای به‌روزرسانی NavBar
+          window.dispatchEvent(new Event("invoicesUpdated"));
+        } catch (error) {
+          console.error("خطا در حذف فاکتور از localStorage:", error);
+        }
+      } else {
+        // فاکتور پیدا نشد
       }
     } catch (error) {
       console.error("خطا در بارگذاری فاکتور:", error);
       setSuccessMessage("خطا در بارگذاری فاکتور");
       setTimeout(() => setSuccessMessage(""), 3000);
     }
-  }, []);
+  };
 
   // حذف توابع مربوط به saved factors
   // const loadSavedFactors = () => { ... };
@@ -1088,6 +1279,157 @@ const Content: React.FC = () => {
           onDelete={handleDeleteConfirm}
           invoiceNumber={invoiceNumber}
         />
+        {/* مدال ذخیره فاکتور فعلی */}
+        {isSaveCurrentFactorModalOpen && (
+          <div
+            style={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: "rgba(0, 0, 0, 0.5)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              zIndex: 1000,
+            }}
+          >
+            <div
+              style={{
+                backgroundColor: "white",
+                borderRadius: "10px",
+                padding: "30px",
+                maxWidth: "400px",
+                width: "90%",
+                textAlign: "center",
+              }}
+            >
+              <h3
+                style={{
+                  marginBottom: "20px",
+                  fontSize: "18px",
+                  fontWeight: "bold",
+                }}
+              >
+                فاکتور فعلی
+              </h3>
+              <p
+                style={{
+                  marginBottom: "15px",
+                  fontSize: "16px",
+                  lineHeight: "1.5",
+                }}
+              >
+                فاکتور شماره {invoiceNumber} در حال حاضر وجود دارد.
+                <br />
+                آیا می‌خواهید آن را ذخیره کنید یا حذف کنید؟
+              </p>
+              {pendingLoadFactor && (
+                <div
+                  style={{
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "8px",
+                    padding: "15px",
+                    marginBottom: "20px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <h4
+                    style={{
+                      marginBottom: "10px",
+                      fontSize: "16px",
+                      fontWeight: "bold",
+                      color: "#495057",
+                    }}
+                  >
+                    فاکتور انتخاب شده:
+                  </h4>
+                  <div style={{ fontSize: "14px", lineHeight: "1.4" }}>
+                    <p style={{ marginBottom: "5px" }}>
+                      <strong>شماره فاکتور:</strong> {pendingLoadFactor.id}
+                    </p>
+                    <p style={{ marginBottom: "5px" }}>
+                      <strong>تعداد اقلام:</strong>{" "}
+                      {pendingLoadFactor.itemsCount || "نامشخص"}
+                    </p>
+                    <p style={{ marginBottom: "5px" }}>
+                      <strong>مبلغ کل:</strong>{" "}
+                      {pendingLoadFactor.totalAmount
+                        ? `${pendingLoadFactor.totalAmount.toLocaleString(
+                            "fa-IR"
+                          )} ریال`
+                        : "نامشخص"}
+                    </p>
+                    {pendingLoadFactor.customerName && (
+                      <p style={{ marginBottom: "5px" }}>
+                        <strong>مشتری:</strong> {pendingLoadFactor.customerName}
+                      </p>
+                    )}
+                    {pendingLoadFactor.date && (
+                      <p style={{ marginBottom: "5px" }}>
+                        <strong>تاریخ:</strong>{" "}
+                        {new Date(pendingLoadFactor.date).toLocaleDateString(
+                          "fa-IR"
+                        )}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+              <div
+                style={{
+                  display: "flex",
+                  gap: "10px",
+                  justifyContent: "center",
+                }}
+              >
+                <button
+                  onClick={handleSaveCurrentFactor}
+                  style={{
+                    backgroundColor: "#4973DE",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "10px 20px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  ذخیره
+                </button>
+                <button
+                  onClick={handleDeleteCurrentFactor}
+                  style={{
+                    backgroundColor: "#DE4949",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "10px 20px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  حذف
+                </button>
+                <button
+                  onClick={handleCancelSaveCurrentFactor}
+                  style={{
+                    backgroundColor: "#6c757d",
+                    color: "white",
+                    border: "none",
+                    borderRadius: "5px",
+                    padding: "10px 20px",
+                    cursor: "pointer",
+                    fontSize: "14px",
+                  }}
+                >
+                  انصراف
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <CartPaymentModal
           totalAmount={finalAmount}
           onConfirm={handleCartPaymentConfirm}

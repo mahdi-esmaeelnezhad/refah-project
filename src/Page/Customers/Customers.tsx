@@ -1,6 +1,4 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../store/store";
 import useRequest from "../../hooks/useRequest";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 import { Button } from "../../Components/Ui/Button/button";
@@ -65,7 +63,7 @@ interface CustomerApiResponse {
 const pageSize = 20;
 
 const Customers: React.FC = () => {
-  const { token } = useSelector((state: RootState) => state.auth);
+  const token = localStorage.getItem("token");
   const { isOpen, openModal, closeModal } = useModal();
 
   const { loading: addCustomerLoading, execute: addCustomerHandler } =
@@ -174,7 +172,7 @@ const Customers: React.FC = () => {
   useEffect(() => {
     fetchCustomerList();
   }, [token]);
-  const productSectionMaxHeight = showFilter ? 450 : 600;
+  const productSectionMaxHeight = showFilter ? 430 : 570;
 
   const totalPages = Math.ceil(items.length / pageSize);
 

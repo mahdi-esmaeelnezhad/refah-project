@@ -5,14 +5,12 @@ import mapIcon from "../../assets/mapIcon.svg";
 import { AUTH_ENDPOINTS } from "../../endpoint/login/login";
 import map from "../../assets/map.svg";
 import useRequest from "../../hooks/useRequest";
-import { useSelector } from "react-redux";
-import type { RootState } from "../../store/store";
 
 const ShopSettings: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const { token } = useSelector((state: RootState) => state.auth);
+  const token = localStorage.getItem("token");
   const [shopInfo, setShopInfo] = useState<any>(null);
 
   const { execute: changePasswordRequest } = useRequest<any>(

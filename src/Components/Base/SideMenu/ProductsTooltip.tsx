@@ -103,87 +103,9 @@ const ProductsTooltip: React.FC<ProductsTooltipProps> = ({
     // فراخوانی API گرفتن لیست محصولات و به‌روزرسانی localStorage
     setIsLoading(true);
     try {
-      const shopId = localStorage.getItem("shopId");
-      if (shopId) {
-        // فراخوانی API گرفتن لیست محصولات
-        const response = await fetch(
-          `${
-            import.meta.env.VITE_BASE_URL || "https://api2.shopp.market"
-          }/api/shop_biz/cache/item/list`,
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ shopId }),
-          }
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          const cacheProductList = data.data;
-
-          if (cacheProductList && Array.isArray(cacheProductList)) {
-            // پردازش داده‌ها
-            const cacheCategoryList = JSON.parse(
-              localStorage.getItem("cacheCategoryList") || "[]"
-            );
-            const cacheBrandList = JSON.parse(
-              localStorage.getItem("cacheBrandList") || "[]"
-            );
-
-            const categoryMap = new Map<string, string>();
-            const brandMap = new Map<string, string>();
-
-            if (cacheCategoryList) {
-              cacheCategoryList.forEach((cat: any) => {
-                categoryMap.set(cat.id, cat.title);
-              });
-            }
-
-            if (cacheBrandList) {
-              cacheBrandList.forEach((brand: any) => {
-                brandMap.set(brand.id, brand.name);
-              });
-            }
-
-            let processedData = cacheProductList.map((item: any) => ({
-              id: item.id || item.itemDto?.id || "",
-              name: item.name || item.itemDto?.name || "",
-              price: item.price || item.itemDto?.price || 0,
-              categoryId: item.categoryId || "",
-              brandId: item.brandId || "",
-              brandName: brandMap.get(item.brandId) || item.brandName || "",
-              sku: item.sku || "",
-              govId: item.govId || "",
-              isAvailable: item.isAvailable || false,
-              vatRate: item.vatRate || "",
-              categoryName:
-                categoryMap.get(item.categoryId) || item.categoryName || "",
-              unitType: item.unitType || "",
-              onlineStockThreshold: item.onlineStockThreshold || 0,
-              discount: item.discount || 0,
-            }));
-
-            const availableProducts = processedData.filter(
-              (item) => item.isAvailable
-            );
-
-            // به‌روزرسانی localStorage
-            localStorage.setItem(
-              "finalDataStorage",
-              JSON.stringify(availableProducts)
-            );
-
-            // به‌روزرسانی state
-            setProducts(availableProducts);
-            setFilteredProducts(availableProducts);
-
-            console.log("لیست محصولات با موفقیت به‌روزرسانی شد");
-          }
-        }
-      }
+      const productList = localStorage.getItem("finalDataStorage");
+      setProducts(JSON.parse(productList || "[]"));
+      setFilteredProducts(JSON.parse(productList || "[]"));
     } catch (error) {
       console.error("خطا در به‌روزرسانی لیست محصولات:", error);
     } finally {

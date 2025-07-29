@@ -5,6 +5,7 @@ import { BASE_ENDPOINTS } from "../../endpoint/base/base";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 // import type { RootState } from "../../store/store";
 import axios from "axios";
+import { ProductDataService } from "../../utils/productService";
 interface ProductItem {
   id: string;
   name: string;
@@ -73,6 +74,18 @@ const ShopInfoInitializer: React.FC = () => {
   const getInfo = async () => {
     const shopId = localStorage.getItem("shopId");
     if (!shopId) return;
+
+    // بررسی نیاز به به‌روزرسانی
+    if (
+      !ProductDataService.shouldUpdateData() &&
+      ProductDataService.hasData()
+    ) {
+      console.log("استفاده از داده‌های کش شده - نیازی به به‌روزرسانی نیست");
+      return;
+    }
+
+    console.log("دریافت داده‌های جدید از سرور...");
+
     // please json parse
     const cacheCategoryList = JSON.parse(
       localStorage.getItem("cacheCategoryList") || "[]"
@@ -119,12 +132,10 @@ const ShopInfoInitializer: React.FC = () => {
       const availableProducts = processedData.filter(
         (item) => item.isAvailable
       );
-      // setFinalData(availableProducts);
-      // setAllFinalData(availableProducts);
-      localStorage.setItem(
-        "finalDataStorage",
-        JSON.stringify(availableProducts)
-      );
+
+      // ذخیره با استفاده از سرویس
+      ProductDataService.setProductData(availableProducts);
+
       const availableCategoriesArray: CategoryOption[] = [];
       availableProducts.forEach((item) => {
         if (item.categoryId && categoryMap.has(item.categoryId)) {

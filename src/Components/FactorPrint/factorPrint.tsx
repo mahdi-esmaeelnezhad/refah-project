@@ -198,7 +198,7 @@ const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
         <div className="factor-summary px-4">
           <span>
             تعداد اقلام:{" "}
-            {factorData.shopBizItemDtoList.reduce(
+            {factorData?.shopBizItemDtoList.reduce(
               (acc: any, curr: { saleCount: any }) => acc + curr.saleCount,
               0
             )}
@@ -227,7 +227,7 @@ const FactorPrintWeb: React.FC<Props> = ({ factordetail, onClose }) => {
           <strong>بدهی این فاکتور:</strong>
           <strong>
             {formatPrice(
-              factorData.shopBizPaymentDtoList.find(
+              factorData?.shopBizPaymentDtoList.find(
                 (p: { method: number }) => p.method === 0
               )?.totalAmount || 0
             )}

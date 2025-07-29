@@ -13,6 +13,18 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
   const isProcessingRef = useRef(false);
   const barcodeStartTimeRef = useRef(0);
   const autoProcessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  
+  // تنظیمات بهینه‌سازی شده برای دستگاه‌های اندروید قدیمی
+  const ANDROID_OPTIMIZATION = {
+    // افزایش فاصله زمانی بین کلیدها برای دستگاه‌های کند
+    KEY_INTERVAL_THRESHOLD: 500, // از 150ms به 500ms افزایش یافت
+    // کاهش تاخیر پردازش خودکار
+    AUTO_PROCESS_DELAY: 100, // از 300ms به 100ms کاهش یافت
+    // افزایش زمان پاک کردن بافر
+    BUFFER_CLEAR_DELAY: 2000, // از 1500ms به 2000ms افزایش یافت
+    // کاهش تاخیر پردازش
+    PROCESSING_DELAY: 100, // از 300ms به 100ms کاهش یافت
+  };
 
   const clearBuffer = useCallback(() => {
     setBarcodeBuffer('');
@@ -31,9 +43,9 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
 
     const currentTime = Date.now();
     
-    // اگر فاصله زمانی بین کلیدها بیشتر از 150ms باشد، بافر را پاک کن
-    // این کار از اتصال بارکدهای مختلف جلوگیری می‌کند
-    if (currentTime - lastKeyTimeRef.current > 150) {
+    // اگر فاصله زمانی بین کلیدها بیشتر از آستانه باشد، بافر را پاک کن
+    // برای دستگاه‌های اندروید قدیمی، آستانه افزایش یافته است
+    if (currentTime - lastKeyTimeRef.current > ANDROID_OPTIMIZATION.KEY_INTERVAL_THRESHOLD) {
       clearBuffer();
       barcodeStartTimeRef.current = currentTime;
     }
@@ -49,10 +61,10 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
         // جلوگیری از submit فرم
         event.preventDefault();
         
-        // افزایش تاخیر به 300ms برای اطمینان از عدم تداخل
+        // کاهش تاخیر برای سرعت بیشتر
         setTimeout(() => {
           isProcessingRef.current = false;
-        }, 300);
+        }, ANDROID_OPTIMIZATION.PROCESSING_DELAY);
       }
       return;
     }
@@ -74,7 +86,7 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
             clearTimeout(autoProcessTimeoutRef.current);
           }
           
-          // تنظیم تایمر جدید برای پردازش خودکار
+          // تنظیم تایمر جدید برای پردازش خودکار - کاهش تاخیر
           autoProcessTimeoutRef.current = setTimeout(() => {
             if (barcodeBuffer === newBuffer && !isProcessingRef.current) {
               isProcessingRef.current = true;
@@ -82,9 +94,9 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
               clearBuffer();
               setTimeout(() => {
                 isProcessingRef.current = false;
-              }, 300);
+              }, ANDROID_OPTIMIZATION.PROCESSING_DELAY);
             }
-          }, 300);
+          }, ANDROID_OPTIMIZATION.AUTO_PROCESS_DELAY);
         }
         
         return newBuffer;
@@ -107,12 +119,12 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
     };
   }, [enabled, isListening, handleKeyPress, clearBuffer]);
 
-  // پاک کردن بافر بعد از مدتی عدم فعالیت - افزایش به 1500ms
+  // پاک کردن بافر بعد از مدتی عدم فعالیت - افزایش برای دستگاه‌های اندروید قدیمی
   useEffect(() => {
     if (barcodeBuffer.length > 0) {
       bufferTimeoutRef.current = setTimeout(() => {
         clearBuffer();
-      }, 1500);
+      }, ANDROID_OPTIMIZATION.BUFFER_CLEAR_DELAY);
     }
 
     return () => {

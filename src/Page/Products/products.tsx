@@ -20,6 +20,7 @@ import useRequest from "../../hooks/useRequest";
 import { PRODUCT_ENDPOINTS } from "../../endpoint/product/product";
 import axios from "axios";
 import { BASE_ENDPOINTS } from "../../endpoint/base/base";
+import { ProductDataService } from "../../utils/productService";
 // import { useSelector } from "react-redux";
 // import type { RootState } from "../../store/store";
 
@@ -85,6 +86,7 @@ const Products: React.FC = () => {
   );
   const token = localStorage.getItem("token");
   const shopId = localStorage.getItem("shopId");
+
   const { execute: addProductRequest } = useRequest(
     PRODUCT_ENDPOINTS.addProduct,
     "POST",
@@ -115,13 +117,57 @@ const Products: React.FC = () => {
       },
     }
   );
-  const getInfo = async () => {
+  const getInfo = async (forceRefresh: boolean = false) => {
     const shopId = localStorage.getItem("shopId");
     if (!shopId) return;
 
     try {
       setIsLoading(true);
       setError(null);
+
+      // اگر forceRefresh درخواست شده یا کش خالی است، حتماً از سرور دریافت کن
+      if (forceRefresh || !ProductDataService.hasData()) {
+        console.log("دریافت اجباری داده‌های جدید از سرور...");
+      } else if (ProductDataService.shouldUpdateData()) {
+        console.log("دریافت داده‌های جدید از سرور (به‌روزرسانی ساعتی)...");
+      } else {
+        console.log("استفاده از داده‌های کش شده در صفحه محصولات");
+        const cachedData = ProductDataService.getProductData();
+        setFinalData(cachedData);
+        setAllFinalData(cachedData);
+
+        // ایجاد دسته‌بندی‌ها از داده‌های کش شده
+        const availableCategoriesArray: CategoryOption[] = [];
+        const categoryMap = new Map<string, string>();
+
+        // خواندن دسته‌بندی‌ها از localStorage
+        const cacheCategoryList = JSON.parse(
+          localStorage.getItem("cacheCategoryList") || "[]"
+        );
+        cacheCategoryList.forEach((cat: any) => {
+          categoryMap.set(cat.id, cat.title);
+        });
+
+        cachedData.forEach((item) => {
+          if (item.categoryId && categoryMap.has(item.categoryId)) {
+            const existing = availableCategoriesArray.find(
+              (cat) => cat.categoryId === item.categoryId
+            );
+            if (!existing) {
+              availableCategoriesArray.push({
+                categoryId: item.categoryId,
+                categoryName: categoryMap.get(item.categoryId) || "",
+              });
+            }
+          }
+        });
+
+        setAvailableCategories(availableCategoriesArray);
+        return;
+      }
+
+      console.log("دریافت داده‌های جدید از سرور در صفحه محصولات...");
+
       // please json parse
       const cacheCategoryList = JSON.parse(
         localStorage.getItem("cacheCategoryList") || "[]"
@@ -172,10 +218,10 @@ const Products: React.FC = () => {
         );
         setFinalData(availableProducts);
         setAllFinalData(availableProducts);
-        localStorage.setItem(
-          "finalDataStorage",
-          JSON.stringify(availableProducts)
-        );
+
+        // ذخیره با استفاده از سرویس
+        ProductDataService.setProductData(availableProducts);
+
         const availableCategoriesArray: CategoryOption[] = [];
         availableProducts.forEach((item) => {
           if (item.categoryId && categoryMap.has(item.categoryId)) {
@@ -310,6 +356,101 @@ const Products: React.FC = () => {
     if (unit === "وزن" || unit === 1 || unit === "1") return 1;
     return unit;
   };
+
+  // تابع برای فراخوانی API و به‌روزرسانی localStorage
+  const refreshProductList = async () => {
+    const shopId = localStorage.getItem("shopId");
+    if (!shopId) return;
+
+    try {
+      console.log("فراخوانی API برای دریافت لیست جدید محصولات...");
+
+      // فراخوانی API گرفتن لیست محصولات
+      const res: any = await getCacheProductList({ shopId });
+      const cacheProductList = res.data;
+
+      if (cacheProductList && Array.isArray(cacheProductList)) {
+        // پردازش داده‌ها
+        const cacheCategoryList = JSON.parse(
+          localStorage.getItem("cacheCategoryList") || "[]"
+        );
+        const cacheBrandList = JSON.parse(
+          localStorage.getItem("cacheBrandList") || "[]"
+        );
+
+        const categoryMap = new Map<string, string>();
+        const brandMap = new Map<string, string>();
+
+        if (cacheCategoryList) {
+          cacheCategoryList.forEach((cat: any) => {
+            categoryMap.set(cat.id, cat.title);
+          });
+        }
+
+        if (cacheBrandList) {
+          cacheBrandList.forEach((brand: any) => {
+            brandMap.set(brand.id, brand.name);
+          });
+        }
+
+        let processedData: ProductItem[] = cacheProductList.map(
+          (item: any) => ({
+            id: item.id || item.itemDto?.id || "",
+            name: item.name || item.itemDto?.name || "",
+            price: item.price || item.itemDto?.price || 0,
+            categoryId: item.categoryId || "",
+            brandId: item.brandId || "",
+            brandName: brandMap.get(item.brandId) || item.brandName || "",
+            sku: item.sku || "",
+            govId: item.govId || "",
+            isAvailable: item.isAvailable || false,
+            vatRate: item.vatRate || "",
+            categoryName:
+              categoryMap.get(item.categoryId) || item.categoryName || "",
+            unitType: item.unitType || "",
+            onlineStockThreshold: item.onlineStockThreshold || 0,
+            discount: item.discount || 0,
+          })
+        );
+
+        const availableProducts = processedData.filter(
+          (item) => item.isAvailable
+        );
+
+        // به‌روزرسانی localStorage
+        localStorage.setItem(
+          "finalDataStorage",
+          JSON.stringify(availableProducts)
+        );
+
+        // به‌روزرسانی state
+        setFinalData(availableProducts);
+        setAllFinalData(availableProducts);
+
+        // به‌روزرسانی دسته‌بندی‌ها
+        const availableCategoriesArray: CategoryOption[] = [];
+        availableProducts.forEach((item) => {
+          if (item.categoryId && categoryMap.has(item.categoryId)) {
+            const existing = availableCategoriesArray.find(
+              (cat) => cat.categoryId === item.categoryId
+            );
+            if (!existing) {
+              availableCategoriesArray.push({
+                categoryId: item.categoryId,
+                categoryName: categoryMap.get(item.categoryId) || "",
+              });
+            }
+          }
+        });
+
+        setAvailableCategories(availableCategoriesArray);
+
+        console.log("لیست محصولات با موفقیت به‌روزرسانی شد");
+      }
+    } catch (error) {
+      console.error("خطا در به‌روزرسانی لیست محصولات:", error);
+    }
+  };
   const submitEditProduct = async (data: any) => {
     try {
       const body = {
@@ -325,10 +466,16 @@ const Products: React.FC = () => {
         vatRate: data.vatRate || 0,
         govId: data.govId || "",
       };
-      await addProductRequest(body);
-      alert("کالا با موفقیت ویرایش شد");
-      setIsEditModalOpen(false);
-      getInfo();
+      const response = await addProductRequest(body);
+
+      // اگر موفقیت‌آمیز بود (200)
+      if (response && response.status === 200) {
+        alert("کالا با موفقیت ویرایش شد");
+        setIsEditModalOpen(false);
+
+        // فراخوانی API گرفتن لیست محصولات و به‌روزرسانی localStorage
+        await refreshProductList();
+      }
     } catch (error) {
       alert("خطا در ویرایش کالا");
       console.error("Error editing product:", error);
@@ -341,14 +488,23 @@ const Products: React.FC = () => {
   const submitDeleteProduct = async () => {
     if (!deleteProduct) return;
     try {
-      await axios.delete(PRODUCT_ENDPOINTS.deleteProduct(deleteProduct.id), {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      alert("کالا با موفقیت حذف شد");
-      setIsDeleteModalOpen(false);
-      getInfo();
+      const response = await axios.delete(
+        PRODUCT_ENDPOINTS.deleteProduct(deleteProduct.id),
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // اگر موفقیت‌آمیز بود (200)
+      if (response && response.status === 200) {
+        alert("کالا با موفقیت حذف شد");
+        setIsDeleteModalOpen(false);
+
+        // فراخوانی API گرفتن لیست محصولات و به‌روزرسانی localStorage
+        await refreshProductList();
+      }
     } catch (error) {
       alert("خطا در حذف کالا");
       console.error("Error deleting product:", error);
@@ -361,7 +517,7 @@ const Products: React.FC = () => {
         <div className="text-center">
           <div className="text-red-500 text-xl mb-4">{error}</div>
           <button
-            onClick={getInfo}
+            onClick={() => getInfo()}
             className="bg-blue-500 text-white px-4 py-2 rounded"
           >
             تلاش مجدد

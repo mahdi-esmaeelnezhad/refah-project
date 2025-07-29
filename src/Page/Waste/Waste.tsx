@@ -13,7 +13,7 @@ import { useModal } from "../../hooks/useModal";
 import DeleteModal from "../../Components/Modal/DeleteModal";
 import CartPaymentModal from "../../Components/Modal/CartPaymentModal";
 import CartPaymentLoading from "../../Components/Modal/CartPaymentLoading";
-import CartPaymentPassword from "../../Components/Modal/CartPaymentPassword";
+// import CartPaymentPassword from "../../Components/Modal/CartPaymentPassword";
 import SuccessPaymentModal from "../../Components/Modal/SuccessPaymentModal";
 import FailedPaymentModal from "../../Components/Modal/FailedPaymentModal";
 import { useBarcodeScanner } from "../../hooks/useBarcodeScanner";
@@ -295,7 +295,7 @@ const Waste: React.FC = () => {
           paymentType={paymentMethod === "نقدی" ? "cash" : "card"}
         />
         <CartPaymentLoading amount={paymentAmount} />
-        <CartPaymentPassword amount={paymentAmount} />
+        {/* <CartPaymentPassword amount={paymentAmount} /> */}
         <SuccessPaymentModal
           amount={paymentAmount}
           transactionType={paymentMethod === "نقدی" ? "نقدی" : "خرید"}

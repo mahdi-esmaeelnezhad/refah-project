@@ -19,6 +19,7 @@ interface InputProps {
   onFocus?: (e: React.FocusEvent<HTMLInputElement>) => void;
   onBlur?: (e: React.FocusEvent<HTMLInputElement>) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
   disabled?: boolean;
   error?: string;
   type?: string;
@@ -36,6 +37,7 @@ interface InputProps {
   onButtonClick?: () => void;
   backgroundColor?: string;
   onUpload?: (file: File) => void;
+  readOnly?: boolean;
 }
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
@@ -48,6 +50,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onFocus,
       onBlur,
       onKeyDown,
+      onClick,
       disabled = false,
       error,
       type,
@@ -65,6 +68,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onButtonClick,
       backgroundColor = "#f2f2f2",
       onUpload,
+      readOnly = false,
     },
     ref
   ) => {
@@ -104,7 +108,9 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             onFocus={onFocus}
             onBlur={onBlur}
             onKeyDown={onKeyDown}
+            onClick={onClick}
             disabled={disabled}
+            readOnly={readOnly}
             style={{
               height: typeof height === "number" ? `${height - 30}px` : height,
               ...placeholderStyle,

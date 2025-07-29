@@ -79,3 +79,63 @@ export const findProductByBarcode = (barcode: string): ProductItem | null => {
     return null;
   }
 }; 
+
+// سرویس مدیریت محصولات با کش و به‌روزرسانی ساعتی
+export const ProductDataService = {
+  // کلیدهای localStorage
+  STORAGE_KEYS: {
+    FINAL_DATA: "finalDataStorage",
+    LAST_UPDATE: "lastProductUpdate",
+    CACHE_DURATION: 60 * 60 * 1000, // 1 ساعت به میلی‌ثانیه
+  },
+
+  // بررسی نیاز به به‌روزرسانی
+  shouldUpdateData(): boolean {
+    const lastUpdate = localStorage.getItem(this.STORAGE_KEYS.LAST_UPDATE);
+    if (!lastUpdate) return true;
+
+    const lastUpdateTime = parseInt(lastUpdate);
+    const currentTime = Date.now();
+    const timeDiff = currentTime - lastUpdateTime;
+
+    return timeDiff >= this.STORAGE_KEYS.CACHE_DURATION;
+  },
+
+  // دریافت داده‌های محصولات
+  getProductData(): any[] {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEYS.FINAL_DATA);
+      return data ? JSON.parse(data) : [];
+    } catch (error) {
+      console.error("خطا در خواندن داده‌های محصولات:", error);
+      return [];
+    }
+  },
+
+  // ذخیره داده‌های محصولات
+  setProductData(data: any[]): void {
+    try {
+      localStorage.setItem(this.STORAGE_KEYS.FINAL_DATA, JSON.stringify(data));
+      localStorage.setItem(this.STORAGE_KEYS.LAST_UPDATE, Date.now().toString());
+    } catch (error) {
+      console.error("خطا در ذخیره داده‌های محصولات:", error);
+    }
+  },
+
+  // بررسی وجود داده
+  hasData(): boolean {
+    const data = this.getProductData();
+    return data.length > 0;
+  },
+
+  // پاک کردن کش
+  clearCache(): void {
+    localStorage.removeItem(this.STORAGE_KEYS.FINAL_DATA);
+    localStorage.removeItem(this.STORAGE_KEYS.LAST_UPDATE);
+  },
+
+  // به‌روزرسانی اجباری (برای کالای جدید)
+  forceUpdate(): void {
+    this.clearCache();
+  }
+}; 

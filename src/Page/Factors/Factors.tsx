@@ -346,6 +346,7 @@ const Factors: React.FC = () => {
           className="overflow-y-auto relative"
           style={{
             maxHeight: productSectionMaxHeight,
+            height: productSectionMaxHeight,
           }}
         >
           {pagedFactors && pagedFactors.length > 0 ? (

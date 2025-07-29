@@ -139,6 +139,7 @@ const Content: React.FC = () => {
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [barcodeInput, setBarcodeInput] = useState("");
   const [isBarcodeInputFocused, setIsBarcodeInputFocused] = useState(false);
+  const [isBarcodeDialPadOpen, setIsBarcodeDialPadOpen] = useState(false);
   const [mobileInput, setMobileInput] = useState("");
   const [isMobileInputFocused, setIsMobileInputFocused] = useState(false);
   const [, setSuccessMessage] = useState("");
@@ -737,11 +738,11 @@ const Content: React.FC = () => {
         openProductNotFoundModal(barcode);
       }
 
-      // Reset processing flag after a delay to prevent overlapping scans
+      // Reset processing flag after a delay to prevent overlapping scans - کاهش تاخیر برای سرعت بیشتر
       setTimeout(() => {
         barcodeProcessingRef.current = false;
         lastProcessedBarcodeRef.current = "";
-      }, 300);
+      }, 100);
     },
     [items, openProductNotFoundModal, shopBizItemDtoList]
   );
@@ -752,13 +753,13 @@ const Content: React.FC = () => {
 
     // اگر بارکد با دستگاه اسکن شده (طول مناسب و سرعت بالا)
     if (newValue.length >= 8 && newValue.length <= 20) {
-      // کاهش تاخیر به 50ms برای سرعت بیشتر
+      // کاهش تاخیر به 20ms برای سرعت بیشتر در دستگاه‌های اندروید قدیمی
       setTimeout(() => {
         if (barcodeInput === newValue) {
           handleBarcodeScanned(newValue.trim());
           setBarcodeInput("");
         }
-      }, 50);
+      }, 20);
     }
   };
 
@@ -782,6 +783,26 @@ const Content: React.FC = () => {
 
   const handleBarcodeInputBlur = () => {
     setIsBarcodeInputFocused(false);
+  };
+
+  const handleBarcodeInputClick = () => {
+    // اگر روی input کلیک شد، dialPad را باز کن
+    setIsBarcodeDialPadOpen(true);
+  };
+
+  const handleBarcodeDialPadChange = (value: string) => {
+    setBarcodeInput(value);
+  };
+
+  const handleBarcodeDialPadClose = () => {
+    setIsBarcodeDialPadOpen(false);
+    // دوباره فوکوس روی input بارکد
+    setTimeout(() => {
+      if (barcodeInputRef.current) {
+        barcodeInputRef.current.focus();
+        setIsBarcodeInputFocused(true);
+      }
+    }, 100);
   };
 
   const handleMobileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1186,23 +1207,52 @@ const Content: React.FC = () => {
         >
           <div className="flex items-center justify-between gap-8 max-h-10">
             <div className="flex items-center gap-2">
-              <Input
-                ref={barcodeInputRef}
-                placeholder="بارکد کالا را وارد کنید"
-                hasButton
-                buttonText="ثبت بارکد"
-                value={barcodeInput}
-                onChange={handleBarcodeInputChange}
-                onFocus={handleBarcodeInputFocus}
-                onBlur={handleBarcodeInputBlur}
-                onButtonClick={handleBarcodeSubmit}
-                onKeyDown={handleBarcodeKeyDown}
-                style={{
-                  width: "445px",
-                  borderRadius: "55px",
-                  border: "2px solid #7485E5",
-                }}
-              />
+              <Tooltip
+                positioning="parent"
+                top={60}
+                left={0}
+                component={
+                  <DialPad
+                    value={barcodeInput}
+                    onChange={handleBarcodeDialPadChange}
+                    onConfirm={() => {
+                      handleBarcodeSubmit();
+                      setIsBarcodeDialPadOpen(false);
+                      // دوباره فوکوس روی input بارکد
+                      setTimeout(() => {
+                        if (barcodeInputRef.current) {
+                          barcodeInputRef.current.focus();
+                          setIsBarcodeInputFocused(true);
+                        }
+                      }, 100);
+                    }}
+                    onClose={handleBarcodeDialPadClose}
+                  />
+                }
+                isOpen={isBarcodeDialPadOpen}
+                setIsOpen={setIsBarcodeDialPadOpen}
+              >
+                <Input
+                  ref={barcodeInputRef}
+                  placeholder="بارکد کالا را وارد کنید"
+                  hasButton
+                  buttonText="ثبت بارکد"
+                  value={barcodeInput}
+                  onChange={handleBarcodeInputChange}
+                  onFocus={handleBarcodeInputFocus}
+                  onBlur={handleBarcodeInputBlur}
+                  onClick={handleBarcodeInputClick}
+                  onButtonClick={handleBarcodeSubmit}
+                  onKeyDown={handleBarcodeKeyDown}
+                  readOnly={true} // جلوگیری از باز شدن کیبورد
+                  style={{
+                    width: "445px",
+                    borderRadius: "55px",
+                    border: "2px solid #7485E5",
+                    cursor: "pointer", // نشان دادن قابلیت کلیک
+                  }}
+                />
+              </Tooltip>
               {isListening && isBarcodeInputFocused && (
                 <div className="flex items-center gap-1 text-green-600 text-sm">
                   <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>

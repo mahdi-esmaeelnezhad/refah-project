@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import Input from "../../Ui/Input/input";
 import { SearchIcon } from "../../icons";
 import AddProductModal from "../../Modal/AddProductModal";
+import { ProductDataService } from "../../../utils/productService";
 // import { useModal } from "../../../hooks/useModal";
 
 interface Product {
@@ -33,28 +34,39 @@ const ProductsTooltip: React.FC<ProductsTooltipProps> = ({
   const [products, setProducts] = useState<Product[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
   const [isAddProductModalOpen, setIsAddProductModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Load products from localStorage (finalDataStorage)
   useEffect(() => {
     const loadProducts = () => {
+      setIsLoading(true);
       try {
-        const finalDataStorage = localStorage.getItem("finalDataStorage");
-        if (finalDataStorage) {
-          const productsData = JSON.parse(finalDataStorage);
+        // ابتدا از سرویس استفاده کنیم
+        if (ProductDataService.hasData()) {
+          const productsData = ProductDataService.getProductData();
           setProducts(productsData);
           setFilteredProducts(productsData);
+        } else {
+          // اگر سرویس داده ندارد، از localStorage استفاده کنیم
+          const finalDataStorage = localStorage.getItem("finalDataStorage");
+          if (finalDataStorage) {
+            const productsData = JSON.parse(finalDataStorage);
+            setProducts(productsData);
+            setFilteredProducts(productsData);
+          }
         }
       } catch (error) {
         console.error("خطا در بارگذاری محصولات:", error);
         setProducts([]);
         setFilteredProducts([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    if (isOpen) {
-      loadProducts();
-    }
-  }, [isOpen]);
+    // همیشه محصولات را بارگذاری کن، نه فقط وقتی isOpen تغییر می‌کند
+    loadProducts();
+  }, [isOpen]); // همچنان isOpen را در dependency قرار می‌دهیم تا در صورت باز شدن مجدد، داده‌ها به‌روزرسانی شوند
 
   // Filter products based on search term
   useEffect(() => {
@@ -85,14 +97,97 @@ const ProductsTooltip: React.FC<ProductsTooltipProps> = ({
     setIsAddProductModalOpen(false);
   };
 
-  const handleAddProductSuccess = () => {
+  const handleAddProductSuccess = async () => {
     setIsAddProductModalOpen(false);
-    // Reload products after adding new one
-    const finalDataStorage = localStorage.getItem("finalDataStorage");
-    if (finalDataStorage) {
-      const productsData = JSON.parse(finalDataStorage);
-      setProducts(productsData);
-      setFilteredProducts(productsData);
+
+    // فراخوانی API گرفتن لیست محصولات و به‌روزرسانی localStorage
+    setIsLoading(true);
+    try {
+      const shopId = localStorage.getItem("shopId");
+      if (shopId) {
+        // فراخوانی API گرفتن لیست محصولات
+        const response = await fetch(
+          `${
+            import.meta.env.VITE_BASE_URL || "https://api2.shopp.market"
+          }/api/shop_biz/cache/item/list`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ shopId }),
+          }
+        );
+
+        if (response.ok) {
+          const data = await response.json();
+          const cacheProductList = data.data;
+
+          if (cacheProductList && Array.isArray(cacheProductList)) {
+            // پردازش داده‌ها
+            const cacheCategoryList = JSON.parse(
+              localStorage.getItem("cacheCategoryList") || "[]"
+            );
+            const cacheBrandList = JSON.parse(
+              localStorage.getItem("cacheBrandList") || "[]"
+            );
+
+            const categoryMap = new Map<string, string>();
+            const brandMap = new Map<string, string>();
+
+            if (cacheCategoryList) {
+              cacheCategoryList.forEach((cat: any) => {
+                categoryMap.set(cat.id, cat.title);
+              });
+            }
+
+            if (cacheBrandList) {
+              cacheBrandList.forEach((brand: any) => {
+                brandMap.set(brand.id, brand.name);
+              });
+            }
+
+            let processedData = cacheProductList.map((item: any) => ({
+              id: item.id || item.itemDto?.id || "",
+              name: item.name || item.itemDto?.name || "",
+              price: item.price || item.itemDto?.price || 0,
+              categoryId: item.categoryId || "",
+              brandId: item.brandId || "",
+              brandName: brandMap.get(item.brandId) || item.brandName || "",
+              sku: item.sku || "",
+              govId: item.govId || "",
+              isAvailable: item.isAvailable || false,
+              vatRate: item.vatRate || "",
+              categoryName:
+                categoryMap.get(item.categoryId) || item.categoryName || "",
+              unitType: item.unitType || "",
+              onlineStockThreshold: item.onlineStockThreshold || 0,
+              discount: item.discount || 0,
+            }));
+
+            const availableProducts = processedData.filter(
+              (item) => item.isAvailable
+            );
+
+            // به‌روزرسانی localStorage
+            localStorage.setItem(
+              "finalDataStorage",
+              JSON.stringify(availableProducts)
+            );
+
+            // به‌روزرسانی state
+            setProducts(availableProducts);
+            setFilteredProducts(availableProducts);
+
+            console.log("لیست محصولات با موفقیت به‌روزرسانی شد");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("خطا در به‌روزرسانی لیست محصولات:", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -130,7 +225,12 @@ const ProductsTooltip: React.FC<ProductsTooltipProps> = ({
 
         {/* Products List */}
         <div className="overflow-y-auto" style={{ maxHeight: "300px" }}>
-          {filteredProducts.length === 0 ? (
+          {isLoading ? (
+            <div className="p-4 text-center text-gray-500">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto mb-2"></div>
+              در حال بارگذاری محصولات...
+            </div>
+          ) : filteredProducts.length === 0 ? (
             <div className="p-4 text-center text-gray-500">
               {searchTerm ? "محصولی یافت نشد" : "هیچ محصولی موجود نیست"}
             </div>

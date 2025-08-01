@@ -85,13 +85,9 @@ interface Factor {
 type TabKey = "today" | "credit" | "debt" | "courier" | "canceled" | "waste";
 const tabFilters: Record<TabKey, (f: Factor) => boolean> = {
   today: (f) => {
-    const factorDate = new Date(f.createdDate);
-    const today = new Date();
-    return (
-      factorDate.getFullYear() === today.getFullYear() &&
-      factorDate.getMonth() === today.getMonth() &&
-      factorDate.getDate() === today.getDate()
-    );
+    const factorDate = f.createdDate.split("T")[0];
+    const today = new Date().toISOString().split("T")[0];
+    return factorDate === today;
   },
   credit: (f) => f.shopBizSalePaymentMethod === 0,
   debt: (f) => f.shopBizSalePaymentMethod === 11,
@@ -364,7 +360,11 @@ const Factors: React.FC = () => {
                   {toPersianNumber(item.receiptCode)}
                 </div>
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[210px]">
-                  {new Date(item.createdDate).toLocaleDateString("fa-IR")}
+                  {(() => {
+                    const date = new Date(item.createdDate);
+                    date.setDate(date.getDate() - 1);
+                    return date.toLocaleDateString("fa-IR");
+                  })()}
                 </div>
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[210px] font-semibold">
                   {toPersianNumberSeparator(item.totalAmount)}

@@ -80,11 +80,8 @@ const ShopInfoInitializer: React.FC = () => {
       !ProductDataService.shouldUpdateData() &&
       ProductDataService.hasData()
     ) {
-      console.log("استفاده از داده‌های کش شده - نیازی به به‌روزرسانی نیست");
       return;
     }
-
-    console.log("دریافت داده‌های جدید از سرور...");
 
     // please json parse
     const cacheCategoryList = JSON.parse(

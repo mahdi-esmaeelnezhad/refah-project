@@ -56,6 +56,20 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
     }
   }, [isOpen]);
 
+  // Listen for customer updates
+  useEffect(() => {
+    const handleCustomersUpdated = () => {
+      if (isOpen) {
+        fetchCustomersFromAPI();
+      }
+    };
+
+    window.addEventListener("customersUpdated", handleCustomersUpdated);
+    return () => {
+      window.removeEventListener("customersUpdated", handleCustomersUpdated);
+    };
+  }, [isOpen]);
+
   const fetchCustomersFromAPI = async () => {
     try {
       const response: any = localStorage.getItem("customers");

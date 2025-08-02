@@ -14,6 +14,7 @@ import Tooltip from "./Tooltip";
 import SavedFactorsTooltip from "./SavedFactorsTooltip";
 import NotificationsTooltip from "./NotificationsTooltip";
 import ProductsTooltip from "./ProductsTooltip";
+
 import { useNetworkStatus } from "../../../hooks/useNetworkStatus";
 import InternetDisconnectedModal from "../../Modal/InternetDisconnectedModal";
 
@@ -21,7 +22,7 @@ interface NavBarProps {
   children?: React.ReactNode;
   showFullNav?: boolean;
   onLoadSavedFactor?: (factor: any) => void;
-  onSelectProduct?: (product: any) => void; // اضافه شد
+  onSelectProduct?: (product: any) => void;
 }
 
 export function NavBar({
@@ -33,7 +34,8 @@ export function NavBar({
   const [searchProduct, setSearchProduct] = useState("");
   const [isSavedFactorsOpen, setIsSavedFactorsOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [isProductsOpen, setIsProductsOpen] = useState(false); // اضافه شد
+  const [isProductsOpen, setIsProductsOpen] = useState(false);
+
   const [savedFactors, setSavedFactors] = useState<any[]>([]);
   const [pendingInvoices, setPendingInvoices] = useState<any[]>([]);
   const [unregisteredCount, setUnregisteredCount] = useState(0);
@@ -74,6 +76,7 @@ export function NavBar({
       setUnregisteredCount(0);
     }
   };
+
   const toPersianNumber = (number: string) => {
     return number.replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d)]);
   };
@@ -310,19 +313,6 @@ export function NavBar({
               محصولات
             </span>
           </Tooltip>
-          {/* <span
-            className="bg-primary text-white rounded-2xl h-10 p-2 flex justify-center items-center gap-3 px-4 min-w-[286px] font-23 cursor-pointer"
-            onClick={() => setIsProductsOpen(!isProductsOpen)}
-          >
-            <ProductsIcon />
-            محصولات
-          </span>
-          <ProductsTooltip
-            isOpen={isProductsOpen}
-            setIsOpen={setIsProductsOpen}
-            onSelectProduct={handleProductSelect}
-            onOpenAddProduct={() => setIsProductsOpen(false)}
-          /> */}
         </div>
 
         <Input

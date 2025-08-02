@@ -43,6 +43,7 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   const handlePrint = () => {
     // اگر پرداخت کامل است، چاپ خودکار انجام شده و نیازی به چاپ مجدد نیست
     if (isPaymentComplete) {
+      onPrint?.();
       return;
     }
 
@@ -59,8 +60,6 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
   //   closeSuccessPayment();
   //   openCartPayment();
   // };
-  console.log(totalAmount, "totalAmount");
-  console.log(editableAmount, "editableAmount");
 
   // const remainingAmount = totalAmount ? totalAmount - editableAmount : 0;
 
@@ -68,7 +67,6 @@ const SuccessPaymentModal: React.FC<SuccessPaymentModalProps> = ({
     paymentType === "cash" &&
     typeof totalAmount === "number" &&
     totalAmount !== 0;
-  console.log(showRemainingAmount, "showRemainingAmount");
 
   // تشخیص پرداخت کامل
   const isPaymentComplete = React.useMemo(() => {

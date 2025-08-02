@@ -159,7 +159,6 @@ const ClickTooltip: React.FC<ClickTooltipProps> = ({
               ref={tooltipRef}
               className="fixed whitespace-normal break-words rounded-lg shadow bg-white text-black py-1.5 px-3 font-sans text-sm font-normal focus:outline-none"
               style={{
-                position: "absolute",
                 ...getTooltipStyles(),
                 zIndex: 9999,
               }}

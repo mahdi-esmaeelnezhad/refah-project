@@ -32,6 +32,8 @@ import SendSmsModal from "../../Modal/SendSmsModal";
 import SendPaykModal from "../../Modal/SendPaykModal";
 import useRequest from "../../../hooks/useRequest";
 import { FACTOR_ENDPOINTS } from "../../../endpoint/Factor/factor";
+import { PRODUCT_ENDPOINTS } from "../../../endpoint/product/product";
+import axios from "axios";
 
 interface Item {
   id: number;
@@ -79,6 +81,7 @@ const Content: React.FC = () => {
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [isCustomerTooltipOpen, setIsCustomerTooltipOpen] = useState(false);
+
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(
     null
   );
@@ -86,6 +89,7 @@ const Content: React.FC = () => {
   // const [shopBizPaymentDtoList, setShopBizPaymentDtoList] = useState<any[]>([]);
   const [isCustomerDefinitionModalOpen, setIsCustomerDefinitionModalOpen] =
     useState(false);
+  const [addCustomerLoading, setAddCustomerLoading] = useState(false);
   const [isCreditPaymentModalOpen, setIsCreditPaymentModalOpen] =
     useState(false);
   const [isBarcodeCreditModalOpen, setIsBarcodeCreditModalOpen] =
@@ -143,7 +147,7 @@ const Content: React.FC = () => {
   const [pendingLoadFactor, setPendingLoadFactor] = useState<any>(null);
   const [mobileInput, setMobileInput] = useState("");
   const [isMobileInputFocused, setIsMobileInputFocused] = useState(false);
-  const [, setSuccessMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const barcodeInputRef = React.useRef<HTMLInputElement>(null);
   const mobileInputRef = React.useRef<HTMLInputElement>(null);
   const lastProcessedBarcodeRef = React.useRef<string>("");
@@ -159,12 +163,24 @@ const Content: React.FC = () => {
     isDeleteModalOpen ||
     isSaveCurrentFactorModalOpen;
 
+  // بررسی اینکه آیا هر tooltip باز است یا نه
+  const isAnyTooltipOpen =
+    isCustomerTooltipOpen ||
+    isBarcodeDialPadOpen ||
+    isMobileInputFocused ||
+    openTooltipId !== null;
+
+  // بررسی اینکه آیا هر مدال یا tooltip باز است یا نه
+  const isAnyModalOrTooltipOpen = isAnyModalOpen || isAnyTooltipOpen;
+
   const { isListening } = useBarcodeScanner({
     onBarcodeScanned: React.useCallback((barcode: string) => {
       handleBarcodeScanned(barcode);
     }, []),
     enabled:
-      !isProductNotFoundOpen && !isBarcodeInputFocused && !isAnyModalOpen,
+      !isProductNotFoundOpen &&
+      !isBarcodeInputFocused &&
+      !isAnyModalOrTooltipOpen,
   });
 
   // تابع برای برداشتن فوکوس از input بارکد
@@ -182,30 +198,30 @@ const Content: React.FC = () => {
   // تابع برای بازگرداندن فوکوس به input بارکد
   const restoreBarcodeFocus = useCallback(() => {
     setTimeout(() => {
-      if (barcodeInputRef.current && !isAnyModalOpen) {
+      if (barcodeInputRef.current && !isAnyModalOrTooltipOpen) {
         barcodeInputRef.current.focus();
         setIsBarcodeInputFocused(true);
         hideKeyboard();
       }
     }, 200);
-  }, [isAnyModalOpen]);
+  }, [isAnyModalOrTooltipOpen]);
 
-  // نظارت بر وضعیت مدال‌ها و مدیریت فوکوس
+  // نظارت بر وضعیت مدال‌ها و tooltip ها و مدیریت فوکوس
   useEffect(() => {
-    // اگر هر مدالی باز شد، فوکوس را از input بارکد بردار
-    if (isAnyModalOpen) {
+    // اگر هر مدال یا tooltip باز شد، فوکوس را از input بارکد بردار
+    if (isAnyModalOrTooltipOpen) {
       removeBarcodeFocus();
     } else {
-      // اگر همه مدال‌ها بسته شدند، فوکوس را به input بارکد برگردان
+      // اگر همه مدال‌ها و tooltip ها بسته شدند، فوکوس را به input بارکد برگردان
       restoreBarcodeFocus();
     }
-  }, [isAnyModalOpen, removeBarcodeFocus, restoreBarcodeFocus]);
+  }, [isAnyModalOrTooltipOpen, removeBarcodeFocus, restoreBarcodeFocus]);
 
   // اضافه کردن event listener برای دریافت بارکد از input
   useEffect(() => {
     const handleInput = (e: Event) => {
-      // اگر مدالی باز است، ورودی را نادیده بگیر
-      if (isAnyModalOpen) {
+      // اگر مدال یا tooltip باز است، ورودی را نادیده بگیر
+      if (isAnyModalOrTooltipOpen) {
         return;
       }
 
@@ -233,7 +249,7 @@ const Content: React.FC = () => {
         barcodeInputRef.current.removeEventListener("change", handleInput);
       }
     };
-  }, [isAnyModalOpen]);
+  }, [isAnyModalOrTooltipOpen]);
 
   const totalItems = React.useMemo(() => items.length, [items.length]);
 
@@ -337,8 +353,8 @@ const Content: React.FC = () => {
   // اضافه کردن event listener برای جلوگیری از باز شدن کیبورد
   useEffect(() => {
     const preventKeyboard = (e: Event) => {
-      // اگر هر مدالی باز است، اجازه بده فوکوس تغییر کند
-      if (isAnyModalOpen) {
+      // اگر هر مدال یا tooltip باز است، اجازه بده فوکوس تغییر کند
+      if (isAnyModalOrTooltipOpen) {
         return;
       }
 
@@ -353,8 +369,8 @@ const Content: React.FC = () => {
     };
 
     const preventFocus = (e: Event) => {
-      // اگر هر مدالی باز است، اجازه بده فوکوس تغییر کند
-      if (isAnyModalOpen) {
+      // اگر هر مدال یا tooltip باز است، اجازه بده فوکوس تغییر کند
+      if (isAnyModalOrTooltipOpen) {
         return;
       }
 
@@ -380,13 +396,13 @@ const Content: React.FC = () => {
       document.removeEventListener("focusin", preventFocus);
       document.removeEventListener("focus", preventFocus);
     };
-  }, [isAnyModalOpen]);
+  }, [isAnyModalOrTooltipOpen]);
 
   // اضافه کردن event listener برای حفظ فوکوس
   useEffect(() => {
     const handleVisibilityChange = () => {
-      // اگر هر مدالی باز است، فوکوس را حفظ نکن
-      if (isAnyModalOpen) {
+      // اگر هر مدال یا tooltip باز است، فوکوس را حفظ نکن
+      if (isAnyModalOrTooltipOpen) {
         return;
       }
 
@@ -398,8 +414,8 @@ const Content: React.FC = () => {
     };
 
     const handleWindowFocus = () => {
-      // اگر هر مدالی باز است، فوکوس را حفظ نکن
-      if (isAnyModalOpen) {
+      // اگر هر مدال یا tooltip باز است، فوکوس را حفظ نکن
+      if (isAnyModalOrTooltipOpen) {
         return;
       }
 
@@ -417,7 +433,7 @@ const Content: React.FC = () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("focus", handleWindowFocus);
     };
-  }, [isAnyModalOpen]);
+  }, [isAnyModalOrTooltipOpen]);
 
   const handleModalSubmit = (data: { productName: string; price: string }) => {
     closeModal();
@@ -428,6 +444,7 @@ const Content: React.FC = () => {
     setSelectedItemId(itemId);
     setTempQuantity(currentQuantity);
     setOpenTooltipId(itemId);
+    removeBarcodeFocus(); // برداشتن فوکوس از input بارکد
   };
 
   const handleQuantityChange = (newValue: string) => {
@@ -460,6 +477,10 @@ const Content: React.FC = () => {
     setOpenTooltipId(null);
     setSelectedItemId(null);
     setTempQuantity("");
+    // بازگرداندن فوکوس به input بارکد بعد از بستن tooltip
+    setTimeout(() => {
+      restoreBarcodeFocus();
+    }, 100);
   };
 
   const handleDeleteClick = () => {
@@ -785,6 +806,10 @@ const Content: React.FC = () => {
   const handleCustomerSelect = (customer: Customer) => {
     setSelectedCustomer(customer);
     setIsCustomerTooltipOpen(false);
+    // بازگرداندن فوکوس به input بارکد بعد از انتخاب مشتری
+    setTimeout(() => {
+      restoreBarcodeFocus();
+    }, 100);
   };
 
   const handleOpenCustomerDefinition = () => {
@@ -792,8 +817,87 @@ const Content: React.FC = () => {
     removeBarcodeFocus();
   };
 
-  const handleAddCustomer = (customerData: any) => {
-    console.log("New customer data:", customerData);
+  const handleAddCustomer = async (customerData: any) => {
+    try {
+      setAddCustomerLoading(true);
+
+      const token = localStorage.getItem("token");
+      const newCustomer = {
+        displayName: customerData.displayName || "",
+        mobile: customerData.mobile || "",
+        address: customerData.address || "",
+        gender: customerData.gender === "زن" ? "0" : "1",
+        id: customerData.id || "",
+        isArchive: customerData.isArchive || false,
+        nationalCode: customerData.nationalCode || "",
+      };
+
+      if (newCustomer.id === "") {
+        // Add new customer
+        await axios.post(PRODUCT_ENDPOINTS.addCustomer, newCustomer, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      } else {
+        // Edit existing customer
+        await axios.put(PRODUCT_ENDPOINTS.addCustomer, newCustomer, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+      }
+
+      // Refresh customer list from API
+      await fetchCustomerListFromAPI();
+
+      console.log("Customer added/updated successfully:", customerData);
+      setSuccessMessage("مشتری با موفقیت افزوده شد");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      console.error("Error adding/updating customer:", error);
+      alert("خطا در افزودن/ویرایش مشتری");
+    } finally {
+      setAddCustomerLoading(false);
+    }
+  };
+
+  const fetchCustomerListFromAPI = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const searchPayload = {
+        conditionType: "OR",
+        conditions: [],
+        values: [],
+      };
+
+      const response = await axios.post(
+        PRODUCT_ENDPOINTS.customerList(0, 10000),
+        {
+          searchPayload,
+          sort: "id,desc",
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const customers = response.data;
+      if (customers) {
+        const nonArchived = customers.filter(
+          (customer: any) => !customer.isArchive
+        );
+        // Save to localStorage
+        localStorage.setItem("customers", JSON.stringify(nonArchived));
+
+        // Dispatch event to notify other components about the update
+        window.dispatchEvent(new Event("customersUpdated"));
+      }
+    } catch (error) {
+      console.error("Error fetching customers:", error);
+    }
   };
 
   const handleProductSelect = React.useCallback(
@@ -835,8 +939,8 @@ const Content: React.FC = () => {
 
   const handleBarcodeScanned = React.useCallback(
     (barcode: string) => {
-      // اگر مدالی باز است، بارکد را پردازش نکن
-      if (isAnyModalOpen) {
+      // اگر مدال یا tooltip باز است، بارکد را پردازش نکن
+      if (isAnyModalOrTooltipOpen) {
         return;
       }
 
@@ -916,12 +1020,17 @@ const Content: React.FC = () => {
         lastProcessedBarcodeRef.current = "";
       }, 100);
     },
-    [items, openProductNotFoundModal, shopBizItemDtoList, isAnyModalOpen]
+    [
+      items,
+      openProductNotFoundModal,
+      shopBizItemDtoList,
+      isAnyModalOrTooltipOpen,
+    ]
   );
 
   const handleBarcodeInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // اگر مدالی باز است، تغییرات را نادیده بگیر
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، تغییرات را نادیده بگیر
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
 
@@ -933,7 +1042,7 @@ const Content: React.FC = () => {
     if (newValue.length >= 40) {
       // افزایش تاخیر برای اطمینان از کامل شدن بارکد
       setTimeout(() => {
-        if (barcodeInput === newValue && !isAnyModalOpen) {
+        if (barcodeInput === newValue && !isAnyModalOrTooltipOpen) {
           handleBarcodeScanned(newValue.trim());
           setBarcodeInput("");
           // فوکوس را حفظ کن
@@ -944,8 +1053,8 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeSubmit = () => {
-    // اگر مدالی باز است، ارسال را نادیده بگیر
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، ارسال را نادیده بگیر
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
 
@@ -956,8 +1065,8 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // اگر مدالی باز است، کلیدها را نادیده بگیر
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، کلیدها را نادیده بگیر
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
 
@@ -968,8 +1077,8 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeInputFocus = () => {
-    // اگر مدالی باز است، فوکوس را نادیده بگیر
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، فوکوس را نادیده بگیر
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
     setIsBarcodeInputFocused(true);
@@ -981,13 +1090,13 @@ const Content: React.FC = () => {
 
   const handleBarcodeInputBlur = () => {
     setIsBarcodeInputFocused(false);
-    // اگر مدالی باز است، فوکوس را برنگردان
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، فوکوس را برنگردان
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
     // فوکوس را دوباره برگردان
     setTimeout(() => {
-      if (barcodeInputRef.current && !isAnyModalOpen) {
+      if (barcodeInputRef.current && !isAnyModalOrTooltipOpen) {
         barcodeInputRef.current.focus();
         setIsBarcodeInputFocused(true);
         hideKeyboard();
@@ -996,8 +1105,8 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeInputClick = () => {
-    // اگر مدالی باز است، کلیک را نادیده بگیر
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، کلیک را نادیده بگیر
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
     // اگر روی input کلیک شد، dialPad را باز کن
@@ -1006,8 +1115,8 @@ const Content: React.FC = () => {
   };
 
   const handleBarcodeDialPadChange = (value: string) => {
-    // اگر مدالی باز است، تغییرات را نادیده بگیر
-    if (isAnyModalOpen) {
+    // اگر مدال یا tooltip باز است، تغییرات را نادیده بگیر
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
 
@@ -1016,13 +1125,9 @@ const Content: React.FC = () => {
 
   const handleBarcodeDialPadClose = () => {
     setIsBarcodeDialPadOpen(false);
-    // اگر مدالی باز است، فوکوس را برنگردان
-    if (isAnyModalOpen) {
-      return;
-    }
-    // Re-focus on barcode input after DialPad closes
+    // بازگرداندن فوکوس به input بارکد
     setTimeout(() => {
-      hideKeyboard();
+      restoreBarcodeFocus();
     }, 100);
   };
 
@@ -1150,6 +1255,7 @@ const Content: React.FC = () => {
 
   const handleMobileInputClick = () => {
     setIsMobileInputFocused(true);
+    removeBarcodeFocus(); // برداشتن فوکوس از input بارکد
   };
 
   const handleMobileDialPadChange = (value: string) => {
@@ -1237,8 +1343,8 @@ const Content: React.FC = () => {
 
   // تابع کمکی برای مخفی کردن کیبورد
   const hideKeyboard = () => {
-    // اگر هر مدالی باز است، کیبورد را مخفی نکن
-    if (isAnyModalOpen) {
+    // اگر هر مدال یا tooltip باز است، کیبورد را مخفی نکن
+    if (isAnyModalOrTooltipOpen) {
       return;
     }
 
@@ -1252,7 +1358,7 @@ const Content: React.FC = () => {
       barcodeInputRef.current.setAttribute("spellcheck", "false");
 
       setTimeout(() => {
-        if (barcodeInputRef.current && !isAnyModalOpen) {
+        if (barcodeInputRef.current && !isAnyModalOrTooltipOpen) {
           barcodeInputRef.current.removeAttribute("readonly");
           barcodeInputRef.current.removeAttribute("inputmode");
           barcodeInputRef.current.focus();
@@ -1262,7 +1368,9 @@ const Content: React.FC = () => {
     }
   };
   const handlePrintFactor = async () => {
+    console.log(98989);
     try {
+      console.log("handlePrintFactor");
       // Calculate total amount from all partial payments
       const totalAmount = partialPayments.reduce(
         (sum, payment) => sum + payment.receiveAmount,
@@ -1316,6 +1424,18 @@ const Content: React.FC = () => {
       await printFactor(payload);
     } catch (e) {
       console.error("Error in print factor:", e);
+    }
+  };
+
+  // تابع جدید برای چاپ فاکتور در SuccessPaymentModal
+  const handlePrintInvoice = async () => {
+    try {
+      await handlePrintFactor();
+      setSuccessMessage("فاکتور با موفقیت به سرور ارسال شد");
+      setTimeout(() => setSuccessMessage(""), 3000);
+    } catch (error) {
+      setSuccessMessage("خطا در ارسال فاکتور به سرور");
+      setTimeout(() => setSuccessMessage(""), 3000);
     }
   };
 
@@ -1482,7 +1602,21 @@ const Content: React.FC = () => {
       detail: { handler: handleProductSelect },
     });
     window.dispatchEvent(productEvent);
-  }, [handleLoadSavedFactor, handleProductSelect]);
+
+    // ارسال توابع مدیریت فوکوس به NavBar
+    const focusEvent = new CustomEvent("setFocusHandlers", {
+      detail: {
+        removeBarcodeFocus: removeBarcodeFocus,
+        restoreBarcodeFocus: restoreBarcodeFocus,
+      },
+    });
+    window.dispatchEvent(focusEvent);
+  }, [
+    handleLoadSavedFactor,
+    handleProductSelect,
+    removeBarcodeFocus,
+    restoreBarcodeFocus,
+  ]);
 
   return (
     <>
@@ -1498,6 +1632,19 @@ const Content: React.FC = () => {
           border-radius:55px 0px 0px 55px !important;
           width: 130px !important;
           background-color: #7485E5 !important;
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
       `}
       </style>
@@ -1730,7 +1877,14 @@ const Content: React.FC = () => {
           }
           onClose={handleSuccessPaymentClose}
           onRemainingPayment={handleRemainingPayment}
-          onPrint={handlePrintFactor}
+          onPrint={handlePrintInvoice}
+          // invoiceData={{
+          //   items,
+          //   selectedCustomer,
+          //   partialPayments,
+          //   invoiceNumber,
+          //   deliveryMedivod,
+          // }}
           // autoPrint={true}
         />
         <FailedPaymentModal
@@ -1748,6 +1902,7 @@ const Content: React.FC = () => {
             restoreBarcodeFocus();
           }}
           onAdd={handleAddCustomer}
+          loading={addCustomerLoading}
         />
         <CreditPaymentModal
           isOpen={isCreditPaymentModalOpen}
@@ -1821,16 +1976,9 @@ const Content: React.FC = () => {
                     onConfirm={() => {
                       handleBarcodeSubmit();
                       setIsBarcodeDialPadOpen(false);
-                      // اگر مدالی باز است، فوکوس را برنگردان
-                      if (isAnyModalOpen) {
-                        return;
-                      }
-                      // دوباره فوکوس روی input بارکد
+                      // بازگرداندن فوکوس به input بارکد
                       setTimeout(() => {
-                        if (barcodeInputRef.current && !isAnyModalOpen) {
-                          barcodeInputRef.current.focus();
-                          setIsBarcodeInputFocused(true);
-                        }
+                        restoreBarcodeFocus();
                       }, 100);
                     }}
                     onClose={handleBarcodeDialPadClose}
@@ -1883,12 +2031,12 @@ const Content: React.FC = () => {
                   <span></span>
                 </div>
               )}
-              {/* {successMessage && (
+              {successMessage && (
                 <div className="flex items-center gap-1 text-green-600 text-sm animate-fade-in">
                   <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span></span>
+                  <span>{successMessage}</span>
                 </div>
-              )} */}
+              )}
             </div>
 
             <div style={{ position: "relative" }}>
@@ -1904,6 +2052,7 @@ const Content: React.FC = () => {
                     setIsCustomerTooltipOpen(false);
                   } else {
                     setIsCustomerTooltipOpen(true);
+                    removeBarcodeFocus(); // برداشتن فوکوس از input بارکد
                     //disable the button
                     // e.currentTarget.disabled = true;
                   }
@@ -2283,8 +2432,20 @@ const Content: React.FC = () => {
                     <DialPad
                       value={mobileInput}
                       onChange={handleMobileDialPadChange}
-                      onConfirm={() => setIsMobileInputFocused(false)}
-                      onClose={() => setIsMobileInputFocused(false)}
+                      onConfirm={() => {
+                        setIsMobileInputFocused(false);
+                        // بازگرداندن فوکوس به input بارکد
+                        setTimeout(() => {
+                          restoreBarcodeFocus();
+                        }, 100);
+                      }}
+                      onClose={() => {
+                        setIsMobileInputFocused(false);
+                        // بازگرداندن فوکوس به input بارکد
+                        setTimeout(() => {
+                          restoreBarcodeFocus();
+                        }, 100);
+                      }}
                     />
                   }
                   isOpen={isMobileInputFocused}

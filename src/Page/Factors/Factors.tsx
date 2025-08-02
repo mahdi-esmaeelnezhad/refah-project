@@ -360,12 +360,15 @@ const Factors: React.FC = () => {
                   {toPersianNumber(item.receiptCode)}
                 </div>
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[210px]">
+                  {new Date(item.createdDate).toLocaleDateString("fa-IR")}
+                </div>
+                {/* <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[210px]">
                   {(() => {
                     const date = new Date(item.createdDate);
                     date.setDate(date.getDate() - 1);
                     return date.toLocaleDateString("fa-IR");
                   })()}
-                </div>
+                </div> */}
                 <div className="h-[49px] p-4 rounded-md flex items-center justify-center w-[210px] font-semibold">
                   {toPersianNumberSeparator(item.totalAmount)}
                 </div>

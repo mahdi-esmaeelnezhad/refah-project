@@ -14,16 +14,11 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
   const barcodeStartTimeRef = useRef(0);
   const autoProcessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   
-  // تنظیمات بهینه‌سازی شده برای دستگاه‌های اندروید قدیمی
   const ANDROID_OPTIMIZATION = {
-    // افزایش فاصله زمانی بین کلیدها برای دستگاه‌های کند
-    KEY_INTERVAL_THRESHOLD: 500, // از 150ms به 500ms افزایش یافت
-    // کاهش تاخیر پردازش خودکار
-    AUTO_PROCESS_DELAY: 100, // از 300ms به 100ms کاهش یافت
-    // افزایش زمان پاک کردن بافر
-    BUFFER_CLEAR_DELAY: 2000, // از 1500ms به 2000ms افزایش یافت
-    // کاهش تاخیر پردازش
-    PROCESSING_DELAY: 100, // از 300ms به 100ms کاهش یافت
+    KEY_INTERVAL_THRESHOLD: 500,
+    AUTO_PROCESS_DELAY: 100,
+    BUFFER_CLEAR_DELAY: 2000, 
+    PROCESSING_DELAY: 100, 
   };
 
   const clearBuffer = useCallback(() => {
@@ -79,14 +74,14 @@ export const useBarcodeScanner = ({ onBarcodeScanned, enabled = true }: UseBarco
           return event.key;
         }
         
-        // اگر بارکد به طول مناسب رسید، تایمر خودکار را تنظیم کن
-        if (newBuffer.length >= 8 && newBuffer.length <= 13) {
-          // پاک کردن تایمر قبلی
-          if (autoProcessTimeoutRef.current) {
-            clearTimeout(autoProcessTimeoutRef.current);
-          }
-          
-          // تنظیم تایمر جدید برای پردازش خودکار - کاهش تاخیر
+        // پاک کردن تایمر قبلی
+        if (autoProcessTimeoutRef.current) {
+          clearTimeout(autoProcessTimeoutRef.current);
+        }
+        
+        // تنظیم تایمر جدید برای پردازش خودکار - منتظر توقف در ورودی
+        // برای هر بارکدی که حداقل 8 رقم داشته باشد
+        if (newBuffer.length >= 40) {
           autoProcessTimeoutRef.current = setTimeout(() => {
             if (barcodeBuffer === newBuffer && !isProcessingRef.current) {
               isProcessingRef.current = true;

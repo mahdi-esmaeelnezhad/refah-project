@@ -81,8 +81,8 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
       if (apiCustomers && apiCustomers.length > 0) {
         const convertedCustomers: Customer[] = apiCustomers
           .filter((customer) => !customer.isArchive)
-          .map((customer) => ({
-            id: parseInt(customer.id),
+          .map((customer, index) => ({
+            id: customer.id ? parseInt(customer.id) || index + 1 : index + 1,
             name:
               customer.displayName && customer.displayName.trim() !== ""
                 ? customer.displayName
@@ -223,9 +223,9 @@ const CustomerTooltip: React.FC<CustomerTooltipProps> = ({
             paddingRight: "4px",
           }}
         >
-          {filteredCustomers.map((customer) => (
+          {filteredCustomers.map((customer, index) => (
             <div
-              key={customer.id}
+              key={`customer-${index}`}
               style={{
                 width: "386px",
                 backgroundColor: "#F8F9FA",

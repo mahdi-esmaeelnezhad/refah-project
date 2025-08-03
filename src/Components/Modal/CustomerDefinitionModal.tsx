@@ -58,6 +58,7 @@ const CustomerDefinitionModal: React.FC<CustomerDefinitionModalProps> = ({
     useState<HTMLInputElement | null>(null);
 
   const handleChange = (field: string, value: any) => {
+    console.log(field, value, "field, value");
     setForm((prev) => ({ ...prev, [field]: value }));
     setErrors((prev: any) => ({ ...prev, [field]: undefined }));
   };

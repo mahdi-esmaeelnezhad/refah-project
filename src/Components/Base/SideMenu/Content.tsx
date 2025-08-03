@@ -78,7 +78,7 @@ const Content: React.FC = () => {
     isSendPaykModalOpen,
   } = useModal();
   const [deliveryMedivod, setDeliveryMedivod] = useState("حضوری");
-  const [paymentMedivod, setPaymentMedivod] = useState("کارتی");
+  const [paymentMedivod, setPaymentMedivod] = useState("نقدی");
   const [openTooltipId, setOpenTooltipId] = useState<number | null>(null);
   const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
   const [isCustomerTooltipOpen, setIsCustomerTooltipOpen] = useState(false);
@@ -524,7 +524,7 @@ const Content: React.FC = () => {
     setSelectedCustomer(null);
     setShowCreditInfo(false);
     setCreditAmount(0);
-    setSuccessMessage("فاکتور با موفقیت حذف شد");
+    // setSuccessMessage("فاکتور با موفقیت حذف شد");
     setTimeout(() => setSuccessMessage(""), 3000);
     setIsDeleteModalOpen(false);
     setPaymentAmount(0);
@@ -583,7 +583,7 @@ const Content: React.FC = () => {
         setPaymentAmount(0); // صفر کردن مبلغ قابل پرداخت
         setPartialPayments([]); // حذف مبالغ پرداختی قبلی
         // حذف loadSavedFactors();
-        setSuccessMessage("فاکتور با موفقیت ذخیره شد");
+        // setSuccessMessage("فاکتور با موفقیت ذخیره شد");
         setTimeout(() => setSuccessMessage(""), 3000);
       } else {
         alert("خطا در ذخیره فاکتور");
@@ -883,7 +883,7 @@ const Content: React.FC = () => {
       await fetchCustomerListFromAPI();
 
       console.log("Customer added/updated successfully:", customerData);
-      setSuccessMessage("مشتری با موفقیت افزوده شد");
+      // setSuccessMessage("مشتری با موفقیت افزوده شد");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       console.error("Error adding/updating customer:", error);
@@ -1148,9 +1148,9 @@ const Content: React.FC = () => {
 
   const handleBarcodeDialPadChange = (value: string) => {
     // اگر مدال یا tooltip باز است، تغییرات را نادیده بگیر
-    if (isAnyModalOrTooltipOpen) {
-      return;
-    }
+    // if (isAnyModalOrTooltipOpen) {
+    //   return;
+    // }
 
     setBarcodeInput(value);
   };
@@ -1236,7 +1236,7 @@ const Content: React.FC = () => {
       const success = saveInvoice(newInvoice);
 
       if (success) {
-        setSuccessMessage("فاکتور با موفقیت ذخیره شد");
+        // setSuccessMessage("فاکتور با موفقیت ذخیره شد");
         setTimeout(() => setSuccessMessage(""), 3000);
         return true;
       } else {
@@ -1463,7 +1463,7 @@ const Content: React.FC = () => {
   const handlePrintInvoice = async () => {
     try {
       await handlePrintFactor();
-      setSuccessMessage("فاکتور با موفقیت به سرور ارسال شد");
+      // setSuccessMessage("فاکتور با موفقیت به سرور ارسال شد");
       setTimeout(() => setSuccessMessage(""), 3000);
     } catch (error) {
       setSuccessMessage("خطا در ارسال فاکتور به سرور");
@@ -1578,9 +1578,9 @@ const Content: React.FC = () => {
         setPartialPayments(savedFactor.partialPayments || []);
         // اگر remainingAmount ذخیره شده بود، می‌توان آن را در state جداگانه قرار داد یا در نمایش استفاده کرد
 
-        setSuccessMessage(
-          `فاکتور ${savedFactor.invoiceNumber} با موفقیت بارگذاری شد`
-        );
+        // setSuccessMessage(
+        //   `فاکتور ${savedFactor.invoiceNumber} با موفقیت بارگذاری شد`
+        // );
         setTimeout(() => setSuccessMessage(""), 3000);
 
         // حذف فاکتور از localStorage بعد از بارگذاری موفق
@@ -2557,13 +2557,13 @@ const Content: React.FC = () => {
                       value={medivod}
                       checked={paymentMedivod === medivod}
                       onChange={() => setPaymentMedivod(medivod)}
-                      disabled={payAtLocation}
+                      disabled={payAtLocation || medivod !== "نقدی"}
                       className="w-4 h-4 accent-primary"
                     />
                     <label
                       htmlFor={`payment-${medivod}`}
                       className={`font-21 cursor-pointer ${
-                        payAtLocation ? "opacity-50" : ""
+                        payAtLocation || medivod !== "نقدی" ? "opacity-50" : ""
                       }`}
                     >
                       {medivod}

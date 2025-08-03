@@ -1035,6 +1035,8 @@ const Content: React.FC = () => {
     }
 
     const newValue = e.target.value;
+    console.log(newValue, "newValue");
+
     setBarcodeInput(newValue);
 
     // اگر بارکد با دستگاه اسکن شده (طول مناسب و سرعت بالا)
@@ -1045,10 +1047,9 @@ const Content: React.FC = () => {
         if (barcodeInput === newValue && !isAnyModalOrTooltipOpen) {
           handleBarcodeScanned(newValue.trim());
           setBarcodeInput("");
-          // فوکوس را حفظ کن
           hideKeyboard();
         }
-      }, 800); // افزایش تاخیر برای اطمینان از کامل شدن بارکد
+      }, 50);
     }
   };
 
@@ -2088,7 +2089,9 @@ const Content: React.FC = () => {
               فاکتور فروش {toPersianNumber(invoiceNumber)}
             </span>
             {/* just show when selectedCustomer */}
-            {selectedCustomer ? (
+            {/* if selectedCustomer is null , show the input */}
+
+            {selectedCustomer?.name ? (
               <div className="pr-10 pl-4 flex justify-between rounded-[43px] items-center gap-2 w-[523px] h-[43px] bg-[#FFD976]">
                 <span className="f-[20px] text-medium">
                   {selectedCustomer ? selectedCustomer.name : ""}
@@ -2155,15 +2158,15 @@ const Content: React.FC = () => {
                 </div>
               </div>
               <section className="overflow-y-auto relative h-[610px]">
-                {items.map((item) => (
+                {items.map((item, index) => (
                   <div
                     key={item.id}
                     className={`flex justify-between py-1 font-21 ${
-                      item.id % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
+                      index % 2 === 1 ? "bg-our-choice-200 rounded-md" : ""
                     }`}
                   >
                     <div className="h-10 w-10 p-4 rounded-md flex items-center justify-center">
-                      {item.id}
+                      {index + 1}
                     </div>
                     <div className="h-10 w-10 p-4 rounded-md flex items-center text-[16px] justify-center min-w-[216px] font-semibold">
                       {item.name}

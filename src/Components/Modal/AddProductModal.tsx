@@ -352,7 +352,11 @@ const AddProductModal: React.FC<AddProductModalProps> = ({
             </div>
             <div style={{ flex: 1 }}>
               <span style={labelProdeut}>واحد : </span>
-
+              <span
+                style={{ color: "#DE4949", fontSize: 25, marginBottom: "20px" }}
+              >
+                *
+              </span>
               <DropDownCustom
                 options={units.map((u) => ({ name: u }))}
                 borderRadius={55}

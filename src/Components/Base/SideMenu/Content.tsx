@@ -14,6 +14,7 @@ import { DialPad } from "./DialPad";
 import NoBarcodeModal from "../../Modal/NoBarcodeModal";
 import { useModal } from "../../../hooks/useModal";
 import DeleteModal from "../../Modal/DeleteModal";
+import DeleteProductModal from "../../Modal/DeleteProductModal";
 import CartPaymentModal from "../../Modal/CartPaymentModal";
 import CartPaymentLoading from "../../Modal/CartPaymentLoading";
 // import CartPaymentPassword from "../../Modal/CartPaymentPassword";
@@ -109,6 +110,12 @@ const Content: React.FC = () => {
   >(null);
   const [tempQuantity, setTempQuantity] = useState("");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleteProductModalOpen, setIsDeleteProductModalOpen] =
+    useState(false);
+  const [productToDelete, setProductToDelete] = useState<{
+    id: number;
+    name: string;
+  } | null>(null);
   const [invoiceNumber, setInvoiceNumber] = useState("256");
   const [, setShowCashInfo] = useState(false);
   const [partialPayments, setPartialPayments] = useState<
@@ -161,6 +168,7 @@ const Content: React.FC = () => {
     isSendSmsModalOpen ||
     isSendPaykModalOpen ||
     isDeleteModalOpen ||
+    isDeleteProductModalOpen ||
     isSaveCurrentFactorModalOpen;
 
   // بررسی اینکه آیا هر tooltip باز است یا نه
@@ -469,6 +477,29 @@ const Content: React.FC = () => {
 
   const handleRemoveProduct = (itemId: number) => {
     setItems(items.filter((item) => item.id !== itemId));
+  };
+
+  const handleDeleteProductClick = (itemId: number, itemName: string) => {
+    setProductToDelete({ id: itemId, name: itemName });
+    setIsDeleteProductModalOpen(true);
+    removeBarcodeFocus();
+  };
+
+  const handleDeleteProductConfirm = () => {
+    if (productToDelete) {
+      setItems(items.filter((item) => item.id !== productToDelete.id));
+      setSuccessMessage(`محصول ${productToDelete.name} با موفقیت حذف شد`);
+      setTimeout(() => setSuccessMessage(""), 3000);
+    }
+    setIsDeleteProductModalOpen(false);
+    setProductToDelete(null);
+    restoreBarcodeFocus();
+  };
+
+  const handleDeleteProductModalClose = () => {
+    setIsDeleteProductModalOpen(false);
+    setProductToDelete(null);
+    restoreBarcodeFocus();
   };
 
   const handleQuantityConfirm = () => {};
@@ -1675,6 +1706,12 @@ const Content: React.FC = () => {
           onDelete={handleDeleteConfirm}
           invoiceNumber={invoiceNumber}
         />
+        <DeleteProductModal
+          isOpen={isDeleteProductModalOpen}
+          onClose={handleDeleteProductModalClose}
+          onDelete={handleDeleteProductConfirm}
+          productName={productToDelete?.name || ""}
+        />
         {/* مدال ذخیره فاکتور فعلی */}
         {isSaveCurrentFactorModalOpen && (
           <div
@@ -2312,7 +2349,9 @@ const Content: React.FC = () => {
                     <div className="h-10 w-10 rounded-md flex items-center justify-center min-w-[158px] font-23 gap-3">
                       {item.total.toLocaleString("fa-IR")}
                       <CloseSmIcon
-                        onClick={() => handleRemoveProduct(item.id)}
+                        onClick={() =>
+                          handleDeleteProductClick(item.id, item.name)
+                        }
                       />
                     </div>
                   </div>
